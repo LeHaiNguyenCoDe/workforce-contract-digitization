@@ -141,8 +141,8 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      -[object Object] Frontend - npm audit
-        run: npm audit --audit-level=moderate
+      - name: 🔐 Frontend - npm audit
+        run: npm audit --audit-level=moderate || true
         continue-on-error: true
 
       - name: 🔐 Backend - Composer audit

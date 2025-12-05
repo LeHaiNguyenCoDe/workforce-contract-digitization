@@ -54,7 +54,7 @@ jobs:
           NODE_ENV: production
 
       - name: 📤 Upload build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: frontend-dist-prod
           path: dist/
@@ -91,7 +91,7 @@ jobs:
           php artisan key:generate --env=production
 
       - name: 📤 Upload build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: backend-dist-prod
           path: |
@@ -122,7 +122,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 📥 Download frontend artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: frontend-dist-prod
           path: public/

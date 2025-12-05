@@ -46,7 +46,7 @@ jobs:
           VITE_API_URL: ${{ secrets.STAGING_API_URL }}
 
       - name: 📤 Upload build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: frontend-dist
           path: dist/
@@ -60,7 +60,7 @@ jobs:
       image-tag: ${{ steps.meta.outputs.tags }}
 
     steps:
-      - name[object Object]
+      - name: 📥 Checkout code
         uses: actions/checkout@v4
 
       - name: 🐘 Setup PHP
@@ -86,7 +86,7 @@ jobs:
           php artisan key:generate --env=staging
 
       - name: 📤 Upload build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: backend-dist
           path: |
@@ -117,7 +117,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 📥 Download frontend artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: frontend-dist
           path: public/
