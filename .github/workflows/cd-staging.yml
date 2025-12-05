@@ -1,0 +1,231 @@
+name: CD - Develop Branch (Build & Deploy to Staging)
+
+on:
+  push:
+    branches:
+      - develop
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  CACHE_VERSION: v1
+
+jobs:
+  build-frontend:
+    name: Build Frontend (Vue.js + Vite)
+    runs-on: ubuntu-latest
+    
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: 💾 Cache node_modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}-${{ env.CACHE_VERSION }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: 📚 Install dependencies
+        run: npm ci
+
+      - name: 🏗️ Build Frontend
+        run: npm run build
+        env:
+          VITE_API_URL: ${{ secrets.STAGING_API_URL }}
+
+      - name: 📤 Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: frontend-dist
+          path: dist/
+          retention-days: 1
+
+  build-backend:
+    name: Build Backend (Laravel)
+    runs-on: ubuntu-latest
+    
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+
+    steps:
+      - name[object Object]
+        uses: actions/checkout@v4
+
+      - name: 🐘 Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, pdo, pdo_mysql, bcmath, ctype, fileinfo, json, tokenizer, xml
+
+      - name: 💾 Cache Composer dependencies
+        uses: actions/cache@v3
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}-${{ env.CACHE_VERSION }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: 📚 Install Composer dependencies
+        run: composer install --no-dev --prefer-dist --optimize-autoloader
+
+      - name: 🔧 Setup Laravel environment
+        run: |
+          cp .env.example .env.staging
+          php artisan key:generate --env=staging
+
+      - name: 📤 Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: backend-dist
+          path: |
+            app/
+            bootstrap/
+            config/
+            database/
+            public/
+            resources/
+            routes/
+            storage/
+            vendor/
+            .env.staging
+            artisan
+          retention-days: 1
+
+  build-docker:
+    name: Build & Push Docker Images
+    runs-on: ubuntu-latest
+    needs: [build-frontend, build-backend]
+    
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📥 Download frontend artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: frontend-dist
+          path: public/
+
+      - name: 🔐 Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🏷️ Extract metadata
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=sha,prefix=staging-
+            type=raw,value=staging-latest
+
+      - name: 🐳 Build & Push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy-staging:
+    name: Deploy to Staging Environment
+    runs-on: ubuntu-latest
+    needs: build-docker
+    
+    environment:
+      name: staging
+      url: https://staging.workforce-contract.local
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔐 Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.STAGING_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.STAGING_SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      - name: 📋 Create deployment script
+        run: |
+          cat > deploy.sh << 'EOF'
+          #!/bin/bash
+          set -e
+          
+          echo "🚀 Starting Staging Deployment..."
+          
+          # Pull latest code
+          cd /var/www/workforce-contract-staging
+          git pull origin develop
+          
+          # Pull Docker image
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:staging-latest
+          
+          # Stop old container
+          docker-compose -f docker-compose.staging.yml down || true
+          
+          # Start new container
+          docker-compose -f docker-compose.staging.yml up -d
+          
+          # Run migrations
+          docker-compose -f docker-compose.staging.yml exec -T app php artisan migrate --force
+          
+          # Clear caches
+          docker-compose -f docker-compose.staging.yml exec -T app php artisan cache:clear
+          docker-compose -f docker-compose.staging.yml exec -T app php artisan config:clear
+          
+          echo "✅ Staging deployment completed successfully!"
+          EOF
+          
+          chmod +x deploy.sh
+
+      - name: 🚀 Execute deployment
+        run: |
+          ssh -i ~/.ssh/id_rsa ${{ secrets.STAGING_SERVER_USER }}@${{ secrets.STAGING_SERVER_HOST }} \
+            "bash -s" < deploy.sh
+
+      - name: 🔔 Notify Slack
+        if: always()
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "🚀 Staging Deployment ${{ job.status }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Staging Deployment* - ${{ job.status }}\n*Branch:* develop\n*Commit:* ${{ github.sha }}\n*Author:* ${{ github.actor }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+

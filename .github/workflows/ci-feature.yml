@@ -1,0 +1,168 @@
+name: CI - Feature Branch (Lint & Test)
+
+on:
+  pull_request:
+    branches:
+      - develop
+    types: [opened, synchronize, reopened]
+
+env:
+  NODE_ENV: test
+  CACHE_VERSION: v1
+
+jobs:
+  lint-and-test-frontend:
+    name: Frontend - Lint & Test
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 📦 Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: 💾 Cache node_modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}-${{ env.CACHE_VERSION }}
+          restore-keys: |
+            ${{ runner.os }}-node-${{ matrix.node-version }}-
+
+      - name: 📚 Install dependencies
+        run: npm ci
+
+      - name: 🔍 ESLint - Code Style Check
+        run: npm run lint
+        continue-on-error: false
+
+      - name: ✅ Unit Tests - Frontend
+        run: npm run test:unit
+        continue-on-error: false
+
+      - name: 📊 Code Coverage Report
+        run: npm run test:coverage
+        continue-on-error: true
+
+      - name: 📤 Upload Coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage/coverage-final.json
+          flags: frontend
+          name: frontend-coverage
+        continue-on-error: true
+
+  lint-and-test-backend:
+    name: Backend - Lint & Test
+    runs-on: ubuntu-latest
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: test_db
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+        ports:
+          - 3306:3306
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐘 Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, pdo, pdo_mysql, bcmath, ctype, fileinfo, json, tokenizer, xml
+          coverage: xdebug
+
+      - name: 💾 Cache Composer dependencies
+        uses: actions/cache@v3
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}-${{ env.CACHE_VERSION }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: 📚 Install Composer dependencies
+        run: composer install --no-progress --prefer-dist --optimize-autoloader
+
+      - name: 🔧 Setup Laravel environment
+        run: |
+          cp .env.example .env.testing
+          php artisan key:generate --env=testing
+
+      - name: 🔍 PHP CodeSniffer - Code Style Check
+        run: ./vendor/bin/phpcs --standard=PSR12 app routes
+        continue-on-error: false
+
+      - name: 🔎 PHPStan - Static Analysis
+        run: ./vendor/bin/phpstan analyse app --level=5
+        continue-on-error: false
+
+      - name: ✅ Unit & Feature Tests
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: test_db
+          DB_USERNAME: root
+          DB_PASSWORD: root
+        run: php artisan test --coverage
+        continue-on-error: false
+
+      - name: 📤 Upload Coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage/coverage.xml
+          flags: backend
+          name: backend-coverage
+        continue-on-error: true
+
+  security-check:
+    name: Security - Dependency Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      -[object Object] Frontend - npm audit
+        run: npm audit --audit-level=moderate
+        continue-on-error: true
+
+      - name: 🔐 Backend - Composer audit
+        run: composer audit
+        continue-on-error: true
+
+  code-quality:
+    name: Code Quality - SonarQube
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🔍 SonarQube Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        continue-on-error: true
+
