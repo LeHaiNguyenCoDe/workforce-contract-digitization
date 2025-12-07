@@ -1,0 +1,13 @@
+# Git Commit Message Template
+# Format: <type>: <description> #<issue_id>
+#
+# Types:
+# - feat: New feature
+# - fix: Bug fix
+# - docs: Documentation changes
+# - style: Code style changes (formatting, etc.)
+# - refactor: Code refactoring
+# - test: Adding or updating tests
+# - chore: Maintenance tasks
+# - hotfix: Critical bug fix for production
+
