@@ -1,10 +1,10 @@
 # Gitflow Workflow - Hướng dẫn Quy trình Làm việc
 
-## 📋 Tổng quan
+## Tổng quan
 
 Dự án này sử dụng **Gitflow Workflow** để quản lý code một cách có tổ chức và an toàn. Tất cả các commit phải đi kèm với **Issue ID**.
 
-## 🌳 Cấu trúc Nhánh
+## Cấu trúc Nhánh
 
 ### Nhánh chính (Main Branches)
 
@@ -44,7 +44,7 @@ Dự án này sử dụng **Gitflow Workflow** để quản lý code một cách
    - Format: `fix/memory_leak`, `fix/validation_error`
    - Dùng để sửa lỗi thông thường
 
-## 🔄 Quy trình Làm việc
+## Quy trình Làm việc
 
 ### 1. Phát triển Feature mới
 
@@ -125,7 +125,7 @@ git merge prod
 git push origin dev
 ```
 
-## 📝 Quy tắc Commit Message
+## Quy tắc Commit Message
 
 ### Format chuẩn:
 ```
@@ -151,7 +151,7 @@ git commit -m "docs: update API documentation #101"
 git commit -m "refactor: optimize database queries #202"
 ```
 
-## ⚠️ Lưu ý quan trọng
+## Lưu ý quan trọng
 
 1. **Luôn thêm Issue ID vào commit message** - Đây là yêu cầu bắt buộc
 2. **KHÔNG push trực tiếp vào `prod` và `staging`** - Chỉ merge qua Pull Request
@@ -159,38 +159,3 @@ git commit -m "refactor: optimize database queries #202"
 4. **Review code trước khi merge** - Ít nhất 1 người review
 5. **Sau hotfix, nhớ merge vào staging và dev** để đồng bộ code
 6. **Xóa nhánh feature/hotfix sau khi merge** để giữ repo gọn gàng
-
-## 🔒 Bảo vệ Nhánh (Branch Protection)
-
-Trên GitHub/GitLab, nên cấu hình branch protection cho:
-- `prod`: Yêu cầu PR, review, và status checks
-- `staging`: Yêu cầu PR và review
-
-### Cấu hình trên GitHub:
-1. Vào Settings > Branches
-2. Add rule cho `prod` và `staging`
-3. Bật các tùy chọn:
-   - ✅ Require a pull request before merging
-   - ✅ Require approvals (ít nhất 1)
-   - ✅ Require status checks to pass before merging
-
-## 📚 Tài liệu tham khảo
-
-- [Git Flow](https://nvie.com/posts/a-successful-git-branching-model/)
-- [Conventional Commits](https://www.conventionalcommits.org/)
-- [GitHub Flow](https://guides.github.com/introduction/flow/)
-
-## ❓ Câu hỏi thường gặp
-
-**Q: Tôi có thể commit trực tiếp vào dev không?**  
-A: Có thể, nhưng khuyến khích tạo nhánh feature và dùng PR để dễ review.
-
-**Q: Làm sao nếu quên thêm Issue ID vào commit?**  
-A: Có thể dùng `git commit --amend` để sửa commit message, hoặc tạo commit mới với message đúng.
-
-**Q: Khi nào nên merge dev vào staging?**  
-A: Khi có đủ các feature ổn định và sẵn sàng cho QA test hoặc demo.
-
-**Q: Hotfix có cần tạo PR không?**  
-A: Có, vẫn nên tạo PR để review, trừ trường hợp khẩn cấp cực kỳ.
-

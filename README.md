@@ -2,9 +2,9 @@
 
 Dự án số hóa hợp đồng lao động.
 
-## 🌳 Gitflow Workflow
+## Gitflow Workflow
 
-Dự án này sử dụng **Gitflow Workflow** để quản lý code. Vui lòng đọc file [GITFLOW.md](./GITFLOW.md) để hiểu rõ quy trình làm việc.
+Dự án này sử dụng **Gitflow Workflow** để quản lý code. Vui lòng đọc file [GITFLOW.md](./docs/GITFLOW.md) để hiểu rõ quy trình làm việc.
 
 ### Nhánh chính:
 - **`prod`**: Production environment (chỉ merge qua PR)
@@ -40,4 +40,4 @@ git push -u origin feat/your_feature_name
 # Tạo Pull Request từ feat/your_feature_name vào dev
 ```
 
-Xem chi tiết tại [GITFLOW.md](./GITFLOW.md)
+Xem chi tiết tại [GITFLOW.md](./docs/GITFLOW.md)
