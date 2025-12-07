@@ -1,0 +1,135 @@
+<?php
+
+namespace App\Services;
+
+use App\Exceptions\AuthenticationException;
+use App\Helpers\Helper;
+use App\Repositories\Contracts\UserRepositoryInterface;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+
+class AuthService
+{
+    public function __construct(
+        private UserRepositoryInterface $userRepository
+    ) {
+    }
+
+    /**
+     * Authenticate user and create session
+     *
+     * @param  array  $credentials
+     * @param  bool  $remember
+     * @param  Request  $request
+     * @return array
+     * @throws AuthenticationException
+     */
+    public function login(array $credentials, bool $remember, Request $request): array
+    {
+        $user = $this->userRepository->findByEmail($credentials['email']);
+
+        if (!$user) {
+            throw new AuthenticationException('Invalid credentials');
+        }
+
+        // Check if user is active
+        if (isset($user->active) && $user->active === false) {
+            throw new AuthenticationException('Account is deactivated', 403);
+        }
+
+        // Check password
+        if (!Hash::check($credentials['password'], $user->password)) {
+            throw new AuthenticationException('Invalid credentials');
+        }
+
+        // Login user (create session)
+        Auth::login($user, $remember);
+
+        // Log activity
+        $this->logActivity('login', $user->id, ['email' => $user->email]);
+
+        // Regenerate session ID for security
+        $sessionId = null;
+        if ($request->hasSession()) {
+            $request->session()->regenerate();
+            $sessionId = $request->session()->getId();
+        }
+
+        return [
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+            ],
+            'session_id' => $sessionId,
+        ];
+    }
+
+    /**
+     * Logout user
+     *
+     * @param  Request  $request
+     * @return void
+     */
+    public function logout(Request $request): void
+    {
+        $user = Auth::user();
+
+        if ($user) {
+            $this->logActivity('logout', $user->id);
+        }
+
+        Auth::logout();
+
+        if ($request->hasSession()) {
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
+    }
+
+    /**
+     * Get current authenticated user
+     *
+     * @return array
+     * @throws AuthenticationException
+     */
+    public function getCurrentUser(): array
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            throw new AuthenticationException('Unauthenticated');
+        }
+
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'created_at' => $user->created_at,
+        ];
+    }
+
+    /**
+     * Log activity
+     *
+     * @param  string  $action
+     * @param  int  $userId
+     * @param  array|null  $data
+     * @return void
+     */
+    private function logActivity(string $action, int $userId, ?array $data = null): void
+    {
+        $data_log = [
+            'action' => $action,
+            'obj_action' => json_encode([$userId]),
+        ];
+
+        if ($data) {
+            $data_log['new_value'] = json_encode($data);
+        }
+
+        Helper::addLog($data_log);
+    }
+}
+

@@ -1,59 +1,308 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Workforce Contract Digitization API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A Laravel-based RESTful API for workforce contract digitization system.
 
-## About Laravel
+## 📋 Table of Contents
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- [Features](#features)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [API Documentation](#api-documentation)
+- [Testing](#testing)
+- [Architecture](#architecture)
+- [Code Standards](#code-standards)
+- [Contributing](#contributing)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## ✨ Features
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- **Authentication System**: Session-based authentication with login/logout
+- **User Management**: Full CRUD operations for user management
+- **Audit Logging**: Complete audit trail for all operations
+- **Soft Deletes**: Soft delete functionality for data recovery
+- **RESTful API**: Clean REST API design
+- **Service Layer Architecture**: Separation of concerns with Service and Repository patterns
+- **Custom Exceptions**: Proper exception handling
+- **Validation**: Comprehensive input validation
 
-## Learning Laravel
+## 🔧 Requirements
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+- PHP >= 8.2
+- Composer
+- Node.js >= 18.x
+- Database (MySQL/PostgreSQL/SQLite)
+- Laravel 12.x
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## 🚀 Installation
 
-## Laravel Sponsors
+### 1. Clone the repository
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+```bash
+git clone <repository-url>
+cd workforce-contract-digitization/web
+```
 
-### Premium Partners
+### 2. Install dependencies
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+```bash
+composer install
+npm install
+```
 
-## Contributing
+### 3. Environment setup
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-## Code of Conduct
+### 4. Configure database
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Edit `.env` file and set your database credentials:
 
-## Security Vulnerabilities
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=your_database
+DB_USERNAME=your_username
+DB_PASSWORD=your_password
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### 5. Run migrations
 
-## License
+```bash
+php artisan migrate
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### 6. Start development server
+
+```bash
+php artisan serve
+```
+
+Or use the dev script:
+
+```bash
+composer run dev
+```
+
+## ⚙️ Configuration
+
+### API Base URL
+
+Default API base URL: `http://localhost:8000/api/v1`
+
+### Session Configuration
+
+The API uses session-based authentication. Make sure to include session cookies in your requests.
+
+## 📚 API Documentation
+
+### Authentication Endpoints
+
+#### Login
+```http
+POST /api/v1/login
+Content-Type: application/json
+
+{
+    "email": "user@example.com",
+    "password": "Password123!",
+    "remember": false
+}
+```
+
+**Response:**
+```json
+{
+    "status": "success",
+    "message": "Login successful",
+    "data": {
+        "user": {
+            "id": 1,
+            "name": "John Doe",
+            "email": "user@example.com"
+        }
+    }
+}
+```
+
+#### Logout
+```http
+POST /api/v1/logout
+```
+
+#### Get Current User
+```http
+GET /api/v1/me
+```
+
+### User Endpoints
+
+#### List Users
+```http
+GET /api/v1/users?per_page=15&search=john
+```
+
+#### Create User
+```http
+POST /api/v1/users
+Content-Type: application/json
+
+{
+    "name": "John Doe",
+    "email": "john@example.com",
+    "password": "Password123!"
+}
+```
+
+#### Get User
+```http
+GET /api/v1/users/{id}
+```
+
+#### Update User
+```http
+PUT /api/v1/users/{id}
+Content-Type: application/json
+
+{
+    "name": "John Updated",
+    "email": "john.updated@example.com"
+}
+```
+
+#### Delete User
+```http
+DELETE /api/v1/users/{id}
+```
+
+## 🧪 Testing
+
+### Run all tests
+
+```bash
+php artisan test
+```
+
+### Run specific test suite
+
+```bash
+# Unit tests
+php artisan test --testsuite=Unit
+
+# Feature tests
+php artisan test --testsuite=Feature
+```
+
+### Code coverage
+
+```bash
+php artisan test --coverage
+```
+
+## 🏗️ Architecture
+
+### Project Structure
+
+```
+app/
+├── Exceptions/          # Custom exception classes
+├── Helpers/             # Helper functions
+├── Http/
+│   ├── Controllers/     # API controllers
+│   ├── Middleware/      # HTTP middleware
+│   └── Requests/        # Form request validation
+├── Models/              # Eloquent models
+├── Providers/           # Service providers
+├── Repositories/        # Repository pattern
+│   ├── Contracts/       # Repository interfaces
+│   └── UserRepository.php
+└── Services/            # Business logic layer
+    ├── AuthService.php
+    └── UserService.php
+```
+
+### Design Patterns
+
+- **Service Layer Pattern**: Business logic separated from controllers
+- **Repository Pattern**: Data access abstraction
+- **Dependency Injection**: Services injected via constructor
+- **Exception Handling**: Custom exceptions for better error handling
+
+### Data Flow
+
+```
+Request → Controller → Service → Repository → Model → Database
+                ↓
+            Response
+```
+
+## 📝 Code Standards
+
+### PSR Standards
+
+- **PSR-1**: Basic Coding Standard
+- **PSR-4**: Autoloading Standard
+- **PSR-12**: Extended Coding Style
+
+### Laravel Best Practices
+
+- Form Requests for validation
+- Service layer for business logic
+- Repository pattern for data access
+- Resource controllers for RESTful APIs
+- Eloquent ORM for database operations
+
+### Code Quality Tools
+
+- **Laravel Pint**: Code formatting
+- **PHPUnit**: Testing framework
+- **PHPStan**: Static analysis (recommended)
+
+## 🔒 Security
+
+- Password hashing using `Hash::make()`
+- Session-based authentication
+- Input validation via Form Requests
+- CSRF protection
+- SQL injection protection via Eloquent ORM
+
+## 📊 Audit Logging
+
+All operations are logged with:
+- Action type
+- User ID
+- Timestamp
+- Old/New values (for updates)
+- IP address
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+### Code Review Checklist
+
+- [ ] Code follows PSR standards
+- [ ] Tests are written and passing
+- [ ] Documentation is updated
+- [ ] No linter errors
+- [ ] Security best practices followed
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+## 👥 Support
+
+For support, email support@example.com or create an issue in the repository.
+
+---
+
+**Version:** 1.0.0  
+**Last Updated:** 2025-12-07
