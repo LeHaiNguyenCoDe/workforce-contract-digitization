@@ -2,15 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\AuthenticationException;
 use App\Helpers\Helper;
 use App\Http\Requests\AuthRequest;
-use App\Models\User;
+use App\Services\AuthService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
+    public function __construct(
+        private AuthService $authService
+    ) {
+    }
+
     /**
      * Login user and return session
      */
@@ -18,65 +22,31 @@ class AuthController extends Controller
     {
         try {
             $credentials = $request->only('email', 'password');
-            $user = User::where('email', $credentials['email'])->first();
-
-            if (!$user) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Invalid credentials',
-                ], 401);
-            }
-
-            // Check if user is active
-            if (isset($user->active) && $user->active === false) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Account is deactivated',
-                ], 403);
-            }
-
-            // Check password
-            if (!Hash::check($credentials['password'], $user->password)) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Invalid credentials',
-                ], 401);
-            }
-
-            // Login user (create session)
-            Auth::login($user, $request->has('remember'));
-
-            $data_log['action'] = 'login';
-            $data_log['obj_action'] = json_encode(array($user->id));
-            $data_log['new_value'] = json_encode(array('email' => $user->email));
-            Helper::addLog($data_log);
-
-            // Regenerate session ID for security
-            if ($request->hasSession()) {
-                $request->session()->regenerate();
-                $sessionId = $request->session()->getId();
-            } else {
-                $sessionId = null;
-            }
+            $result = $this->authService->login(
+                $credentials,
+                $request->has('remember'),
+                $request
+            );
 
             $response = response()->json([
                 'status' => 'success',
                 'message' => 'Login successful',
                 'data' => [
-                    'user' => [
-                        'id' => $user->id,
-                        'name' => $user->name,
-                        'email' => $user->email,
-                    ],
+                    'user' => $result['user'],
                 ],
             ]);
 
             // Add session cookie if session is available
-            if ($sessionId) {
-                $response->withCookie(cookie('laravel_session', $sessionId, 120));
+            if ($result['session_id']) {
+                $response->withCookie(cookie('laravel_session', $result['session_id'], 120));
             }
 
             return $response;
+        } catch (AuthenticationException $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], $ex->getCode());
         } catch (\Exception $ex) {
             Helper::trackingError('auth', $ex->getMessage());
             return response()->json([
@@ -92,19 +62,7 @@ class AuthController extends Controller
     public function logout(AuthRequest $request): JsonResponse
     {
         try {
-            $user = Auth::user();
-            
-            if ($user) {
-                $data_log['action'] = 'logout';
-                $data_log['obj_action'] = json_encode(array($user->id));
-                Helper::addLog($data_log);
-            }
-
-            Auth::logout();
-            if ($request->hasSession()) {
-                $request->session()->invalidate();
-                $request->session()->regenerateToken();
-            }
+            $this->authService->logout($request);
 
             return response()->json([
                 'status' => 'success',
@@ -125,24 +83,17 @@ class AuthController extends Controller
     public function me(AuthRequest $request): JsonResponse
     {
         try {
-            $user = Auth::user();
-
-            if (!$user) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Unauthenticated',
-                ], 401);
-            }
+            $user = $this->authService->getCurrentUser();
 
             return response()->json([
                 'status' => 'success',
-                'data' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'created_at' => $user->created_at,
-                ],
+                'data' => $user,
             ]);
+        } catch (AuthenticationException $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], $ex->getCode());
         } catch (\Exception $ex) {
             Helper::trackingError('auth', $ex->getMessage());
             return response()->json([

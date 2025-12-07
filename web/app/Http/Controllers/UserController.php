@@ -2,21 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\NotFoundException;
+use App\Exceptions\ValidationException;
 use App\Helpers\Helper;
 use App\Http\Requests\UserRequest;
 use App\Models\User;
-use Carbon\Carbon;
-use Illuminate\Http\Request;
+use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
-    private $module;
-
-    public function __construct()
-    {
-        $this->module = 'user';
+    public function __construct(
+        private UserService $userService
+    ) {
     }
 
     /**
@@ -27,25 +26,15 @@ class UserController extends Controller
         try {
             $perPage = $req->get('per_page', 15);
             $search = $req->get('search');
-            $columns = ['id', 'name', 'email', 'created_at'];
 
-            $query = User::query();
-
-            if ($search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%");
-                });
-            }
-
-            $users = $query->select($columns)->paginate($perPage);
+            $users = $this->userService->getAll($perPage, $search);
 
             return response()->json([
                 'status' => 'success',
                 'data' => $users,
             ]);
         } catch (\Exception $ex) {
-            Helper::trackingError($this->module, $ex->getMessage());
+            Helper::trackingError('user', $ex->getMessage());
             return response()->json([
                 'status' => 'error',
                 'message' => 'An error occurred while processing the request',
@@ -61,28 +50,24 @@ class UserController extends Controller
         try {
             $validator = $req->storeValidator();
             if ($validator->count()) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Validation error',
-                    'errors' => $validator,
-                ], 422);
+                throw new ValidationException('Validation error', $validator);
             }
 
-            $data = $this->getDataRequest($req, 'create');
-            $user = User::create($data);
-
-            $data_log['action'] = getAction($this->module);
-            $data_log['obj_action'] = json_encode(array());
-            $data_log['new_value'] = json_encode($req->all());
-            Helper::addLog($data_log);
+            $user = $this->userService->create($req->all());
 
             return response()->json([
                 'status' => 'success',
                 'message' => 'Operation completed successfully',
                 'data' => $user,
             ], 201);
+        } catch (ValidationException $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+                'errors' => $ex->getErrors(),
+            ], 422);
         } catch (\Exception $ex) {
-            Helper::trackingError($this->module, $ex->getMessage());
+            Helper::trackingError('user', $ex->getMessage());
             return response()->json([
                 'status' => 'error',
                 'message' => 'An error occurred while processing the request',
@@ -96,12 +81,19 @@ class UserController extends Controller
     public function show(User $user): JsonResponse
     {
         try {
+            $userData = $this->userService->getById($user->id);
+
             return response()->json([
                 'status' => 'success',
-                'data' => $user,
+                'data' => $userData,
             ]);
+        } catch (NotFoundException $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 404);
         } catch (\Exception $ex) {
-            Helper::trackingError($this->module, $ex->getMessage());
+            Helper::trackingError('user', $ex->getMessage());
             return response()->json([
                 'status' => 'error',
                 'message' => 'An error occurred while processing the request',
@@ -117,30 +109,29 @@ class UserController extends Controller
         try {
             $validator = $req->updateValidator();
             if ($validator->count()) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Validation error',
-                    'errors' => $validator,
-                ], 422);
+                throw new ValidationException('Validation error', $validator);
             }
 
-            $oldValue = $user->toArray();
-            $data = $this->getDataRequest($req, 'update');
-            $user->update($data);
-
-            $data_log['action'] = getAction($this->module);
-            $data_log['obj_action'] = json_encode(array($user->id));
-            $data_log['old_value'] = json_encode($oldValue);
-            $data_log['new_value'] = json_encode($req->all());
-            Helper::addLog($data_log);
+            $userData = $this->userService->update($user->id, $req->all());
 
             return response()->json([
                 'status' => 'success',
                 'message' => 'Operation completed successfully',
-                'data' => $user->fresh(),
+                'data' => $userData,
             ]);
+        } catch (ValidationException $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+                'errors' => $ex->getErrors(),
+            ], 422);
+        } catch (NotFoundException $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 404);
         } catch (\Exception $ex) {
-            Helper::trackingError($this->module, $ex->getMessage());
+            Helper::trackingError('user', $ex->getMessage());
             return response()->json([
                 'status' => 'error',
                 'message' => 'An error occurred while processing the request',
@@ -154,80 +145,23 @@ class UserController extends Controller
     public function destroy(User $user): JsonResponse
     {
         try {
-            $oldValue = $user->toArray();
-            
-            // Set deleted_by and active before soft delete
-            $user->deleted_by = auth()->user()->id ?? 0;
-            $user->active = false;
-            $user->save();
-            
-            // Soft delete
-            $user->delete();
-
-            $data_log['action'] = getAction($this->module, 'destroy');
-            $data_log['obj_action'] = json_encode(array($user->id));
-            $data_log['old_value'] = json_encode($oldValue);
-            Helper::addLog($data_log);
+            $this->userService->delete($user->id);
 
             return response()->json([
                 'status' => 'success',
                 'message' => 'Data deleted successfully',
             ]);
+        } catch (NotFoundException $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 404);
         } catch (\Exception $ex) {
-            Helper::trackingError($this->module, $ex->getMessage());
+            Helper::trackingError('user', $ex->getMessage());
             return response()->json([
                 'status' => 'error',
                 'message' => 'An error occurred while processing the request',
             ], 500);
         }
-    }
-
-    /**
-     * Get data request for create/update
-     *
-     * @param UserRequest $req
-     * @param string|null $action
-     * @return array
-     */
-    private function getDataRequest(UserRequest $req, ?string $action = null): array
-    {
-        $baseData = [
-            'name' => $req->name,
-            'email' => $req->email,
-        ];
-
-        // Add password if provided (only hash when password is present)
-        $passwordData = $req->filled('password')
-            ? ['password' => Hash::make($req->password)]
-            : [];
-
-        // Get audit fields based on action
-        $auditData = $this->getAuditData($action);
-
-        return array_merge($baseData, $passwordData, $auditData);
-    }
-
-    /**
-     * Get audit fields (created_at, updated_at, created_by, updated_by) based on action
-     *
-     * @param string|null $action
-     * @return array
-     */
-    private function getAuditData(?string $action): array
-    {
-        $userId = auth()->id() ?? 0;
-        $timestamp = Carbon::now()->toDateTimeString();
-
-        return match ($action) {
-            'create' => [
-                'created_at' => $timestamp,
-                'created_by' => $userId,
-            ],
-            'update' => [
-                'updated_at' => $timestamp,
-                'updated_by' => $userId,
-            ],
-            default => [],
-        };
     }
 }
