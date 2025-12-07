@@ -28,7 +28,6 @@ git commit -m "fix: resolve login error #456"
 # Chuyển sang nhánh dev
 git checkout dev
 git pull origin dev
-
 # Tạo nhánh feature mới
 git checkout -b feat/your_feature_name
 
