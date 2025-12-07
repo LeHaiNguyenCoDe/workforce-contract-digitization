@@ -127,6 +127,20 @@ return [
             'path' => storage_path('logs/laravel.log'),
         ],
 
+        'custom_error' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/custom_error.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'replace_placeholders' => true,
+        ],
+
+        'track_info' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/track_info.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'replace_placeholders' => true,
+        ],
+
     ],
 
 ];
