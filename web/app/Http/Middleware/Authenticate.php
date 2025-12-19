@@ -15,9 +15,9 @@ class Authenticate extends Middleware
      */
     protected function redirectTo($request)
     {
-        if (! $request->expectsJson()) {
-            Auth::logout();
-            return route('getLogin');
-        }
+        // Đối với API, ta không redirect sang trang login mà để Laravel
+        // trả về response 401 (Unauthorized). Việc trả về null ở đây sẽ
+        // tránh lỗi "Route [getLogin] not defined" khi gọi các endpoint API.
+        return null;
     }
 }
