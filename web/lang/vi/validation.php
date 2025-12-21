@@ -1,0 +1,52 @@
+<?php
+
+return [
+    'required' => 'Trường :attribute là bắt buộc.',
+    'email' => ':attribute phải là địa chỉ email hợp lệ.',
+    'string' => ':attribute phải là chuỗi ký tự.',
+    'integer' => ':attribute phải là số nguyên.',
+    'min' => [
+        'numeric' => ':attribute phải tối thiểu :min.',
+        'string' => ':attribute phải có ít nhất :min ký tự.',
+    ],
+    'max' => [
+        'numeric' => ':attribute không được vượt quá :max.',
+        'string' => ':attribute không được vượt quá :max ký tự.',
+    ],
+    'unique' => ':attribute đã tồn tại.',
+    'exists' => ':attribute không tồn tại.',
+    'in' => ':attribute được chọn không hợp lệ.',
+    'boolean' => ':attribute phải là true hoặc false.',
+    'date' => ':attribute phải là ngày hợp lệ.',
+    'after_or_equal' => ':attribute phải sau hoặc bằng :date.',
+    'exists_products' => 'Sản phẩm được chọn không tồn tại.',
+    'exists_product_variants' => 'Biến thể sản phẩm được chọn không tồn tại.',
+
+    'attributes' => [
+        'email' => 'Email',
+        'password' => 'Mật khẩu',
+        'name' => 'Tên',
+        'phone' => 'Số điện thoại',
+        'address' => 'Địa chỉ',
+        'full_name' => 'Họ và tên',
+        'address_line' => 'Địa chỉ',
+        'ward' => 'Phường/Xã',
+        'district' => 'Quận/Huyện',
+        'province' => 'Tỉnh/Thành phố',
+        'payment_method' => 'Phương thức thanh toán',
+        'product_id' => 'Mã sản phẩm',
+        'variant_id' => 'Mã biến thể',
+        'qty' => 'Số lượng',
+        'promotion_code' => 'Mã khuyến mãi',
+        'use_points' => 'Sử dụng điểm',
+        'rating' => 'Đánh giá',
+        'content' => 'Nội dung',
+        'code' => 'Mã',
+        'type' => 'Loại',
+        'value' => 'Giá trị',
+        'starts_at' => 'Ngày bắt đầu',
+        'ends_at' => 'Ngày kết thúc',
+        'is_active' => 'Trạng thái',
+    ],
+];
+

@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -26,6 +27,7 @@ class User extends Authenticatable
         'updated_by',
         'deleted_by',
         'active',
+        'language',
     ];
 
     /**
@@ -49,5 +51,24 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Get the roles that belong to the user.
+     */
+    public function roles(): BelongsToMany
+    {
+        return $this->belongsToMany(Role::class, 'user_role')
+            ->withTimestamps();
+    }
+
+    /**
+     * Get the rights that belong to the user.
+     */
+    public function rights(): BelongsToMany
+    {
+        return $this->belongsToMany(Right::class, 'user_right')
+            ->withPivot('suppress')
+            ->withTimestamps();
     }
 }

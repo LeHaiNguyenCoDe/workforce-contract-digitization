@@ -30,12 +30,23 @@ class Helper
         }
     }
 
-    public static function trackingError($module, $msg_log, $action = null, $channel = 'custom_error')
+    public static function trackingError($module, $msg_log, $action = null, $channel = 'daily_errors')
     {
         if($action==null){
             $action = @Route::currentRouteAction() ?? "undefine";
         }
-        Log::channel($channel)->error($module.'_'.$action.":".$msg_log);
+        
+        // Group errors by module and action
+        $context = [
+            'module' => $module,
+            'action' => $action,
+            'route' => request()->fullUrl(),
+            'method' => request()->method(),
+            'ip' => request()->ip(),
+            'user_id' => auth()->id(),
+        ];
+        
+        Log::channel($channel)->error("[{$module}] [{$action}] {$msg_log}", $context);
     }
 
 
