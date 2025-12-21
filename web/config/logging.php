@@ -54,7 +54,7 @@ return [
 
         'stack' => [
             'driver' => 'stack',
-            'channels' => explode(',', (string) env('LOG_STACK', 'single')),
+            'channels' => explode(',', (string) env('LOG_STACK', 'daily')),
             'ignore_exceptions' => false,
         ],
 
@@ -68,6 +68,22 @@ return [
         'daily' => [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => env('LOG_DAILY_DAYS', 14),
+            'replace_placeholders' => true,
+        ],
+        
+        'daily_errors' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/errors.log'),
+            'level' => 'error',
+            'days' => env('LOG_DAILY_DAYS', 30),
+            'replace_placeholders' => true,
+        ],
+        
+        'daily_api' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/api.log'),
             'level' => env('LOG_LEVEL', 'debug'),
             'days' => env('LOG_DAILY_DAYS', 14),
             'replace_placeholders' => true,
@@ -127,17 +143,83 @@ return [
             'path' => storage_path('logs/laravel.log'),
         ],
 
-        'custom_error' => [
-            'driver' => 'single',
-            'path' => storage_path('logs/custom_error.log'),
-            'level' => env('LOG_LEVEL', 'debug'),
+        'error_database' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/error_database.log'),
+            'level' => 'error',
+            'days' => env('LOG_DAILY_DAYS', 30),
             'replace_placeholders' => true,
+            'tap' => [App\Logging\ErrorDatabaseTap::class],
+        ],
+
+        'error_auth' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/error_auth.log'),
+            'level' => 'error',
+            'days' => env('LOG_DAILY_DAYS', 30),
+            'replace_placeholders' => true,
+            'tap' => [App\Logging\ErrorAuthTap::class],
+        ],
+
+        'error_validation' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/error_validation.log'),
+            'level' => 'error',
+            'days' => env('LOG_DAILY_DAYS', 30),
+            'replace_placeholders' => true,
+            'tap' => [App\Logging\ErrorValidationTap::class],
+        ],
+
+        'error_route' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/error_route.log'),
+            'level' => 'error',
+            'days' => env('LOG_DAILY_DAYS', 30),
+            'replace_placeholders' => true,
+            'tap' => [App\Logging\ErrorRouteTap::class],
+        ],
+
+        'error_model' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/error_model.log'),
+            'level' => 'error',
+            'days' => env('LOG_DAILY_DAYS', 30),
+            'replace_placeholders' => true,
+            'tap' => [App\Logging\ErrorModelTap::class],
+        ],
+
+        'error_business' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/error_business.log'),
+            'level' => 'error',
+            'days' => env('LOG_DAILY_DAYS', 30),
+            'replace_placeholders' => true,
+            'tap' => [App\Logging\ErrorBusinessTap::class],
+        ],
+
+        'error_method' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/error_method.log'),
+            'level' => 'error',
+            'days' => env('LOG_DAILY_DAYS', 30),
+            'replace_placeholders' => true,
+            'tap' => [App\Logging\ErrorMethodTap::class],
+        ],
+
+        'error_general' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/error_general.log'),
+            'level' => 'error',
+            'days' => env('LOG_DAILY_DAYS', 30),
+            'replace_placeholders' => true,
+            'tap' => [App\Logging\ErrorGeneralTap::class],
         ],
 
         'track_info' => [
-            'driver' => 'single',
+            'driver' => 'daily',
             'path' => storage_path('logs/track_info.log'),
             'level' => env('LOG_LEVEL', 'debug'),
+            'days' => env('LOG_DAILY_DAYS', 14),
             'replace_placeholders' => true,
         ],
 
