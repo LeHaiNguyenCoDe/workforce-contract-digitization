@@ -3,8 +3,6 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use Illuminate\Http\Request;
-use Illuminate\Auth\AuthenticationException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -16,18 +14,81 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->api(prepend: [
             \Illuminate\Http\Middleware\HandleCors::class,
+            \App\Http\Middleware\SetLocale::class,
+        ]);
+        
+        // Register admin middleware alias
+        $middleware->alias([
+            'admin' => \App\Http\Middleware\AdminMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        // Trả về JSON 401 cho API khi chưa xác thực, không redirect tới route "login"
-        $exceptions->respond(function ($response, \Throwable $e, Request $request) {
-            if ($e instanceof AuthenticationException && $request->is('api/*')) {
+        // Report all exceptions to appropriate error log channel
+        $exceptions->report(function (\Throwable $e) {
+            $channel = \App\Logging\ErrorChannelResolver::getChannel($e);
+            \Log::channel($channel)->error($e->getMessage(), [
+                'exception' => $e,
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+        });
+
+        // Handle authentication exceptions for API
+        $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, \Illuminate\Http\Request $request) {
+            if ($request->expectsJson() || $request->is('api/*')) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Unauthenticated.',
+                    'message' => 'Unauthenticated',
                 ], 401);
             }
+        });
 
-            return $response;
+        // Handle custom exceptions for API
+        $exceptions->render(function (\App\Exceptions\ValidationException $e, \Illuminate\Http\Request $request) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return $e->render($request);
+            }
+        });
+
+        $exceptions->render(function (\App\Exceptions\NotFoundException $e, \Illuminate\Http\Request $request) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return $e->render($request);
+            }
+        });
+
+        $exceptions->render(function (\App\Exceptions\BusinessLogicException $e, \Illuminate\Http\Request $request) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return $e->render($request);
+            }
+        });
+
+        $exceptions->render(function (\App\Exceptions\AuthenticationException $e, \Illuminate\Http\Request $request) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return $e->render($request);
+            }
+        });
+
+        // Handle all other exceptions for API
+        $exceptions->render(function (\Throwable $e, \Illuminate\Http\Request $request) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                // Log the exception to appropriate channel
+                $channel = \App\Logging\ErrorChannelResolver::getChannel($e);
+                \Log::channel($channel)->error('Unhandled exception', [
+                    'exception' => $e,
+                    'message' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+
+                // Return error response
+                return response()->json([
+                    'status' => 'error',
+                    'message' => config('app.debug') ? $e->getMessage() : 'Internal server error',
+                    'file' => config('app.debug') ? $e->getFile() : null,
+                    'line' => config('app.debug') ? $e->getLine() : null,
+                ], 500);
+            }
         });
     })->create();

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exceptions\AuthenticationException;
 use App\Helpers\Helper;
+use App\Helpers\LanguageHelper;
 use App\Http\Requests\AuthRequest;
 use App\Services\AuthService;
 use Illuminate\Http\JsonResponse;
@@ -30,16 +31,15 @@ class AuthController extends Controller
 
             $response = response()->json([
                 'status' => 'success',
-                'message' => 'Login successful',
+                'message' => LanguageHelper::apiMessage('login_success'),
                 'data' => [
                     'user' => $result['user'],
                 ],
             ]);
 
-            // Add session cookie if session is available
-            if ($result['session_id']) {
-                $response->withCookie(cookie('laravel_session', $result['session_id'], 120));
-            }
+            // Laravel automatically sets the session cookie via Auth::login()
+            // The cookie will be included in the Set-Cookie header automatically
+            // No need to manually set it here as it's already handled by the session middleware
 
             return $response;
         } catch (AuthenticationException $ex) {
@@ -51,7 +51,7 @@ class AuthController extends Controller
             Helper::trackingError('auth', $ex->getMessage());
             return response()->json([
                 'status' => 'error',
-                'message' => 'An error occurred while processing the request',
+                'message' => LanguageHelper::apiMessage('error'),
             ], 500);
         }
     }
@@ -66,13 +66,13 @@ class AuthController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Logout successful',
+                'message' => LanguageHelper::apiMessage('logout_success'),
             ]);
         } catch (\Exception $ex) {
             Helper::trackingError('auth', $ex->getMessage());
             return response()->json([
                 'status' => 'error',
-                'message' => 'An error occurred while processing the request',
+                'message' => LanguageHelper::apiMessage('error'),
             ], 500);
         }
     }
@@ -98,7 +98,7 @@ class AuthController extends Controller
             Helper::trackingError('auth', $ex->getMessage());
             return response()->json([
                 'status' => 'error',
-                'message' => 'An error occurred while processing the request',
+                'message' => LanguageHelper::apiMessage('error'),
             ], 500);
         }
     }

@@ -2,107 +2,104 @@
 
 namespace App\Http\Controllers\Store;
 
+use App\Exceptions\NotFoundException;
 use App\Http\Controllers\Controller;
-use App\Models\Cart;
+use App\Http\Requests\Store\CartRequest;
 use App\Models\CartItem;
-use App\Models\Product;
-use App\Models\ProductVariant;
+use App\Services\CartService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class CartController extends Controller
 {
-    protected function resolveCart(Request $request): Cart
-    {
-        $user = Auth::user();
-
-        if ($user) {
-            return Cart::firstOrCreate(['user_id' => $user->id]);
-        }
-
-        $sessionId = $request->session()->getId();
-
-        return Cart::firstOrCreate(['session_id' => $sessionId]);
+    public function __construct(
+        private CartService $cartService
+    ) {
     }
 
+    /**
+     * Get cart with items
+     */
     public function show(Request $request): JsonResponse
     {
-        $cart = $this->resolveCart($request)->load('items.product');
+        try {
+            $cartData = $this->cartService->getCart($request);
 
-        $items = $cart->items->map(function (CartItem $item) {
-            return [
-                'id' => $item->id,
-                'product' => [
-                    'id' => $item->product->id,
-                    'name' => $item->product->name,
-                    'thumbnail' => $item->product->thumbnail,
-                ],
-                'qty' => $item->qty,
-                'price' => $item->price,
-                'total' => $item->qty * $item->price,
-            ];
-        });
-
-        $total = $items->sum('total');
-
-        return response()->json([
-            'data' => [
-                'items' => $items,
-                'total' => $total,
-            ],
-        ]);
+            return response()->json([
+                'status' => 'success',
+                'data' => $cartData,
+            ]);
+        } catch (\Exception $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while processing the request',
+            ], 500);
+        }
     }
 
-    public function addItem(Request $request): JsonResponse
+    /**
+     * Add item to cart
+     */
+    public function addItem(CartRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'product_id' => ['required', 'integer', 'exists:products,id'],
-            'variant_id' => ['nullable', 'integer', 'exists:product_variants,id'],
-            'qty' => ['required', 'integer', 'min:1'],
-        ]);
+        try {
+            $this->cartService->addItem($request, $request->validated());
 
-        $cart = $this->resolveCart($request);
-
-        $product = Product::findOrFail($validated['product_id']);
-        $variantId = $validated['variant_id'] ?? null;
-
-        $item = $cart->items()->firstOrCreate([
-            'product_id' => $product->id,
-            'product_variant_id' => $variantId,
-        ], [
-            'qty' => 0,
-            'price' => $product->price,
-        ]);
-
-        $item->qty += $validated['qty'];
-        $item->save();
-
-        return response()->json([
-            'message' => 'Item added to cart',
-        ], 201);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Item added to cart',
+            ], 201);
+        } catch (NotFoundException $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 404);
+        } catch (\Exception $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while processing the request',
+            ], 500);
+        }
     }
 
-    public function updateItem(CartItem $item, Request $request): JsonResponse
+    /**
+     * Update cart item quantity
+     */
+    public function updateItem(CartItem $item, CartRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'qty' => ['required', 'integer', 'min:1'],
-        ]);
+        try {
+            $this->cartService->updateItem($item, $request->validated()['qty']);
 
-        $item->update(['qty' => $validated['qty']]);
-
-        return response()->json([
-            'message' => 'Cart item updated',
-        ]);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Cart item updated',
+            ]);
+        } catch (\Exception $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while processing the request',
+            ], 500);
+        }
     }
 
+    /**
+     * Remove item from cart
+     */
     public function removeItem(CartItem $item): JsonResponse
     {
-        $item->delete();
+        try {
+            $this->cartService->removeItem($item);
 
-        return response()->json([
-            'message' => 'Cart item removed',
-        ]);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Cart item removed',
+            ]);
+        } catch (\Exception $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while processing the request',
+            ], 500);
+        }
     }
 }
 

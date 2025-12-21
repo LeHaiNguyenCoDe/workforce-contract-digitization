@@ -2,82 +2,243 @@
 
 namespace App\Http\Controllers\Store;
 
+use App\Exceptions\NotFoundException;
 use App\Http\Controllers\Controller;
-use App\Models\Stock;
+use App\Http\Requests\Store\WarehouseStoreRequest;
+use App\Http\Requests\Store\WarehouseUpdateRequest;
 use App\Models\Warehouse;
+use App\Services\WarehouseService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class WarehouseController extends Controller
 {
-    public function index(): JsonResponse
-    {
-        $warehouses = Warehouse::query()
-            ->select('id', 'name', 'code', 'address', 'is_active')
-            ->orderBy('name')
-            ->get();
-
-        return response()->json(['data' => $warehouses]);
-    }
-
-    public function store(Request $request): JsonResponse
-    {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'code' => ['required', 'string', 'max:50', 'unique:warehouses,code'],
-            'address' => ['nullable', 'string', 'max:255'],
-            'is_active' => ['sometimes', 'boolean'],
-        ]);
-
-        $warehouse = Warehouse::create($validated);
-
-        return response()->json([
-            'message' => 'Warehouse created',
-            'data' => $warehouse,
-        ], 201);
-    }
-
-    public function show(Warehouse $warehouse): JsonResponse
-    {
-        return response()->json(['data' => $warehouse]);
-    }
-
-    public function update(Warehouse $warehouse, Request $request): JsonResponse
-    {
-        $validated = $request->validate([
-            'name' => ['sometimes', 'string', 'max:255'],
-            'code' => ['sometimes', 'string', 'max:50', 'unique:warehouses,code,'.$warehouse->id],
-            'address' => ['nullable', 'string', 'max:255'],
-            'is_active' => ['sometimes', 'boolean'],
-        ]);
-
-        $warehouse->update($validated);
-
-        return response()->json([
-            'message' => 'Warehouse updated',
-            'data' => $warehouse,
-        ]);
-    }
-
-    public function destroy(Warehouse $warehouse): JsonResponse
-    {
-        $warehouse->delete();
-
-        return response()->json([
-            'message' => 'Warehouse deleted',
-        ]);
+    public function __construct(
+        private WarehouseService $warehouseService
+    ) {
     }
 
     /**
-     * Xem tồn kho theo kho.
+     * Get all warehouses
+     */
+    public function index(): JsonResponse
+    {
+        try {
+            $warehouses = $this->warehouseService->getAll();
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $warehouses,
+            ]);
+        } catch (\Exception $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while processing the request',
+            ], 500);
+        }
+    }
+
+    /**
+     * Create warehouse
+     */
+    public function store(WarehouseStoreRequest $request): JsonResponse
+    {
+        try {
+            $warehouse = $this->warehouseService->create($request->validated());
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Warehouse created',
+                'data' => $warehouse,
+            ], 201);
+        } catch (\Exception $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while processing the request',
+            ], 500);
+        }
+    }
+
+    /**
+     * Get warehouse details
+     */
+    public function show(Warehouse $warehouse): JsonResponse
+    {
+        try {
+            $warehouseData = $this->warehouseService->getById($warehouse->id);
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $warehouseData,
+            ]);
+        } catch (NotFoundException $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 404);
+        } catch (\Exception $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while processing the request',
+            ], 500);
+        }
+    }
+
+    /**
+     * Update warehouse
+     */
+    public function update(Warehouse $warehouse, WarehouseUpdateRequest $request): JsonResponse
+    {
+        try {
+            $warehouseData = $this->warehouseService->update($warehouse->id, $request->validated());
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Warehouse updated',
+                'data' => $warehouseData,
+            ]);
+        } catch (NotFoundException $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 404);
+        } catch (\Exception $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while processing the request',
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete warehouse
+     */
+    public function destroy(Warehouse $warehouse): JsonResponse
+    {
+        try {
+            $this->warehouseService->delete($warehouse->id);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Warehouse deleted',
+            ]);
+        } catch (NotFoundException $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 404);
+        } catch (\Exception $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while processing the request',
+            ], 500);
+        }
+    }
+
+    /**
+     * Get stocks by warehouse
      */
     public function stocks(Warehouse $warehouse): JsonResponse
     {
-        $stocks = Stock::with('product:id,name,slug')
-            ->where('warehouse_id', $warehouse->id)
-            ->get();
+        try {
+            if (!$warehouse || !$warehouse->id) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Warehouse not found',
+                ], 404);
+            }
 
-        return response()->json(['data' => $stocks]);
+            $stocks = $this->warehouseService->getStocks($warehouse->id);
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $stocks,
+            ]);
+        } catch (NotFoundException $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 404);
+        } catch (\Exception $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while processing the request',
+            ], 500);
+        }
+    }
+
+    /**
+     * Update stock for warehouse
+     */
+    public function updateStock(Warehouse $warehouse, Request $request): JsonResponse
+    {
+        try {
+            if (!$warehouse || !$warehouse->id) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Warehouse not found',
+                ], 404);
+            }
+
+            $request->validate([
+                'product_id' => 'required|integer|exists:products,id',
+                'product_variant_id' => 'sometimes|integer|exists:product_variants,id',
+                'quantity' => 'required|integer',
+                'type' => 'required|string|in:in,out,adjust',
+                'note' => 'sometimes|string',
+            ]);
+
+            $stock = $this->warehouseService->updateStock($warehouse->id, $request->only([
+                'product_id',
+                'product_variant_id',
+                'quantity',
+                'type',
+                'note'
+            ]));
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Stock updated',
+                'data' => $stock,
+            ]);
+        } catch (NotFoundException $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 404);
+        } catch (\Exception $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while processing the request',
+            ], 500);
+        }
+    }
+
+    /**
+     * Get stock movements for warehouse
+     */
+    public function stockMovements(Warehouse $warehouse, Request $request): JsonResponse
+    {
+        try {
+            if (!$warehouse || !$warehouse->id) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Warehouse not found',
+                ], 404);
+            }
+
+            $perPage = $request->query('per_page', 20);
+            $movements = $this->warehouseService->getStockMovements($warehouse->id, $perPage);
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $movements,
+            ]);
+        } catch (\Exception $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while processing the request',
+            ], 500);
+        }
     }
 }
 

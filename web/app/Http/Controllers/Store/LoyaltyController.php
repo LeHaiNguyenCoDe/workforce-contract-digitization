@@ -3,32 +3,36 @@
 namespace App\Http\Controllers\Store;
 
 use App\Http\Controllers\Controller;
-use App\Models\LoyaltyAccount;
+use App\Services\LoyaltyService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class LoyaltyController extends Controller
 {
+    public function __construct(
+        private LoyaltyService $loyaltyService
+    ) {
+    }
+
     /**
-     * Xem tài khoản điểm & lịch sử giao dịch của user hiện tại.
+     * Get loyalty account with transactions
      */
-    public function show(Request $request): JsonResponse
+    public function show(): JsonResponse
     {
-        $user = Auth::user();
+        try {
+            $userId = Auth::id();
+            $account = $this->loyaltyService->getAccount($userId);
 
-        $account = LoyaltyAccount::firstOrCreate(
-            ['user_id' => $user->id],
-            ['points' => 0]
-        );
-
-        $account->load(['transactions' => function ($q) {
-            $q->latest()->limit(50);
-        }]);
-
-        return response()->json([
-            'data' => $account,
-        ]);
+            return response()->json([
+                'status' => 'success',
+                'data' => $account,
+            ]);
+        } catch (\Exception $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while processing the request',
+            ], 500);
+        }
     }
 }
 

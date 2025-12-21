@@ -2,59 +2,87 @@
 
 namespace App\Http\Controllers\Store;
 
+use App\Exceptions\NotFoundException;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Store\WishlistRequest;
 use App\Models\Product;
-use App\Models\WishlistItem;
+use App\Services\WishlistService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class WishlistController extends Controller
 {
-    public function index(Request $request): JsonResponse
-    {
-        $user = Auth::user();
-
-        $items = WishlistItem::with('product:id,name,price,thumbnail')
-            ->where('user_id', $user->id)
-            ->get();
-
-        return response()->json([
-            'data' => $items,
-        ]);
+    public function __construct(
+        private WishlistService $wishlistService
+    ) {
     }
 
-    public function store(Request $request): JsonResponse
+    /**
+     * Get user wishlist
+     */
+    public function index(): JsonResponse
     {
-        $validated = $request->validate([
-            'product_id' => ['required', 'integer', 'exists:products,id'],
-        ]);
+        try {
+            $userId = Auth::id();
+            $items = $this->wishlistService->getByUserId($userId);
 
-        $user = Auth::user();
-
-        $product = Product::findOrFail($validated['product_id']);
-
-        WishlistItem::firstOrCreate([
-            'user_id' => $user->id,
-            'product_id' => $product->id,
-        ]);
-
-        return response()->json([
-            'message' => 'Added to wishlist',
-        ], 201);
+            return response()->json([
+                'status' => 'success',
+                'data' => $items,
+            ]);
+        } catch (\Exception $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while processing the request',
+            ], 500);
+        }
     }
 
+    /**
+     * Add product to wishlist
+     */
+    public function store(WishlistRequest $request): JsonResponse
+    {
+        try {
+            $userId = Auth::id();
+            $this->wishlistService->addItem($userId, $request->validated()['product_id']);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Added to wishlist',
+            ], 201);
+        } catch (NotFoundException $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 404);
+        } catch (\Exception $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while processing the request',
+            ], 500);
+        }
+    }
+
+    /**
+     * Remove product from wishlist
+     */
     public function destroy(Product $product): JsonResponse
     {
-        $user = Auth::user();
+        try {
+            $userId = Auth::id();
+            $this->wishlistService->removeItem($userId, $product->id);
 
-        WishlistItem::where('user_id', $user->id)
-            ->where('product_id', $product->id)
-            ->delete();
-
-        return response()->json([
-            'message' => 'Removed from wishlist',
-        ]);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Removed from wishlist',
+            ]);
+        } catch (\Exception $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while processing the request',
+            ], 500);
+        }
     }
 }
 

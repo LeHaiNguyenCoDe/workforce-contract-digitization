@@ -2,77 +2,223 @@
 
 namespace App\Http\Controllers\Store;
 
+use App\Exceptions\NotFoundException;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Store\PromotionStoreRequest;
+use App\Http\Requests\Store\PromotionUpdateRequest;
 use App\Models\Promotion;
+use App\Services\PromotionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class PromotionController extends Controller
 {
+    public function __construct(
+        private PromotionService $promotionService
+    ) {
+    }
+
+    /**
+     * Get all promotions
+     */
     public function index(Request $request): JsonResponse
     {
-        $promotions = Promotion::query()
-            ->with('items')
-            ->orderByDesc('starts_at')
-            ->paginate($request->query('per_page', 10));
+        try {
+            $perPage = $request->query('per_page', 10);
+            $promotions = $this->promotionService->getAll($perPage);
 
-        return response()->json($promotions);
+            return response()->json([
+                'status' => 'success',
+                'data' => $promotions,
+            ]);
+        } catch (\Exception $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while processing the request',
+            ], 500);
+        }
     }
 
-    public function store(Request $request): JsonResponse
+    /**
+     * Create promotion
+     */
+    public function store(PromotionStoreRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'code' => ['nullable', 'string', 'max:50', 'unique:promotions,code'],
-            'type' => ['required', 'in:percent,fixed_amount'],
-            'value' => ['required', 'integer', 'min:1'],
-            'starts_at' => ['nullable', 'date'],
-            'ends_at' => ['nullable', 'date', 'after_or_equal:starts_at'],
-            'is_active' => ['sometimes', 'boolean'],
-        ]);
+        try {
+            $promotion = $this->promotionService->create($request->validated());
 
-        $promotion = Promotion::create($validated);
-
-        return response()->json([
-            'message' => 'Promotion created',
-            'data' => $promotion,
-        ], 201);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Promotion created',
+                'data' => $promotion,
+            ], 201);
+        } catch (\Exception $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while processing the request',
+            ], 500);
+        }
     }
 
+    /**
+     * Get promotion details
+     */
     public function show(Promotion $promotion): JsonResponse
     {
-        $promotion->load('items');
+        try {
+            $promotionData = $this->promotionService->getById($promotion->id);
 
-        return response()->json(['data' => $promotion]);
+            return response()->json([
+                'status' => 'success',
+                'data' => $promotionData,
+            ]);
+        } catch (NotFoundException $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 404);
+        } catch (\Exception $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while processing the request',
+            ], 500);
+        }
     }
 
-    public function update(Promotion $promotion, Request $request): JsonResponse
+    /**
+     * Update promotion
+     */
+    public function update(Promotion $promotion, PromotionUpdateRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'name' => ['sometimes', 'string', 'max:255'],
-            'code' => ['sometimes', 'string', 'max:50', 'unique:promotions,code,'.$promotion->id],
-            'type' => ['sometimes', 'in:percent,fixed_amount'],
-            'value' => ['sometimes', 'integer', 'min:1'],
-            'starts_at' => ['nullable', 'date'],
-            'ends_at' => ['nullable', 'date', 'after_or_equal:starts_at'],
-            'is_active' => ['sometimes', 'boolean'],
-        ]);
+        try {
+            $promotionData = $this->promotionService->update($promotion->id, $request->validated());
 
-        $promotion->update($validated);
-
-        return response()->json([
-            'message' => 'Promotion updated',
-            'data' => $promotion,
-        ]);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Promotion updated',
+                'data' => $promotionData,
+            ]);
+        } catch (NotFoundException $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 404);
+        } catch (\Exception $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while processing the request',
+            ], 500);
+        }
     }
 
+    /**
+     * Delete promotion
+     */
     public function destroy(Promotion $promotion): JsonResponse
     {
-        $promotion->delete();
+        try {
+            if (!$promotion || !$promotion->id) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Promotion not found',
+                ], 404);
+            }
 
-        return response()->json([
-            'message' => 'Promotion deleted',
-        ]);
+            $this->promotionService->delete($promotion->id);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Promotion deleted',
+            ]);
+        } catch (NotFoundException $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 404);
+        } catch (\Exception $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while processing the request',
+            ], 500);
+        }
+    }
+
+    /**
+     * Add item to promotion
+     */
+    public function addItem(Promotion $promotion, Request $request): JsonResponse
+    {
+        try {
+            if (!$promotion || !$promotion->id) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Promotion not found',
+                ], 404);
+            }
+
+            $request->validate([
+                'product_id' => 'sometimes|integer|exists:products,id',
+                'category_id' => 'sometimes|integer|exists:categories,id',
+                'min_qty' => 'required|integer|min:1',
+            ]);
+
+            if (!$request->has('product_id') && !$request->has('category_id')) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Either product_id or category_id is required',
+                ], 422);
+            }
+
+            $item = $this->promotionService->addItem($promotion->id, $request->only(['product_id', 'category_id', 'min_qty']));
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Item added to promotion',
+                'data' => $item,
+            ], 201);
+        } catch (NotFoundException $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 404);
+        } catch (\Exception $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while processing the request',
+            ], 500);
+        }
+    }
+
+    /**
+     * Remove item from promotion
+     */
+    public function removeItem(Promotion $promotion, int $item): JsonResponse
+    {
+        try {
+            if (!$promotion || !$promotion->id) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Promotion not found',
+                ], 404);
+            }
+
+            $this->promotionService->removeItem($promotion->id, $item);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Item removed from promotion',
+            ]);
+        } catch (NotFoundException $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 404);
+        } catch (\Exception $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while processing the request',
+            ], 500);
+        }
     }
 }
 
