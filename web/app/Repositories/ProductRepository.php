@@ -29,7 +29,7 @@ class ProductRepository implements ProductRepositoryInterface
         }
 
         return $query
-            ->select('id', 'category_id', 'name', 'slug', 'price', 'thumbnail', 'short_description')
+            ->select('id', 'category_id', 'supplier_id', 'name', 'slug', 'sku', 'price', 'thumbnail', 'short_description', 'stock_qty', 'min_stock_level', 'warehouse_type', 'storage_location')
             ->paginate($perPage);
     }
 
@@ -44,7 +44,7 @@ class ProductRepository implements ProductRepositoryInterface
     {
         return Product::query()
             ->where('category_id', $categoryId)
-            ->select('id', 'category_id', 'name', 'slug', 'price', 'thumbnail', 'short_description')
+            ->select('id', 'category_id', 'supplier_id', 'name', 'slug', 'sku', 'price', 'thumbnail', 'short_description', 'stock_qty', 'min_stock_level', 'warehouse_type', 'storage_location')
             ->paginate($perPage);
     }
 

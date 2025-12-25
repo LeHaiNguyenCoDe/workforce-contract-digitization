@@ -10,6 +10,7 @@ use App\Http\Controllers\Store\OrderController;
 use App\Http\Controllers\Store\ProductController;
 use App\Http\Controllers\Store\PromotionController;
 use App\Http\Controllers\Store\ReviewController;
+use App\Http\Controllers\Store\SupplierController;
 use App\Http\Controllers\Store\WarehouseController;
 use App\Http\Controllers\Store\WishlistController;
 use App\Http\Controllers\UserController;
@@ -139,6 +140,9 @@ Route::prefix('v1')->middleware([StartSession::class])->group(function () {
         Route::get('orders/{order}', [OrderController::class, 'show']); // Order details
         Route::put('orders/{order}/status', [OrderController::class, 'updateStatus']); // Update order status
         Route::put('orders/{order}/cancel', [OrderController::class, 'cancel']); // Cancel order
+        Route::get('orders/{order}/check-stock', [OrderController::class, 'checkStock']); 
+        Route::post('orders/{order}/assign-shipper', [OrderController::class, 'assignShipper']);
+        Route::put('orders/{order}/tracking', [OrderController::class, 'updateTracking']);
 
         // Promotion Management
         Route::apiResource('promotions', PromotionController::class);
@@ -146,10 +150,16 @@ Route::prefix('v1')->middleware([StartSession::class])->group(function () {
         Route::delete('promotions/{promotion}/items/{item}', [PromotionController::class, 'removeItem']);
 
         // Warehouse Management
+        Route::get('warehouses/dashboard-stats', [WarehouseController::class, 'dashboardStats']);
+        Route::get('warehouses/quality-checks', [WarehouseController::class, 'qualityChecks']);
+        Route::post('warehouses/quality-checks', [WarehouseController::class, 'storeQualityCheck']);
+        Route::put('warehouses/quality-checks/{id}', [WarehouseController::class, 'updateQualityCheck']);
+        Route::delete('warehouses/quality-checks/{id}', [WarehouseController::class, 'deleteQualityCheck']);
         Route::apiResource('warehouses', WarehouseController::class);
         Route::get('warehouses/{warehouse}/stocks', [WarehouseController::class, 'stocks']);
         Route::post('warehouses/{warehouse}/stocks', [WarehouseController::class, 'updateStock']);
         Route::get('warehouses/{warehouse}/movements', [WarehouseController::class, 'stockMovements']);
+        Route::apiResource('suppliers', SupplierController::class);
 
         // Article/Blog Management
         Route::apiResource('articles', ArticleController::class);

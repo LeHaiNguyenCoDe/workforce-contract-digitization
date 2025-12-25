@@ -56,12 +56,11 @@ class AuthService
             $sessionId = $request->session()->getId();
         }
 
+        // Load roles relationship
+        $user->load('roles');
+
         return [
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-            ],
+            'user' => $this->formatUser($user),
             'session_id' => $sessionId,
         ];
     }
@@ -102,11 +101,34 @@ class AuthService
             throw new AuthenticationException('Unauthenticated');
         }
 
+        // Load roles relationship
+        $user->load('roles');
+
+        return $this->formatUser($user);
+    }
+
+    /**
+     * Format user data for API response
+     *
+     * @param  mixed  $user
+     * @return array
+     */
+    private function formatUser($user): array
+    {
         return [
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
+            'active' => $user->active ?? true,
+            'language' => $user->language ?? 'vi',
+            'roles' => $user->roles ? $user->roles->map(function ($role) {
+                return [
+                    'id' => $role->id,
+                    'name' => $role->name,
+                ];
+            })->toArray() : [],
             'created_at' => $user->created_at,
+            'updated_at' => $user->updated_at,
         ];
     }
 
@@ -132,4 +154,3 @@ class AuthService
         Helper::addLog($data_log);
     }
 }
-

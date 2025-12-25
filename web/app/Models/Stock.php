@@ -12,6 +12,9 @@ class Stock extends Model
         'product_id',
         'product_variant_id',
         'quantity',
+        'expiry_date',
+        'quality_status',
+        'quality_notes'
     ];
 
     public function warehouse(): BelongsTo

@@ -13,7 +13,8 @@
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
         "laravel-lang/common": "^3.0",
-        "laravel-lang/locales": "^3.0"
+        "laravel-lang/locales": "^3.0",
+        "laravel/sanctum": "^3.2"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -49,6 +50,7 @@
             "npm install",
             "npm run build"
         ],
+        "lint": "./vendor/bin/pint",
         "dev": [
             "Composer\\Config::disableProcessTimeout",
             "npx concurrently -c \"#93c5fd,#c4b5fd,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1\" \"npm run dev\" --names='server,queue,vite'"

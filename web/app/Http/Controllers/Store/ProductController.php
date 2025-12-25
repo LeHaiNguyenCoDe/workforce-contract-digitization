@@ -281,8 +281,8 @@ class ProductController extends Controller
             $request->validate([
                 'category_id' => 'required|integer|exists:categories,id',
                 'name' => 'required|string|max:255',
-                'slug' => 'required|string|max:255|unique:products,slug',
-                'price' => 'required|integer|min:0',
+                'slug' => 'sometimes|string|max:255|unique:products,slug',
+                'price' => 'sometimes|integer|min:0',
                 'short_description' => 'sometimes|string',
                 'description' => 'sometimes|string',
                 'thumbnail' => 'sometimes|string|url',
@@ -299,7 +299,7 @@ class ProductController extends Controller
         } catch (\Exception $ex) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'An error occurred while processing the request',
+                'message' => $ex->getMessage(),
             ], 500);
         }
     }
@@ -343,7 +343,7 @@ class ProductController extends Controller
         } catch (\Exception $ex) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'An error occurred while processing the request',
+                'message' => $ex->getMessage(),
             ], 500);
         }
     }

@@ -285,5 +285,84 @@ class OrderService
         $sessionId = $request->session()->getId();
         return Cart::with('items.product')->where('session_id', $sessionId)->first();
     }
+
+    /**
+     * Check if stock is available for all items in an order
+     */
+    public function checkStockAvailability(Order $order): array
+    {
+        $results = [];
+        $isAvailable = true;
+
+        foreach ($order->items as $item) {
+            $stock = \App\Models\Stock::where('product_id', $item->product_id)
+                ->where('product_variant_id', $item->product_variant_id)
+                ->sum('quantity');
+
+            $results[] = [
+                'product_id' => $item->product_id,
+                'name' => $item->product->name,
+                'requested' => $item->qty,
+                'available' => (int)$stock,
+                'is_sufficient' => $stock >= $item->qty
+            ];
+
+            if ($stock < $item->qty) {
+                $isAvailable = false;
+            }
+        }
+
+        return [
+            'is_available' => $isAvailable,
+            'items' => $results
+        ];
+    }
+
+    /**
+     * Reduce stock levels after order approval
+     */
+    public function updateStockLevels(Order $order): void
+    {
+        foreach ($order->items as $item) {
+            $stock = \App\Models\Stock::where('product_id', $item->product_id)
+                ->where('product_variant_id', $item->product_variant_id)
+                ->first();
+
+            if ($stock) {
+                $stock->decrement('quantity', $item->qty);
+                
+                // Record movement
+                \App\Models\StockMovement::create([
+                    'warehouse_id' => $stock->warehouse_id,
+                    'product_id' => $item->product_id,
+                    'product_variant_id' => $item->product_variant_id,
+                    'type' => 'out',
+                    'quantity' => $item->qty,
+                    'reference_type' => 'order',
+                    'reference_id' => $order->id,
+                    'note' => 'Order approval for ' . $order->code,
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Assign a shipper to an order
+     */
+    public function assignShipper(Order $order, int $shipperId): \App\Models\Shipment
+    {
+        $shipment = \App\Models\Shipment::updateOrCreate(
+            ['order_id' => $order->id],
+            [
+                'shipper_id' => $shipperId,
+                'status' => 'pending',
+                'tracking_number' => 'TRK-' . strtoupper(Str::random(10)),
+            ]
+        );
+
+        $order->update(['status' => 'processing']);
+
+        return $shipment;
+    }
 }
 

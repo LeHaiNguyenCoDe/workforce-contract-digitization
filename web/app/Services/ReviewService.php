@@ -58,9 +58,56 @@ class ReviewService
             'content' => $data['content'] ?? null,
         ]);
 
-        $review->load('user:id,name');
+        // Auto reply logic
+        $this->createAutoReply($review);
+
+        $review->load([
+            'user:id,name', 
+            'replies' => function($q) {
+                $q->with('user:id,name');
+            }
+        ]);
 
         return $review->toArray();
+    }
+
+    /**
+     * Create auto reply based on rating
+     *
+     * @param \App\Models\Review $review
+     * @return void
+     */
+    private function createAutoReply($review): void
+    {
+        $rating = (int) ($review->rating ?? 5);
+        $content = '';
+
+        if ($rating >= 3) {
+            $content = 'Cảm ơn bạn đã đánh giá tốt cho sản phẩm của chúng tôi! Rất hân hạnh được phục vụ bạn.';
+        } else {
+            $content = 'Chúng tôi rất xin lỗi vì trải nghiệm không tốt của bạn. Shop sẽ cố gắng khắc phục để làm hài lòng quý khách trong những lần tới.';
+        }
+
+        // Find an admin user to respond
+        $admin = \App\Models\User::whereHas('roles', function($q) {
+            $q->where('name', 'Admin')->orWhere('name', 'Manager');
+        })->first();
+
+        // If no admin with roles found, try ID 1 or the first user
+        if (!$admin) {
+            $admin = \App\Models\User::find(1) ?? \App\Models\User::first();
+        }
+
+        if ($admin && !empty($content)) {
+            $this->reviewRepository->create([
+                'product_id' => $review->product_id,
+                'user_id' => $admin->id,
+                'rating' => 5,
+                'content' => trim($content),
+                'parent_id' => $review->id,
+                'is_admin_reply' => true,
+            ]);
+        }
     }
 
     /**

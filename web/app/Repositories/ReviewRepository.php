@@ -19,7 +19,13 @@ class ReviewRepository implements ReviewRepositoryInterface
     {
         return Review::query()
             ->where('product_id', $productId)
-            ->with('user:id,name')
+            ->whereNull('parent_id') // Get only top-level reviews
+            ->with([
+                'user:id,name', 
+                'replies' => function ($query) {
+                    $query->with('user:id,name');
+                }
+            ])
             ->latest()
             ->paginate($perPage);
     }

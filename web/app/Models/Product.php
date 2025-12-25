@@ -10,14 +10,25 @@ class Product extends Model
 {
     protected $fillable = [
         'category_id',
+        'supplier_id',
         'name',
         'slug',
+        'sku',
         'price',
+        'stock_qty',
+        'min_stock_level',
+        'warehouse_type',
+        'storage_location',
         'short_description',
         'description',
         'thumbnail',
         'specs',
     ];
+
+    public function supplier(): BelongsTo
+    {
+        return $this->belongsTo(Supplier::class);
+    }
 
     protected $casts = [
         'specs' => 'array',

@@ -47,6 +47,11 @@ class OrderController extends Controller
     {
         try {
             $orderData = $this->orderService->getById($order->id);
+            
+            // If admin, include stock check results
+            if (Auth::user() && Auth::user()->role !== 'customer') {
+                $orderData->stock_check = $this->orderService->checkStockAvailability($orderData);
+            }
 
             return response()->json([
                 'status' => 'success',
@@ -139,6 +144,79 @@ class OrderController extends Controller
             ]);
         } catch (NotFoundException $ex) {
             return $this->errorResponse('order_not_found', null, 404);
+        } catch (\Exception $ex) {
+            return $this->genericErrorResponse(500, $ex);
+        }
+    }
+
+    /**
+     * Check stock for an order
+     */
+    public function checkStock(Order $order): JsonResponse
+    {
+        try {
+            $orderData = $this->orderService->getById($order->id);
+            $stockInfo = $this->orderService->checkStockAvailability($orderData);
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $stockInfo,
+            ]);
+        } catch (\Exception $ex) {
+            return $this->genericErrorResponse(500, $ex);
+        }
+    }
+
+    /**
+     * Assign shipper to order
+     */
+    public function assignShipper(Order $order, Request $request): JsonResponse
+    {
+        try {
+            $request->validate([
+                'shipper_id' => 'required|integer|exists:users,id',
+            ]);
+
+            $shipment = $this->orderService->assignShipper($order, $request->shipper_id);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Shipper assigned and order status updated to processing',
+                'data' => $shipment,
+            ]);
+        } catch (\Exception $ex) {
+            return $this->genericErrorResponse(500, $ex);
+        }
+    }
+
+    /**
+     * Update shipment tracking/GPS
+     */
+    public function updateTracking(Order $order, Request $request): JsonResponse
+    {
+        try {
+            $request->validate([
+                'lat' => 'required|numeric',
+                'lng' => 'required|numeric',
+                'status' => 'sometimes|string',
+            ]);
+
+            $shipment = \App\Models\Shipment::where('order_id', $order->id)->firstOrFail();
+            
+            $shipment->update([
+                'current_lat' => $request->lat,
+                'current_lng' => $request->lng,
+            ]);
+
+            if ($request->has('status')) {
+                $shipment->update(['status' => $request->status]);
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Tracking updated',
+                'data' => $shipment,
+            ]);
         } catch (\Exception $ex) {
             return $this->genericErrorResponse(500, $ex);
         }

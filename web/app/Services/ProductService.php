@@ -7,6 +7,7 @@ use App\Repositories\Contracts\ProductRepositoryInterface;
 use App\Repositories\Contracts\ProductImageRepositoryInterface;
 use App\Repositories\Contracts\ProductVariantRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Str;
 
 class ProductService
 {
@@ -62,7 +63,7 @@ class ProductService
             'images',
             'variants',
             'reviews' => function ($q) {
-                $q->latest()->limit(10);
+                $q->whereNull('parent_id')->latest()->limit(10);
             }
         ]);
 
@@ -97,6 +98,14 @@ class ProductService
      */
     public function create(array $data): array
     {
+        if (empty($data['slug']) && !empty($data['name'])) {
+            $data['slug'] = Str::slug($data['name']) . '-' . time();
+        }
+
+        if (!isset($data['price'])) {
+            $data['price'] = 0;
+        }
+
         $product = $this->productRepository->create($data);
         return $product->toArray();
     }

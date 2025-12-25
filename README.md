@@ -2,6 +2,14 @@
 
 Dự án số hóa hợp đồng lao động.
 
+## 📚 Tài Liệu
+
+- **[ROADMAP.md](./docs/ROADMAP.md)** - Roadmap và kế hoạch phát triển dự án
+- **[GITFLOW.md](./docs/GITFLOW.md)** - Quy trình Gitflow workflow
+- **[DOCUMENTATION.md](./docs/DOCUMENTATION.md)** - Tài liệu kỹ thuật chi tiết
+- **[QUICK_START.md](./docs/QUICK_START.md)** - Hướng dẫn nhanh cho người mới
+- **[CODING_CONVENTIONS.md](./docs/CODING_CONVENTIONS.md)** - Quy ước viết code
+
 ## Gitflow Workflow
 
 Dự án này sử dụng **Gitflow Workflow** để quản lý code. Vui lòng đọc file [GITFLOW.md](./docs/GITFLOW.md) để hiểu rõ quy trình làm việc.

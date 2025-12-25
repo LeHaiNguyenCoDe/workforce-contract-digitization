@@ -6,8 +6,13 @@ use App\Exceptions\NotFoundException;
 use App\Repositories\Contracts\WarehouseRepositoryInterface;
 use App\Repositories\Contracts\StockRepositoryInterface;
 use App\Repositories\Contracts\StockMovementRepositoryInterface;
+use App\Models\QualityCheck;
+use App\Models\Stock;
+use App\Models\Supplier;
+use App\Models\Product;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Carbon\Carbon;
 
 class WarehouseService
 {
@@ -175,6 +180,68 @@ class WarehouseService
         }
 
         return $this->stockMovementRepository->getByWarehouse($warehouseId, $perPage);
+    }
+
+    /**
+     * Get dashboard stats for warehouse
+     */
+    public function getDashboardStats(): array
+    {
+        return [
+            'totalProducts' => Product::count(),
+            'newProducts' => Product::where('warehouse_type', 'new')->count(),
+            'stockProducts' => Product::where('warehouse_type', 'stock')->count(),
+            'expiringSoon' => Stock::where('expiry_date', '<', Carbon::now()->addDays(30))
+                                  ->where('expiry_date', '>', Carbon::now())
+                                  ->count(),
+            'outOfStock' => Stock::where('quantity', '<=', 0)->count(),
+            'totalSuppliers' => Supplier::count(),
+            'pendingQualityCheck' => Stock::where('quality_status', 'pending')->count(),
+        ];
+    }
+
+    /**
+     * Get recent activities
+     */
+    public function getRecentActivities(): Collection
+    {
+        // For simplicity, mixing stock movements and quality checks
+        return Collection::make(); // Actual implementation will depend on how we want to feed the dashboard
+    }
+
+    /**
+     * Get quality checks
+     */
+    public function getQualityChecks(): Collection
+    {
+        return QualityCheck::with(['product', 'supplier', 'inspector'])->latest()->get();
+    }
+
+    /**
+     * Store a new quality check
+     */
+    public function storeQualityCheck(array $data): QualityCheck
+    {
+        return QualityCheck::create($data);
+    }
+
+    /**
+     * Update an existing quality check
+     */
+    public function updateQualityCheck(int $id, array $data): QualityCheck
+    {
+        $check = QualityCheck::findOrFail($id);
+        $check->update($data);
+        return $check->fresh();
+    }
+
+    /**
+     * Delete a quality check
+     */
+    public function deleteQualityCheck(int $id): bool
+    {
+        $check = QualityCheck::findOrFail($id);
+        return $check->delete();
     }
 }
 
