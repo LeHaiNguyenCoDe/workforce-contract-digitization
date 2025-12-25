@@ -53,12 +53,16 @@ class WarehouseSeeder extends Seeder
             foreach ($products as $product) {
                 // Tạo stock cho product (không có variant)
                 $quantity = rand(50, 500);
-                $stock = Stock::create([
+                $stock = Stock::firstOrCreate(
+                    [
                     'warehouse_id' => $warehouse->id,
                     'product_id' => $product->id,
                     'product_variant_id' => null,
+                    ],
+                    [
                     'quantity' => $quantity,
-                ]);
+                    ]
+                );
 
                 // Tạo initial stock movement
                 StockMovement::create([
@@ -75,12 +79,16 @@ class WarehouseSeeder extends Seeder
                 // Tạo stocks cho variants
                 foreach ($product->variants as $variant) {
                     $variantQuantity = rand(10, 100);
-                    Stock::create([
+                    Stock::firstOrCreate(
+                        [
                         'warehouse_id' => $warehouse->id,
                         'product_id' => $product->id,
                         'product_variant_id' => $variant->id,
+                        ],
+                        [
                         'quantity' => $variantQuantity,
-                    ]);
+                        ]
+                    );
 
                     // Tạo initial stock movement cho variant
                     StockMovement::create([

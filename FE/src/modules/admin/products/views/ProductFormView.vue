@@ -44,9 +44,117 @@ const generateSlug = (text: string): string => {
         .replace(/-+/g, '-')
 }
 
+// Auto-select category and generate description
+const autoSelectCategory = (productName: string) => {
+    if (!productName || formData.value.category_id || categories.value.length === 0) return // Skip if already selected or no categories
+    
+    const nameLower = productName.toLowerCase().trim()
+    
+    // Find category whose name is contained in product name (best match first)
+    let matchedCategory = null
+    let bestMatchLength = 0
+    
+    for (const cat of categories.value) {
+        const catNameLower = cat.name.toLowerCase().trim()
+        
+        // Check if category name is in product name
+        if (nameLower.includes(catNameLower)) {
+            // Prefer longer category names (more specific)
+            if (catNameLower.length > bestMatchLength) {
+                bestMatchLength = catNameLower.length
+                matchedCategory = cat
+            }
+        }
+        // Also check reverse (product name in category name)
+        else if (catNameLower.includes(nameLower) && nameLower.length >= 3) {
+            if (nameLower.length > bestMatchLength) {
+                bestMatchLength = nameLower.length
+                matchedCategory = cat
+            }
+        }
+    }
+    
+    if (matchedCategory) {
+        formData.value.category_id = matchedCategory.id.toString()
+    }
+}
+
+// Auto-generate short description and full description
+const autoGenerateShortDescription = (productName: string) => {
+    if (!productName) return
+    
+    // Use selected category if available, otherwise find matched category
+    let categoryName = 'sản phẩm'
+    if (formData.value.category_id) {
+        const selectedCategory = categories.value.find(cat => cat.id.toString() === formData.value.category_id)
+        if (selectedCategory) {
+            categoryName = selectedCategory.name
+        }
+    } else {
+        // Find matched category for context
+        const matchedCategory = categories.value.find(cat => {
+            const nameLower = productName.toLowerCase()
+            const catNameLower = cat.name.toLowerCase()
+            return nameLower.includes(catNameLower) || catNameLower.includes(nameLower)
+        })
+        if (matchedCategory) {
+            categoryName = matchedCategory.name
+        }
+    }
+    
+    // Generate short description (only if empty)
+    if (!formData.value.short_description) {
+        const shortDesc = `${productName} là ${categoryName} chất lượng cao, được thiết kế và sản xuất với tiêu chuẩn nghiêm ngặt. Sản phẩm phù hợp cho mọi nhu cầu sử dụng, mang lại trải nghiệm tuyệt vời cho người dùng.`
+        formData.value.short_description = shortDesc
+    }
+    
+    // Generate full description (only if empty)
+    if (!formData.value.description) {
+        const fullDesc = `## ${productName}
+
+**Danh mục:** ${categoryName}
+
+### Mô tả sản phẩm
+
+${productName} là ${categoryName} được thiết kế với công nghệ tiên tiến, mang đến trải nghiệm sử dụng tuyệt vời cho người dùng. Sản phẩm được sản xuất với tiêu chuẩn chất lượng cao, đảm bảo độ bền và hiệu suất tối ưu.
+
+### Đặc điểm nổi bật
+
+- Chất lượng cao, đáng tin cậy
+- Thiết kế hiện đại, sang trọng
+- Hiệu suất vượt trội
+- Phù hợp cho mọi nhu cầu sử dụng
+
+### Thông tin chi tiết
+
+${productName} là lựa chọn hoàn hảo cho những ai đang tìm kiếm một ${categoryName} chất lượng với giá trị tốt nhất. Sản phẩm được bảo hành chính hãng và có đầy đủ phụ kiện đi kèm.`
+        formData.value.description = fullDesc
+    }
+}
+
 watch(() => formData.value.name, (newName) => {
-    if (!isEditMode.value) {
-        formData.value.slug = generateSlug(newName)
+    if (!isEditMode.value && newName) {
+        const productName = newName.trim()
+        
+        // Auto-generate slug
+        formData.value.slug = generateSlug(productName)
+        
+        // Auto-select category
+        autoSelectCategory(productName)
+        
+        // Auto-generate short description and full description
+        // Use nextTick to ensure category is selected first
+        setTimeout(() => {
+            autoGenerateShortDescription(productName)
+        }, 100)
+    }
+})
+
+// Watch category changes to update descriptions
+watch(() => formData.value.category_id, (newCategoryId, oldCategoryId) => {
+    if (!isEditMode.value && formData.value.name && newCategoryId && newCategoryId !== oldCategoryId) {
+        // Update descriptions when category changes
+        autoGenerateShortDescription(formData.value.name.trim())
     }
 })
 
@@ -161,6 +269,13 @@ onMounted(() => {
                     {{ isEditMode ? 'Chỉnh sửa sản phẩm' : 'Tạo sản phẩm mới' }}
                 </h1>
                 <p class="text-slate-400 mt-1">{{ isEditMode ? 'Cập nhật sản phẩm' : 'Thêm sản phẩm mới' }}</p>
+                <div class="mt-2 bg-info/10 border border-info/20 rounded-lg p-2 text-xs text-info max-w-2xl">
+                    <strong>Lưu ý:</strong> Sản phẩm không chứa thông tin tồn kho (BR-01.1). 
+                    Để thêm tồn kho, vui lòng sử dụng quy trình 
+                    <router-link :to="{ name: 'admin-warehouse-inbound-batches' }" class="underline font-semibold hover:text-info-light">
+                        Kho hàng → Lô nhập
+                    </router-link>
+                </div>
             </div>
         </div>
 

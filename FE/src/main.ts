@@ -7,6 +7,7 @@ import i18n from './plugins/i18n'
 import { vClickOutside } from './shared/directives'
 
 import './shared/styles/main.css'
+import 'sweetalert2/dist/sweetalert2.min.css'
 
 const app = createApp(App)
 

@@ -1,22 +1,30 @@
 <script setup lang="ts">
-import { watch, onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted, computed, onUpdated, onBeforeUnmount } from 'vue'
 
 interface Props {
-    show: boolean
+    modelValue: boolean
     title?: string
     size?: 'sm' | 'md' | 'lg' | 'xl' | 'full'
     closable?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
+    modelValue: false,
     title: '',
     size: 'md',
     closable: true
 })
 
 const emit = defineEmits<{
+    'update:modelValue': [value: boolean]
     close: []
 }>()
+
+// Computed để hỗ trợ cả v-model và show prop (backward compatibility)
+const show = computed({
+    get: () => props.modelValue,
+    set: (value) => emit('update:modelValue', value)
+})
 
 const sizeClasses: Record<string, string> = {
     sm: 'max-w-sm',
@@ -28,6 +36,7 @@ const sizeClasses: Record<string, string> = {
 
 const handleClose = () => {
     if (props.closable) {
+        show.value = false
         emit('close')
     }
 }
@@ -38,20 +47,35 @@ const handleEscape = (e: KeyboardEvent) => {
     }
 }
 
-watch(() => props.show, (isShow) => {
-    if (isShow) {
+// Quản lý body overflow khi modal mở/đóng
+const updateBodyOverflow = () => {
+    if (props.modelValue) {
         document.body.style.overflow = 'hidden'
     } else {
         document.body.style.overflow = ''
     }
+}
+
+// Update body overflow khi modelValue thay đổi
+onUpdated(() => {
+    updateBodyOverflow()
 })
 
 onMounted(() => {
     document.addEventListener('keydown', handleEscape)
+    updateBodyOverflow()
+})
+
+// Update body overflow khi modelValue thay đổi (thay vì watch)
+onUpdated(() => {
+    updateBodyOverflow()
+})
+
+onBeforeUnmount(() => {
+    document.removeEventListener('keydown', handleEscape)
 })
 
 onUnmounted(() => {
-    document.removeEventListener('keydown', handleEscape)
     document.body.style.overflow = ''
 })
 </script>

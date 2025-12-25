@@ -33,10 +33,12 @@ const menuItems: MenuItem[] = [
         path: '/admin/warehouse',
         label: 'admin.warehouse',
         children: [
-            { icon: 'box', path: '/admin/warehouse/products', label: 'Sản phẩm' },
-            { icon: 'supplier', path: '/admin/warehouse/suppliers', label: 'Nhà cung cấp' },
-            { icon: 'quality', path: '/admin/warehouse/quality', label: 'Kiểm tra CL' },
             { icon: 'list', path: '/admin/warehouse/list', label: 'Danh sách kho' },
+            { icon: 'box', path: '/admin/warehouse/products', label: 'Sản phẩm' },
+            { icon: 'inbound', path: '/admin/warehouse/inbound-batches', label: 'Lô nhập' },
+            { icon: 'quality', path: '/admin/warehouse/quality', label: 'Kiểm tra CL' },
+            { icon: 'logs', path: '/admin/warehouse/inventory-logs', label: 'Lịch sử biến động' },
+            { icon: 'supplier', path: '/admin/warehouse/suppliers', label: 'Nhà cung cấp' },
         ]
     },
     { icon: 'articles', path: '/admin/articles', label: 'admin.articles' },

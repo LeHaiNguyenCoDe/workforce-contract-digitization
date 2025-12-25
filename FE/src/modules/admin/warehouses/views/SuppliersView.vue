@@ -225,8 +225,8 @@ onMounted(fetchSuppliers)
         </div>
 
         <!-- Modal using BaseModal -->
-        <BaseModal :show="showModal" :title="editingSupplier ? 'Chỉnh sửa nhà cung cấp' : 'Thêm nhà cung cấp mới'"
-            size="md" @close="showModal = false">
+        <BaseModal v-model="showModal" :title="editingSupplier ? 'Chỉnh sửa nhà cung cấp' : 'Thêm nhà cung cấp mới'"
+            size="md">
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-slate-300 mb-2">Tên công ty *</label>

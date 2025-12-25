@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Store;
 
 use App\Exceptions\NotFoundException;
+use App\Exceptions\BusinessLogicException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Store\WarehouseStoreRequest;
 use App\Http\Requests\Store\WarehouseUpdateRequest;
@@ -137,6 +138,7 @@ class WarehouseController extends Controller
 
     /**
      * Get stocks by warehouse
+     * BR-06.1: Chỉ hiển thị Available Inventory
      */
     public function stocks(Warehouse $warehouse): JsonResponse
     {
@@ -160,104 +162,192 @@ class WarehouseController extends Controller
                 'message' => $ex->getMessage(),
             ], 404);
         } catch (\Exception $ex) {
+            \Log::error('Get stocks error: ' . $ex->getMessage(), [
+                'exception' => $ex,
+                'warehouse_id' => $warehouse->id ?? null,
+                'trace' => $ex->getTraceAsString(),
+            ]);
             return response()->json([
                 'status' => 'error',
-                'message' => 'An error occurred while processing the request',
+                'message' => $ex->getMessage() ?: 'An error occurred while processing the request',
             ], 500);
         }
     }
 
     /**
-     * Update stock for warehouse
+     * BR-02.1: Tạo Inbound Batch
      */
-    public function updateStock(Warehouse $warehouse, Request $request): JsonResponse
+    public function createInboundBatch(Request $request): JsonResponse
     {
         try {
-            if (!$warehouse || !$warehouse->id) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Warehouse not found',
-                ], 404);
-            }
-
             $request->validate([
-                'product_id' => 'required|integer|exists:products,id',
-                'product_variant_id' => 'sometimes|integer|exists:product_variants,id',
-                'quantity' => 'required|integer',
-                'type' => 'required|string|in:in,out,adjust',
-                'note' => 'sometimes|string',
+                'warehouse_id' => 'required|exists:warehouses,id',
+                'supplier_id' => 'required|exists:suppliers,id',
+                'items' => 'required|array|min:1',
+                'items.*.product_id' => 'required|exists:products,id',
+                'items.*.product_variant_id' => 'nullable|exists:product_variants,id',
+                'items.*.quantity_received' => 'required|integer|min:1',
+                'notes' => 'nullable|string',
             ]);
 
-            $stock = $this->warehouseService->updateStock($warehouse->id, $request->only([
-                'product_id',
-                'product_variant_id',
-                'quantity',
-                'type',
-                'note'
-            ]));
+            $batch = $this->warehouseService->createInboundBatch($request->all());
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Stock updated',
-                'data' => $stock,
-            ]);
-        } catch (NotFoundException $ex) {
+                'message' => 'Inbound batch created successfully',
+                'data' => $batch,
+            ], 201);
+        } catch (BusinessLogicException $ex) {
             return response()->json([
                 'status' => 'error',
                 'message' => $ex->getMessage(),
-            ], 404);
-        } catch (\Exception $ex) {
+            ], 400);
+        } catch (\Illuminate\Validation\ValidationException $ex) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'An error occurred while processing the request',
+                'message' => 'Validation failed',
+                'errors' => $ex->errors(),
+            ], 422);
+        } catch (\Exception $ex) {
+            \Log::error('Create inbound batch error: ' . $ex->getMessage(), [
+                'exception' => $ex,
+                'request' => $request->all(),
+            ]);
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage() ?: 'An error occurred while processing the request',
             ], 500);
         }
     }
 
     /**
-     * Get stock movements for warehouse
+     * BR-02.2: Nhận hàng (RECEIVED)
      */
-    public function stockMovements(Warehouse $warehouse, Request $request): JsonResponse
+    public function receiveInboundBatch(int $batchId, Request $request): JsonResponse
     {
         try {
-            if (!$warehouse || !$warehouse->id) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Warehouse not found',
-                ], 404);
-            }
+            $request->validate([
+                'received_date' => 'nullable|date',
+                'items' => 'nullable|array',
+                'items.*.product_id' => 'required|exists:products,id',
+                'items.*.product_variant_id' => 'nullable|exists:product_variants,id',
+                'items.*.quantity_received' => 'required|integer|min:0',
+                'notes' => 'nullable|string',
+            ]);
 
-            $perPage = $request->query('per_page', 20);
-            $movements = $this->warehouseService->getStockMovements($warehouse->id, $perPage);
+            $batch = $this->warehouseService->receiveInboundBatch($batchId, $request->all());
 
             return response()->json([
                 'status' => 'success',
-                'data' => $movements,
+                'message' => 'Batch received successfully',
+                'data' => $batch,
             ]);
-        } catch (\Exception $ex) {
+        } catch (BusinessLogicException $ex) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'An error occurred while processing the request',
+                'message' => $ex->getMessage(),
+            ], 400);
+        } catch (\Exception $ex) {
+            \Log::error('Receive inbound batch error: ' . $ex->getMessage(), [
+                'exception' => $ex,
+                'batch_id' => $batchId,
+            ]);
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage() ?: 'An error occurred while processing the request',
             ], 500);
         }
     }
 
     /**
-     * Get warehouse dashboard stats
+     * Get inbound batches
      */
-    public function dashboardStats(): JsonResponse
+    public function inboundBatches(Request $request): JsonResponse
     {
         try {
-            $stats = $this->warehouseService->getDashboardStats();
+            $filters = $request->only(['status', 'warehouse_id']);
+            $batches = $this->warehouseService->getInboundBatches($filters);
 
             return response()->json([
                 'status' => 'success',
-                'data' => $stats,
+                'data' => $batches,
+            ]);
+        } catch (\Exception $ex) {
+            \Log::error('Get inbound batches error: ' . $ex->getMessage(), [
+                'exception' => $ex,
+                'trace' => $ex->getTraceAsString(),
+            ]);
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage() ?: 'An error occurred while processing the request',
+            ], 500);
+        }
+    }
+
+    /**
+     * Get inbound batch by ID
+     */
+    public function showInboundBatch(int $id): JsonResponse
+    {
+        try {
+            $batch = $this->warehouseService->getInboundBatch($id);
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $batch,
             ]);
         } catch (\Exception $ex) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'An error occurred while processing the request',
+                'message' => $ex->getMessage() ?: 'An error occurred while processing the request',
+            ], 500);
+        }
+    }
+
+    /**
+     * BR-03.1: Tạo Quality Check (chỉ trên Batch)
+     */
+    public function createQualityCheck(Request $request): JsonResponse
+    {
+        try {
+            $request->validate([
+                'inbound_batch_id' => 'required|exists:inbound_batches,id',
+                'product_id' => 'required|exists:products,id',
+                'check_date' => 'nullable|date',
+                'status' => 'required|in:pass,fail,partial',
+                'score' => 'nullable|integer|min:0|max:100',
+                'quantity_passed' => 'required|integer|min:0',
+                'quantity_failed' => 'required|integer|min:0',
+                'notes' => 'nullable|string',
+                'issues' => 'nullable|array',
+            ]);
+
+            $qc = $this->warehouseService->createQualityCheck($request->all());
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Quality check created successfully',
+                'data' => $qc,
+            ], 201);
+        } catch (BusinessLogicException $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 400);
+        } catch (\Illuminate\Validation\ValidationException $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Validation failed',
+                'errors' => $ex->errors(),
+            ], 422);
+        } catch (\Exception $ex) {
+            \Log::error('Create quality check error: ' . $ex->getMessage(), [
+                'exception' => $ex,
+                'request' => $request->all(),
+            ]);
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage() ?: 'An error occurred while processing the request',
             ], 500);
         }
     }
@@ -283,47 +373,171 @@ class WarehouseController extends Controller
     }
 
     /**
-     * Store quality check
+     * BR-05.1, BR-05.2, BR-05.3: Điều chỉnh tồn kho
      */
-    public function storeQualityCheck(Request $request): JsonResponse
+    public function adjustStock(Warehouse $warehouse, Request $request): JsonResponse
     {
         try {
             $request->validate([
-                'batch_number' => 'required|string|unique:quality_checks,batch_number',
-                'product_id' => 'required|exists:products,id',
-                'supplier_id' => 'required|exists:suppliers,id',
-                'check_date' => 'required|date',
-                'status' => 'required|in:passed,failed,pending',
-                'score' => 'required|integer|min:0|max:100',
-                'notes' => 'nullable|string',
-                'issues' => 'nullable|array'
+                'product_id' => 'required|integer|exists:products,id',
+                'product_variant_id' => 'sometimes|integer|exists:product_variants,id',
+                'quantity' => 'required|integer|min:0',
+                'available_quantity' => 'sometimes|integer|min:0',
+                'reason' => 'required|string|min:3', // BR-05.2: Bắt buộc có lý do
+                'note' => 'nullable|string',
             ]);
 
-            $data = $request->all();
-            $data['inspector_id'] = \Illuminate\Support\Facades\Auth::id() ?? 1; // Default to 1 if not auth
-
-            $check = $this->warehouseService->storeQualityCheck($data);
+            $stock = $this->warehouseService->adjustStock($warehouse->id, $request->all());
 
             return response()->json([
                 'status' => 'success',
-                'data' => $check,
-            ], 201);
-        } catch (\Exception $ex) {
+                'message' => 'Stock adjusted successfully',
+                'data' => $stock,
+            ]);
+        } catch (BusinessLogicException $ex) {
             return response()->json([
                 'status' => 'error',
                 'message' => $ex->getMessage(),
+            ], 400);
+        } catch (NotFoundException $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 404);
+        } catch (\Illuminate\Validation\ValidationException $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Validation failed',
+                'errors' => $ex->errors(),
+            ], 422);
+        } catch (\Exception $ex) {
+            \Log::error('Adjust stock error: ' . $ex->getMessage(), [
+                'exception' => $ex,
+                'request' => $request->all(),
+            ]);
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage() ?: 'An error occurred while processing the request',
             ], 500);
         }
     }
 
     /**
-     * Update quality check
+     * BR-06.1, BR-06.2, BR-06.3: Xuất kho
+     */
+    public function outboundStock(Warehouse $warehouse, Request $request): JsonResponse
+    {
+        try {
+            $request->validate([
+                'product_id' => 'required|integer|exists:products,id',
+                'product_variant_id' => 'sometimes|integer|exists:product_variants,id',
+                'quantity' => 'required|integer|min:1',
+                'reference_type' => 'nullable|string',
+                'reference_id' => 'nullable|integer',
+                'note' => 'nullable|string',
+            ]);
+
+            $stock = $this->warehouseService->outboundStock($warehouse->id, $request->all());
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Stock outbound successfully',
+                'data' => $stock,
+            ]);
+        } catch (BusinessLogicException $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 400);
+        } catch (NotFoundException $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 404);
+        } catch (\Illuminate\Validation\ValidationException $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Validation failed',
+                'errors' => $ex->errors(),
+            ], 422);
+        } catch (\Exception $ex) {
+            \Log::error('Outbound stock error: ' . $ex->getMessage(), [
+                'exception' => $ex,
+                'request' => $request->all(),
+            ]);
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage() ?: 'An error occurred while processing the request',
+            ], 500);
+        }
+    }
+
+    /**
+     * Get inventory logs (BR-09.2)
+     */
+    public function inventoryLogs(Warehouse $warehouse, Request $request): JsonResponse
+    {
+        try {
+            if (!$warehouse || !$warehouse->id) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Warehouse not found',
+                ], 404);
+            }
+
+            $perPage = $request->query('per_page', 20);
+            $logs = $this->warehouseService->getInventoryLogs($warehouse->id, $perPage);
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $logs,
+            ]);
+        } catch (NotFoundException $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 404);
+        } catch (\Exception $ex) {
+            \Log::error('Get inventory logs error: ' . $ex->getMessage(), [
+                'exception' => $ex,
+                'warehouse_id' => $warehouse->id ?? null,
+                'trace' => $ex->getTraceAsString(),
+            ]);
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage() ?: 'An error occurred while processing the request',
+            ], 500);
+        }
+    }
+
+    /**
+     * Get warehouse dashboard stats
+     */
+    public function dashboardStats(): JsonResponse
+    {
+        try {
+            $stats = $this->warehouseService->getDashboardStats();
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $stats,
+            ]);
+        } catch (\Exception $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while processing the request',
+            ], 500);
+        }
+    }
+
+    /**
+     * Update quality check (legacy - chỉ cho rollback)
      */
     public function updateQualityCheck(int $id, Request $request): JsonResponse
     {
         try {
             $request->validate([
-                'status' => 'sometimes|in:passed,failed,pending',
+                'status' => 'sometimes|in:pass,fail,partial',
                 'score' => 'sometimes|integer|min:0|max:100',
                 'notes' => 'nullable|string',
                 'issues' => 'nullable|array'
@@ -335,6 +549,11 @@ class WarehouseController extends Controller
                 'status' => 'success',
                 'data' => $check,
             ]);
+        } catch (BusinessLogicException $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 400);
         } catch (\Exception $ex) {
             return response()->json([
                 'status' => 'error',
@@ -344,7 +563,7 @@ class WarehouseController extends Controller
     }
 
     /**
-     * Delete quality check
+     * Delete quality check (BR-09.1: Không được xóa)
      */
     public function deleteQualityCheck(int $id): JsonResponse
     {
@@ -355,6 +574,11 @@ class WarehouseController extends Controller
                 'status' => 'success',
                 'message' => 'Quality check deleted',
             ]);
+        } catch (BusinessLogicException $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 400);
         } catch (\Exception $ex) {
             return response()->json([
                 'status' => 'error',
@@ -363,5 +587,3 @@ class WarehouseController extends Controller
         }
     }
 }
-
-

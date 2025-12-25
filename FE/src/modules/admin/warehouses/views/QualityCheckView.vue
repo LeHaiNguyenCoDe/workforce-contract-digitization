@@ -1,40 +1,35 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import httpClient from '@/plugins/api/httpClient'
+import { warehouseService } from '@/plugins/api/services/WarehouseService'
 import BaseModal from '@/shared/components/BaseModal.vue'
+import { useSwal } from '@/shared/utils'
+import type { QualityCheck, InboundBatch, CreateQualityCheckRequest } from '@/plugins/api/services/WarehouseService'
 
-interface QualityCheck {
-    id: number
-    batch_number: string
-    product?: { id: number; name: string }
-    product_id?: number
-    supplier?: { id: number; name: string }
-    supplier_id?: number
-    inspector?: { name: string }
-    check_date: string
-    status: 'passed' | 'failed' | 'pending'
-    score: number
-    notes: string
-    issues: string[]
+const swal = useSwal()
+
+interface QualityCheckDisplay extends QualityCheck {
+    batch_number?: string
 }
 
-const checks = ref<QualityCheck[]>([])
+const checks = ref<QualityCheckDisplay[]>([])
 const isLoading = ref(true)
 const statusFilter = ref('')
 const showModal = ref(false)
-const editingCheck = ref<QualityCheck | null>(null)
+const editingCheck = ref<QualityCheckDisplay | null>(null)
 const isSaving = ref(false)
 
+const batches = ref<InboundBatch[]>([])
 const products = ref<any[]>([])
-const suppliers = ref<any[]>([])
 
-const form = ref({
-    batch_number: '',
-    product_id: null as number | null,
-    supplier_id: null as number | null,
+const form = ref<CreateQualityCheckRequest & { newIssue: string }>({
+    inbound_batch_id: 0,
+    product_id: 0,
     check_date: new Date().toISOString().split('T')[0],
-    status: 'pending' as 'passed' | 'failed' | 'pending',
+    status: 'pass',
     score: 100,
+    quantity_passed: 0,
+    quantity_failed: 0,
     notes: '',
     issues: [] as string[],
     newIssue: ''
@@ -46,9 +41,9 @@ const filteredChecks = computed(() => {
 })
 
 const statusConfig: Record<string, { text: string; class: string }> = {
-    passed: { text: 'Đạt', class: 'bg-success/10 text-success' },
-    failed: { text: 'Không đạt', class: 'bg-error/10 text-error' },
-    pending: { text: 'Đang kiểm tra', class: 'bg-warning/10 text-warning' }
+    pass: { text: 'Đạt', class: 'bg-success/10 text-success' },
+    fail: { text: 'Không đạt', class: 'bg-error/10 text-error' },
+    partial: { text: 'Một phần', class: 'bg-warning/10 text-warning' }
 }
 
 const getScoreClass = (score: number) => {
@@ -60,11 +55,14 @@ const getScoreClass = (score: number) => {
 const fetchChecks = async () => {
     isLoading.value = true
     try {
-        const response = await httpClient.get('/admin/warehouses/quality-checks')
-        const data = (response.data as any).data
-        checks.value = data || []
-    } catch (error) {
+        const data = await warehouseService.getQualityChecks()
+        checks.value = data.map(qc => ({
+            ...qc,
+            batch_number: qc.inboundBatch?.batch_number || 'N/A'
+        }))
+    } catch (error: any) {
         console.error('Failed to fetch checks:', error)
+        await swal.error('Lấy danh sách QC thất bại!')
         checks.value = []
     } finally {
         isLoading.value = false
@@ -73,47 +71,70 @@ const fetchChecks = async () => {
 
 const fetchMetadata = async () => {
     try {
-        const [prodRes, supRes] = await Promise.all([
-            httpClient.get('/admin/products'),
-            httpClient.get('/admin/suppliers')
+        const [batchesRes, prodRes] = await Promise.all([
+            warehouseService.getInboundBatches({ status: 'received' }).catch((err) => {
+                console.error('Error fetching batches:', err)
+                return []
+            }),
+            httpClient.get('/admin/products', { params: { per_page: 1000 } }).catch((err) => {
+                console.error('Error fetching products:', err)
+                return { data: { data: [] } }
+            })
         ])
-        products.value = (prodRes.data as any).data?.data || (prodRes.data as any).data || []
-        suppliers.value = (supRes.data as any).data?.data || (supRes.data as any).data || []
-    } catch (error) {
+        
+        // Filter batches: chỉ lấy những batch chưa có QC chính thức (BR-03.2)
+        const allBatches = Array.isArray(batchesRes) ? batchesRes : []
+        batches.value = allBatches.filter(batch => {
+            // Nếu batch chưa có qualityCheck hoặc qualityCheck rỗng, thì có thể QC
+            return !batch.qualityCheck || batch.qualityCheck.length === 0
+        })
+        
+        products.value = (prodRes.data as any)?.data?.data || (prodRes.data as any)?.data || []
+        
+        console.log('Fetched batches (all):', allBatches.length)
+        console.log('Fetched batches (available for QC):', batches.value.length)
+        console.log('Fetched products:', products.value.length)
+        
+        if (batches.value.length === 0 && allBatches.length > 0) {
+            console.warn('Có batches nhưng tất cả đã có QC')
+        }
+    } catch (error: any) {
         console.error('Failed to fetch metadata:', error)
+        await swal.error('Lấy dữ liệu thất bại: ' + (error.message || 'Unknown error'))
+        batches.value = []
+        products.value = []
     }
 }
 
-const openCreateModal = () => {
+const openCreateModal = async () => {
     editingCheck.value = null
     form.value = {
-        batch_number: `BATCH-${Date.now()}`,
-        product_id: null,
-        supplier_id: null,
+        inbound_batch_id: 0,
+        product_id: 0,
         check_date: new Date().toISOString().split('T')[0],
-        status: 'pending',
+        status: 'pass',
         score: 100,
+        quantity_passed: 0,
+        quantity_failed: 0,
         notes: '',
         issues: [],
         newIssue: ''
     }
+    // Refresh batches khi mở modal để đảm bảo có dữ liệu mới nhất
+    await fetchMetadata()
     showModal.value = true
 }
 
-const openEditModal = (check: QualityCheck) => {
-    editingCheck.value = check
-    form.value = {
-        batch_number: check.batch_number,
-        product_id: check.product_id || check.product?.id || null,
-        supplier_id: check.supplier_id || check.supplier?.id || null,
-        check_date: check.check_date?.split('T')[0] || '',
-        status: check.status,
-        score: check.score,
-        notes: check.notes || '',
-        issues: [...(check.issues || [])],
-        newIssue: ''
+const onBatchChange = () => {
+    const batch = batches.value.find(b => b.id === form.value.inbound_batch_id)
+    if (batch && batch.items && batch.items.length > 0) {
+        // Auto-select first product from batch
+        form.value.product_id = batch.items[0].product_id
+        // Set default quantities
+        const totalQty = batch.items.reduce((sum, item) => sum + item.quantity_received, 0)
+        form.value.quantity_passed = totalQty
+        form.value.quantity_failed = 0
     }
-    showModal.value = true
 }
 
 const addIssue = () => {
@@ -129,48 +150,70 @@ const removeIssue = (index: number) => {
 
 const saveCheck = async () => {
     if (isSaving.value) return
-    if (!form.value.product_id || !form.value.supplier_id) {
-        alert('Vui lòng chọn sản phẩm và nhà cung cấp!')
+    
+    // BR-03.1: Validate batch and product
+    if (!form.value.inbound_batch_id || !form.value.product_id) {
+        await swal.warning('Vui lòng chọn lô nhập và sản phẩm!')
+        return
+    }
+
+    // Validate quantities
+    if (form.value.quantity_passed < 0 || form.value.quantity_failed < 0) {
+        await swal.warning('Số lượng không được âm!')
+        return
+    }
+
+    if (form.value.status === 'pass' && form.value.quantity_failed > 0) {
+        await swal.warning('QC PASS không được có số lượng FAIL!')
+        return
+    }
+
+    if (form.value.status === 'fail' && form.value.quantity_passed > 0) {
+        await swal.warning('QC FAIL không được có số lượng PASS!')
         return
     }
 
     isSaving.value = true
     try {
-        const payload = {
-            batch_number: form.value.batch_number,
+        const payload: CreateQualityCheckRequest = {
+            inbound_batch_id: form.value.inbound_batch_id,
             product_id: form.value.product_id,
-            supplier_id: form.value.supplier_id,
             check_date: form.value.check_date,
             status: form.value.status,
-            score: form.value.score,
-            notes: form.value.notes,
-            issues: form.value.issues
+            score: form.value.score || 100,
+            quantity_passed: form.value.quantity_passed,
+            quantity_failed: form.value.quantity_failed,
+            notes: form.value.notes || '',
+            issues: form.value.issues || []
         }
 
-        if (editingCheck.value) {
-            await httpClient.put(`/admin/warehouses/quality-checks/${editingCheck.value.id}`, payload)
-        } else {
-            await httpClient.post(`/admin/warehouses/quality-checks`, payload)
-        }
+        await warehouseService.createQualityCheck(payload)
         showModal.value = false
-        fetchChecks()
+        await swal.success('Tạo phiếu kiểm tra chất lượng thành công!')
+        await fetchChecks()
+        await fetchMetadata() // Refresh batches
     } catch (error: any) {
         console.error('Failed to save check:', error)
-        alert(error.response?.data?.message || 'Lưu phiếu kiểm tra thất bại!')
+        const errorMessage = error.response?.data?.message 
+            || error.response?.data?.errors 
+            || 'Lưu phiếu kiểm tra thất bại!'
+        await swal.error(typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage))
     } finally {
         isSaving.value = false
     }
 }
 
 const deleteCheck = async (id: number) => {
-    console.log('Delete check clicked:', id)
-    if (!window.confirm('Bạn có chắc chắn muốn xóa phiếu kiểm tra này?')) return
+    const confirmed = await swal.confirmDelete('Bạn có chắc chắn muốn xóa phiếu kiểm tra này?')
+    if (!confirmed) return
+    
     try {
         await httpClient.delete(`/admin/warehouses/quality-checks/${id}`)
         checks.value = checks.value.filter(c => c.id !== id)
+        await swal.success('Xóa phiếu kiểm tra thành công!')
     } catch (error: any) {
         console.error('Failed to delete check:', error)
-        alert(error.response?.data?.message || 'Xóa thất bại!')
+        await swal.error(error.response?.data?.message || 'Xóa thất bại!')
     }
 }
 
@@ -186,7 +229,7 @@ onMounted(() => {
         <div class="flex items-center justify-between mb-6 flex-shrink-0">
             <div>
                 <h1 class="text-2xl font-bold text-white">Kiểm tra chất lượng</h1>
-                <p class="text-slate-400 mt-1">Quản lý phiếu kiểm tra chất lượng sản phẩm</p>
+                <p class="text-slate-400 mt-1">QC trên Batch - BR-03.1: QC bắt buộc theo Batch</p>
             </div>
             <button class="btn btn-primary" @click="openCreateModal">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
@@ -203,9 +246,9 @@ onMounted(() => {
             <div class="flex gap-4">
                 <select v-model="statusFilter" class="form-input w-48">
                     <option value="">Tất cả trạng thái</option>
-                    <option value="passed">Đạt</option>
-                    <option value="pending">Đang kiểm tra</option>
-                    <option value="failed">Không đạt</option>
+                    <option value="pass">Đạt</option>
+                    <option value="partial">Một phần</option>
+                    <option value="fail">Không đạt</option>
                 </select>
             </div>
         </div>
@@ -224,6 +267,7 @@ onMounted(() => {
                             <th class="px-6 py-4 text-left text-sm font-semibold text-slate-400">Số lô</th>
                             <th class="px-6 py-4 text-left text-sm font-semibold text-slate-400">Sản phẩm</th>
                             <th class="px-6 py-4 text-left text-sm font-semibold text-slate-400">Nhà cung cấp</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold text-slate-400">Số lượng</th>
                             <th class="px-6 py-4 text-left text-sm font-semibold text-slate-400">Ngày kiểm tra</th>
                             <th class="px-6 py-4 text-left text-sm font-semibold text-slate-400">Điểm</th>
                             <th class="px-6 py-4 text-left text-sm font-semibold text-slate-400">Trạng thái</th>
@@ -233,13 +277,18 @@ onMounted(() => {
                     <tbody class="divide-y divide-white/5">
                         <tr v-for="check in filteredChecks" :key="check.id" class="hover:bg-white/5 transition-colors">
                             <td class="px-6 py-4">
-                                <span class="font-mono text-primary">{{ check.batch_number }}</span>
+                                <span class="font-mono text-primary">{{ check.batch_number || check.inboundBatch?.batch_number || 'N/A' }}</span>
                             </td>
                             <td class="px-6 py-4">
                                 <p class="text-white">{{ check.product?.name || 'N/A' }}</p>
                             </td>
                             <td class="px-6 py-4">
                                 <p class="text-white">{{ check.supplier?.name || 'N/A' }}</p>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="text-sm text-slate-300">
+                                    PASS: {{ check.quantity_passed || 0 }} | FAIL: {{ check.quantity_failed || 0 }}
+                                </span>
                             </td>
                             <td class="px-6 py-4">
                                 <p class="text-slate-400">{{ check.check_date }}</p>
@@ -293,28 +342,36 @@ onMounted(() => {
         </div>
 
         <!-- Modal using BaseModal -->
-        <BaseModal :show="showModal" :title="editingCheck ? 'Cập nhật phiếu kiểm tra' : 'Tạo phiếu kiểm tra mới'"
-            size="lg" @close="showModal = false">
+        <BaseModal v-model="showModal" title="Tạo phiếu kiểm tra chất lượng (BR-03.1)"
+            size="lg">
             <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-slate-300 mb-2">Số lô (Batch Number)</label>
-                    <input v-model="form.batch_number" type="text" class="form-input" :disabled="!!editingCheck" />
+                <div class="bg-info/10 border border-info/20 rounded-lg p-3 mb-4">
+                    <p class="text-sm text-info">
+                        <strong>Lưu ý:</strong> QC bắt buộc theo Batch. Một Batch chỉ có 1 kết quả QC chính thức. 
+                        QC PASS/PARTIAL sẽ tự động tạo Inventory.
+                    </p>
                 </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-2">Sản phẩm *</label>
-                        <select v-model="form.product_id" class="form-input" :disabled="!!editingCheck">
-                            <option :value="null">-- Chọn sản phẩm --</option>
-                            <option v-for="p in products" :key="p.id" :value="p.id">{{ p.name }}</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-2">Nhà cung cấp *</label>
-                        <select v-model="form.supplier_id" class="form-input" :disabled="!!editingCheck">
-                            <option :value="null">-- Chọn nhà cung cấp --</option>
-                            <option v-for="s in suppliers" :key="s.id" :value="s.id">{{ s.name }}</option>
-                        </select>
-                    </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Lô nhập (Inbound Batch) *</label>
+                    <select v-model.number="form.inbound_batch_id" @change="onBatchChange" class="form-input" :disabled="batches.length === 0">
+                        <option :value="0">-- Chọn lô nhập --</option>
+                        <option v-for="batch in batches" :key="batch.id" :value="batch.id">
+                            {{ batch.batch_number }} - {{ batch.warehouse?.name || 'N/A' }} ({{ batch.status }})
+                        </option>
+                    </select>
+                    <p v-if="batches.length === 0" class="text-xs text-warning mt-1">
+                        ⚠️ Chưa có lô nhập nào ở trạng thái RECEIVED. Vui lòng tạo và nhận hàng trước khi QC.
+                    </p>
+                    <p v-else class="text-xs text-slate-400 mt-1">
+                        Chỉ hiển thị các lô đã nhận hàng (RECEIVED). Tổng: {{ batches.length }} lô
+                    </p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Sản phẩm *</label>
+                    <select v-model.number="form.product_id" class="form-input">
+                        <option :value="0">-- Chọn sản phẩm --</option>
+                        <option v-for="p in products" :key="p.id" :value="p.id">{{ p.name }}</option>
+                    </select>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
@@ -322,12 +379,22 @@ onMounted(() => {
                         <input v-model="form.check_date" type="date" class="form-input" />
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-2">Trạng thái</label>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Trạng thái *</label>
                         <select v-model="form.status" class="form-input">
-                            <option value="pending">Đang kiểm tra</option>
-                            <option value="passed">Đạt</option>
-                            <option value="failed">Không đạt</option>
+                            <option value="pass">Đạt (PASS)</option>
+                            <option value="partial">Một phần (PARTIAL)</option>
+                            <option value="fail">Không đạt (FAIL)</option>
                         </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Số lượng PASS *</label>
+                        <input v-model.number="form.quantity_passed" type="number" min="0" class="form-input" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Số lượng FAIL *</label>
+                        <input v-model.number="form.quantity_failed" type="number" min="0" class="form-input" />
                     </div>
                 </div>
                 <div>
@@ -358,7 +425,7 @@ onMounted(() => {
                 <div class="flex justify-end gap-3">
                     <button @click="showModal = false" class="btn btn-secondary" :disabled="isSaving">Hủy</button>
                     <button @click="saveCheck" class="btn btn-primary"
-                        :disabled="isSaving || !form.product_id || !form.supplier_id">
+                        :disabled="isSaving || !form.inbound_batch_id || !form.product_id">
                         <span v-if="isSaving"
                             class="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin mr-2"></span>
                         {{ isSaving ? 'Đang lưu...' : 'Lưu' }}

@@ -213,6 +213,16 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/modules/admin/warehouses/views/WarehouseListView.vue')
       },
       {
+        path: 'warehouse/inbound-batches',
+        name: 'admin-warehouse-inbound-batches',
+        component: () => import('@/modules/admin/warehouses/views/InboundBatchView.vue')
+      },
+      {
+        path: 'warehouse/inventory-logs',
+        name: 'admin-warehouse-inventory-logs',
+        component: () => import('@/modules/admin/warehouses/views/InventoryLogsView.vue')
+      },
+      {
         path: 'articles',
         name: 'admin-articles',
         component: () => import('@/modules/admin/views/ArticleListView.vue')

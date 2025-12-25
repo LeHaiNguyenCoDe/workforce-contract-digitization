@@ -10,15 +10,17 @@ class ProductRepository implements ProductRepositoryInterface
 {
     /**
      * Get all products with pagination and filters
+     * For admin: Only show products that have stock in warehouse
      *
      * @param  int  $perPage
      * @param  string|null  $search
      * @param  int|null  $categoryId
+     * @param  bool  $onlyWithStock  Only show products with stock > 0 (for admin)
      * @return LengthAwarePaginator
      */
-    public function getAll(int $perPage = 12, ?string $search = null, ?int $categoryId = null): LengthAwarePaginator
+    public function getAll(int $perPage = 12, ?string $search = null, ?int $categoryId = null, bool $onlyWithStock = false): LengthAwarePaginator
     {
-        $query = Product::query()->with(['category']);
+        $query = Product::query()->with(['category', 'supplier']);
 
         if ($search) {
             $query->where('name', 'like', "%{$search}%");
@@ -28,9 +30,45 @@ class ProductRepository implements ProductRepositoryInterface
             $query->where('category_id', $categoryId);
         }
 
-        return $query
-            ->select('id', 'category_id', 'supplier_id', 'name', 'slug', 'sku', 'price', 'thumbnail', 'short_description', 'stock_qty', 'min_stock_level', 'warehouse_type', 'storage_location')
+        // For admin: Only show products with stock > 0
+        if ($onlyWithStock) {
+            $query->whereIn('id', function($subquery) {
+                $subquery->select('product_id')
+                    ->from('stocks')
+                    ->where('available_quantity', '>', 0)
+                    ->groupBy('product_id')
+                    ->havingRaw('SUM(available_quantity) > 0');
+            });
+        }
+
+        // Add stock_quantity to each product after pagination
+        $products = $query->select('id', 'category_id', 'supplier_id', 'name', 'slug', 'sku', 'price', 'thumbnail', 'short_description', 'min_stock_level', 'warehouse_type', 'storage_location')
             ->paginate($perPage);
+
+        // Calculate stock_quantity for each product
+        $productIds = $products->pluck('id')->toArray();
+        if (!empty($productIds)) {
+            $stockQuantities = \DB::table('stocks')
+                ->select('product_id', \DB::raw('COALESCE(SUM(available_quantity), 0) as total_stock'))
+                ->whereIn('product_id', $productIds)
+                ->groupBy('product_id')
+                ->pluck('total_stock', 'product_id')
+                ->toArray();
+
+            // Add stock_quantity to each product
+            $products->getCollection()->transform(function($product) use ($stockQuantities) {
+                $product->stock_quantity = $stockQuantities[$product->id] ?? 0;
+                return $product;
+            });
+        } else {
+            // If no products, set stock_quantity to 0
+            $products->getCollection()->transform(function($product) {
+                $product->stock_quantity = 0;
+                return $product;
+            });
+        }
+
+        return $products;
     }
 
     /**
@@ -44,7 +82,7 @@ class ProductRepository implements ProductRepositoryInterface
     {
         return Product::query()
             ->where('category_id', $categoryId)
-            ->select('id', 'category_id', 'supplier_id', 'name', 'slug', 'sku', 'price', 'thumbnail', 'short_description', 'stock_qty', 'min_stock_level', 'warehouse_type', 'storage_location')
+            ->select('id', 'category_id', 'supplier_id', 'name', 'slug', 'sku', 'price', 'thumbnail', 'short_description', 'min_stock_level', 'warehouse_type', 'storage_location')
             ->paginate($perPage);
     }
 

@@ -151,14 +151,29 @@ Route::prefix('v1')->middleware([StartSession::class])->group(function () {
 
         // Warehouse Management
         Route::get('warehouses/dashboard-stats', [WarehouseController::class, 'dashboardStats']);
+        
+        // Inbound Batch Management (BR-02.1, BR-02.2)
+        Route::get('warehouses/inbound-batches', [WarehouseController::class, 'inboundBatches']);
+        Route::post('warehouses/inbound-batches', [WarehouseController::class, 'createInboundBatch']);
+        Route::get('warehouses/inbound-batches/{id}', [WarehouseController::class, 'showInboundBatch']);
+        Route::post('warehouses/inbound-batches/{id}/receive', [WarehouseController::class, 'receiveInboundBatch']);
+        
+        // Quality Check Management (BR-03.1)
         Route::get('warehouses/quality-checks', [WarehouseController::class, 'qualityChecks']);
-        Route::post('warehouses/quality-checks', [WarehouseController::class, 'storeQualityCheck']);
+        Route::post('warehouses/quality-checks', [WarehouseController::class, 'createQualityCheck']);
         Route::put('warehouses/quality-checks/{id}', [WarehouseController::class, 'updateQualityCheck']);
         Route::delete('warehouses/quality-checks/{id}', [WarehouseController::class, 'deleteQualityCheck']);
+        
+        // Warehouse CRUD
         Route::apiResource('warehouses', WarehouseController::class);
+        
+        // Stock Management
         Route::get('warehouses/{warehouse}/stocks', [WarehouseController::class, 'stocks']);
-        Route::post('warehouses/{warehouse}/stocks', [WarehouseController::class, 'updateStock']);
-        Route::get('warehouses/{warehouse}/movements', [WarehouseController::class, 'stockMovements']);
+        Route::post('warehouses/{warehouse}/stocks/adjust', [WarehouseController::class, 'adjustStock']); // BR-05.1
+        Route::post('warehouses/{warehouse}/stocks/outbound', [WarehouseController::class, 'outboundStock']); // BR-06.1
+        
+        // Inventory Logs (BR-09.2)
+        Route::get('warehouses/{warehouse}/inventory-logs', [WarehouseController::class, 'inventoryLogs']);
         Route::apiResource('suppliers', SupplierController::class);
 
         // Article/Blog Management

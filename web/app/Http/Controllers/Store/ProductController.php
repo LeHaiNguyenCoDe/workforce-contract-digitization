@@ -19,6 +19,7 @@ class ProductController extends Controller
 
     /**
      * Get all products with filters
+     * For admin: Only show products that have stock in warehouse
      */
     public function index(Request $request): JsonResponse
     {
@@ -26,17 +27,23 @@ class ProductController extends Controller
             $perPage = $request->query('per_page', 12);
             $search = $request->query('search');
             $categoryId = $request->query('category_id');
+            // For admin products page: only show products with stock
+            $onlyWithStock = $request->query('only_with_stock', false);
 
-            $products = $this->productService->getAll($perPage, $search, $categoryId);
+            $products = $this->productService->getAll($perPage, $search, $categoryId, $onlyWithStock);
 
             return response()->json([
                 'status' => 'success',
                 'data' => $products,
             ]);
         } catch (\Exception $ex) {
+            \Log::error('Get products error: ' . $ex->getMessage(), [
+                'exception' => $ex,
+                'trace' => $ex->getTraceAsString(),
+            ]);
             return response()->json([
                 'status' => 'error',
-                'message' => 'An error occurred while processing the request',
+                'message' => $ex->getMessage() ?: 'An error occurred while processing the request',
             ], 500);
         }
     }
@@ -283,9 +290,11 @@ class ProductController extends Controller
                 'name' => 'required|string|max:255',
                 'slug' => 'sometimes|string|max:255|unique:products,slug',
                 'price' => 'sometimes|integer|min:0',
+                'sale_price' => 'sometimes|integer|min:0',
                 'short_description' => 'sometimes|string',
                 'description' => 'sometimes|string',
                 'thumbnail' => 'sometimes|string|url',
+                'is_active' => 'sometimes|boolean',
                 'specs' => 'sometimes|array',
             ]);
 
@@ -296,10 +305,20 @@ class ProductController extends Controller
                 'message' => 'Product created',
                 'data' => $product,
             ], 201);
-        } catch (\Exception $ex) {
+        } catch (\Illuminate\Validation\ValidationException $ex) {
             return response()->json([
                 'status' => 'error',
-                'message' => $ex->getMessage(),
+                'message' => 'Validation failed',
+                'errors' => $ex->errors(),
+            ], 422);
+        } catch (\Exception $ex) {
+            \Log::error('Create product error: ' . $ex->getMessage(), [
+                'exception' => $ex,
+                'trace' => $ex->getTraceAsString(),
+            ]);
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage() ?: 'An error occurred while creating the product',
             ], 500);
         }
     }
@@ -322,9 +341,11 @@ class ProductController extends Controller
                 'name' => 'sometimes|string|max:255',
                 'slug' => 'sometimes|string|max:255|unique:products,slug,' . $product->id,
                 'price' => 'sometimes|integer|min:0',
+                'sale_price' => 'sometimes|integer|min:0',
                 'short_description' => 'sometimes|string',
                 'description' => 'sometimes|string',
                 'thumbnail' => 'sometimes|string|url',
+                'is_active' => 'sometimes|boolean',
                 'specs' => 'sometimes|array',
             ]);
 
@@ -340,10 +361,21 @@ class ProductController extends Controller
                 'status' => 'error',
                 'message' => $ex->getMessage(),
             ], 404);
-        } catch (\Exception $ex) {
+        } catch (\Illuminate\Validation\ValidationException $ex) {
             return response()->json([
                 'status' => 'error',
-                'message' => $ex->getMessage(),
+                'message' => 'Validation failed',
+                'errors' => $ex->errors(),
+            ], 422);
+        } catch (\Exception $ex) {
+            \Log::error('Update product error: ' . $ex->getMessage(), [
+                'exception' => $ex,
+                'product_id' => $product->id ?? null,
+                'trace' => $ex->getTraceAsString(),
+            ]);
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage() ?: 'An error occurred while updating the product',
             ], 500);
         }
     }
@@ -373,9 +405,14 @@ class ProductController extends Controller
                 'message' => $ex->getMessage(),
             ], 404);
         } catch (\Exception $ex) {
+            \Log::error('Delete product error: ' . $ex->getMessage(), [
+                'exception' => $ex,
+                'product_id' => $product->id ?? null,
+                'trace' => $ex->getTraceAsString(),
+            ]);
             return response()->json([
                 'status' => 'error',
-                'message' => 'An error occurred while processing the request',
+                'message' => $ex->getMessage() ?: 'An error occurred while deleting the product',
             ], 500);
         }
     }

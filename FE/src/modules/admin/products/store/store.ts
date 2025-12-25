@@ -1,0 +1,205 @@
+/**
+ * Products Module Store
+ */
+
+import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
+import { adminProductService } from '@/plugins/api/services/ProductService'
+import httpClient from '@/plugins/api/httpClient'
+import type { Product, ProductFilters } from '../types'
+import type { Category } from '@/shared/types'
+
+export const useProductStore = defineStore('admin-products', () => {
+  // State
+  const products = ref<Product[]>([])
+  const categories = ref<Category[]>([])
+  const selectedProduct = ref<Product | null>(null)
+  const isLoading = ref(false)
+  const isSaving = ref(false)
+  const currentPage = ref(1)
+  const totalPages = ref(1)
+  const filters = ref<ProductFilters>({})
+
+  // Forms
+  const productForm = ref({
+    name: '',
+    slug: '',
+    category_id: '',
+    price: 0,
+    sale_price: '',
+    short_description: '',
+    description: '',
+    thumbnail: '',
+    is_active: true
+  })
+
+  // Getters
+  const hasProducts = computed(() => products.value.length > 0)
+  const activeCategories = computed(() => categories.value.filter(c => c.is_active !== false))
+
+  // Actions
+  async function fetchProducts(params?: ProductFilters & { page?: number; per_page?: number }) {
+    isLoading.value = true
+    try {
+      // Update current page if provided
+      if (params?.page) {
+        currentPage.value = params.page
+      }
+      
+      const queryParams: Record<string, unknown> = { 
+        page: params?.page || currentPage.value, 
+        per_page: params?.per_page || 10
+        // Don't filter by stock - show all products in admin/products
+        // only_with_stock is for warehouse products, not admin products
+      }
+      
+      if (params?.search) queryParams.search = params.search
+
+      // Add cache busting timestamp to ensure fresh data
+      queryParams._t = Date.now()
+      
+      const response = await httpClient.get<{ data: { data: Product[]; last_page: number; current_page: number } | Product[] }>('/admin/products', { params: queryParams })
+      const data = response.data as any
+
+      if (data?.data?.data && Array.isArray(data.data.data)) {
+        // Replace entire array to trigger reactivity
+        products.value = [...data.data.data]
+        totalPages.value = data.data.last_page || 1
+        currentPage.value = data.data.current_page || 1
+      } else if (Array.isArray(data?.data)) {
+        products.value = [...data.data]
+        totalPages.value = 1
+        currentPage.value = 1
+      } else {
+        products.value = []
+        totalPages.value = 1
+        currentPage.value = 1
+      }
+      
+      console.log('Fetched products:', products.value.length, 'items')
+    } catch (error) {
+      console.error('Failed to fetch products:', error)
+      products.value = []
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  async function fetchCategories() {
+    try {
+      const response = await httpClient.get<{ data: Category[] }>('/frontend/categories')
+      const data = response.data as any
+      if (Array.isArray(data?.data)) {
+        categories.value = data.data
+      }
+    } catch (error) {
+      console.error('Failed to fetch categories:', error)
+    }
+  }
+
+  async function createProduct(payload: Record<string, unknown>): Promise<boolean> {
+    isSaving.value = true
+    try {
+      const newProduct = await adminProductService.create(payload)
+      // Reset to page 1 to see new product
+      currentPage.value = 1
+      // Force refresh - clear cache by adding timestamp
+      await fetchProducts({ page: 1 })
+      return true
+    } catch (error) {
+      console.error('Failed to create product:', error)
+      throw error
+    } finally {
+      isSaving.value = false
+    }
+  }
+
+  async function updateProduct(id: number, payload: Record<string, unknown>): Promise<boolean> {
+    isSaving.value = true
+    try {
+      await adminProductService.update(id, payload)
+      // Refresh current page to see updated product
+      await fetchProducts({ page: currentPage.value })
+      return true
+    } catch (error) {
+      console.error('Failed to update product:', error)
+      throw error
+    } finally {
+      isSaving.value = false
+    }
+  }
+
+  async function deleteProduct(id: number): Promise<boolean> {
+    try {
+      await adminProductService.delete(id)
+      // Remove from current list
+      products.value = products.value.filter(p => p.id !== id)
+      // Refresh to update pagination if needed
+      await fetchProducts({ page: currentPage.value })
+      return true
+    } catch (error) {
+      console.error('Failed to delete product:', error)
+      return false
+    }
+  }
+
+  function setPage(page: number) {
+    currentPage.value = page
+  }
+
+  function setFilters(newFilters: ProductFilters) {
+    filters.value = { ...filters.value, ...newFilters }
+    if (currentPage.value !== 1) {
+      currentPage.value = 1
+    }
+  }
+
+  function resetProductForm() {
+    productForm.value = {
+      name: '',
+      slug: '',
+      category_id: '',
+      price: 0,
+      sale_price: '',
+      short_description: '',
+      description: '',
+      thumbnail: '',
+      is_active: true
+    }
+  }
+
+  function reset() {
+    products.value = []
+    selectedProduct.value = null
+    currentPage.value = 1
+    filters.value = {}
+    resetProductForm()
+  }
+
+  return {
+    // State
+    products,
+    categories,
+    selectedProduct,
+    isLoading,
+    isSaving,
+    currentPage,
+    totalPages,
+    filters,
+    productForm,
+    // Getters
+    hasProducts,
+    activeCategories,
+    // Actions
+    fetchProducts,
+    fetchCategories,
+    createProduct,
+    updateProduct,
+    deleteProduct,
+    setPage,
+    setFilters,
+    resetProductForm,
+    reset
+  }
+})
+

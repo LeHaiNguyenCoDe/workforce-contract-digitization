@@ -15,7 +15,6 @@ class Product extends Model
         'slug',
         'sku',
         'price',
-        'stock_qty',
         'min_stock_level',
         'warehouse_type',
         'storage_location',
@@ -24,6 +23,15 @@ class Product extends Model
         'thumbnail',
         'specs',
     ];
+
+    /**
+     * BR-01.1: Product không được chứa thông tin tồn kho
+     * BR-01.2: Một Product có thể thuộc nhiều NCC
+     */
+    public function suppliers()
+    {
+        return $this->belongsToMany(Supplier::class, 'product_supplier');
+    }
 
     public function supplier(): BelongsTo
     {
