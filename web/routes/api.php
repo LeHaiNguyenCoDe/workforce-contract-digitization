@@ -152,6 +152,14 @@ Route::prefix('v1')->middleware([StartSession::class])->group(function () {
         // Warehouse Management
         Route::get('warehouses/dashboard-stats', [WarehouseController::class, 'dashboardStats']);
         
+        // Inbound Receipt Management (Phiếu nhập)
+        Route::get('warehouses/inbound-receipts', [WarehouseController::class, 'inboundReceipts']);
+        Route::post('warehouses/inbound-receipts', [WarehouseController::class, 'createInboundReceipt']);
+        Route::put('warehouses/inbound-receipts/{id}', [WarehouseController::class, 'updateInboundReceipt']);
+        Route::post('warehouses/inbound-receipts/{id}/approve', [WarehouseController::class, 'approveInboundReceipt']);
+        Route::post('warehouses/inbound-receipts/{id}/cancel', [WarehouseController::class, 'cancelInboundReceipt']);
+        Route::delete('warehouses/inbound-receipts/{id}', [WarehouseController::class, 'deleteInboundReceipt']);
+        
         // Inbound Batch Management (BR-02.1, BR-02.2)
         Route::get('warehouses/inbound-batches', [WarehouseController::class, 'inboundBatches']);
         Route::post('warehouses/inbound-batches', [WarehouseController::class, 'createInboundBatch']);
@@ -164,6 +172,18 @@ Route::prefix('v1')->middleware([StartSession::class])->group(function () {
         Route::put('warehouses/quality-checks/{id}', [WarehouseController::class, 'updateQualityCheck']);
         Route::delete('warehouses/quality-checks/{id}', [WarehouseController::class, 'deleteQualityCheck']);
         
+        // Outbound Receipt Management (Phiếu xuất)
+        Route::get('warehouses/outbound-receipts', [WarehouseController::class, 'outboundReceipts']);
+        Route::post('warehouses/outbound-receipts', [WarehouseController::class, 'createOutboundReceipt']);
+        Route::put('warehouses/outbound-receipts/{id}', [WarehouseController::class, 'updateOutboundReceipt']);
+        Route::post('warehouses/outbound-receipts/{id}/approve', [WarehouseController::class, 'approveOutboundReceipt']);
+        Route::post('warehouses/outbound-receipts/{id}/complete', [WarehouseController::class, 'completeOutboundReceipt']);
+        Route::post('warehouses/outbound-receipts/{id}/cancel', [WarehouseController::class, 'cancelOutboundReceipt']);
+        
+        // Stock Adjustments (Điều chỉnh tồn)
+        Route::get('warehouses/stock-adjustments', [WarehouseController::class, 'stockAdjustments']);
+        Route::post('warehouses/stock-adjustments', [WarehouseController::class, 'createStockAdjustment']);
+        
         // Warehouse CRUD
         Route::apiResource('warehouses', WarehouseController::class);
         
@@ -174,6 +194,101 @@ Route::prefix('v1')->middleware([StartSession::class])->group(function () {
         
         // Inventory Logs (BR-09.2)
         Route::get('warehouses/{warehouse}/inventory-logs', [WarehouseController::class, 'inventoryLogs']);
+        
+        // Batch Management (FEFO)
+        Route::get('batches/expiring-soon', [\App\Http\Controllers\BatchController::class, 'expiringSoon']);
+        Route::get('batches/product/{productId}', [\App\Http\Controllers\BatchController::class, 'getProductBatches']);
+        Route::get('batches', [\App\Http\Controllers\BatchController::class, 'index']);
+        Route::post('batches', [\App\Http\Controllers\BatchController::class, 'store']);
+        Route::get('batches/{id}', [\App\Http\Controllers\BatchController::class, 'show']);
+        Route::put('batches/{id}', [\App\Http\Controllers\BatchController::class, 'update']);
+        Route::delete('batches/{id}', [\App\Http\Controllers\BatchController::class, 'destroy']);
+        
+        // Stocktake Management (Kiểm kê)
+        Route::get('stocktakes', [\App\Http\Controllers\StocktakeController::class, 'index']);
+        Route::post('stocktakes', [\App\Http\Controllers\StocktakeController::class, 'store']);
+        Route::get('stocktakes/{id}', [\App\Http\Controllers\StocktakeController::class, 'show']);
+        Route::post('stocktakes/{id}/start', [\App\Http\Controllers\StocktakeController::class, 'start']);
+        Route::put('stocktakes/{id}/items', [\App\Http\Controllers\StocktakeController::class, 'updateItems']);
+        Route::post('stocktakes/{id}/complete', [\App\Http\Controllers\StocktakeController::class, 'complete']);
+        Route::post('stocktakes/{id}/approve', [\App\Http\Controllers\StocktakeController::class, 'approve']);
+        Route::post('stocktakes/{id}/cancel', [\App\Http\Controllers\StocktakeController::class, 'cancel']);
+        Route::delete('stocktakes/{id}', [\App\Http\Controllers\StocktakeController::class, 'destroy']);
+        
+        // Inventory Alerts & Settings
+        Route::get('inventory/settings', [\App\Http\Controllers\InventoryAlertController::class, 'settings']);
+        Route::post('inventory/settings', [\App\Http\Controllers\InventoryAlertController::class, 'saveSetting']);
+        Route::delete('inventory/settings/{id}', [\App\Http\Controllers\InventoryAlertController::class, 'deleteSetting']);
+        Route::get('inventory/alerts', [\App\Http\Controllers\InventoryAlertController::class, 'alerts']);
+        Route::get('inventory/alerts/summary', [\App\Http\Controllers\InventoryAlertController::class, 'summary']);
+        Route::post('inventory/alerts/trigger-requests', [\App\Http\Controllers\InventoryAlertController::class, 'triggerAutoRequests']);
+        
+        // Purchase Requests
+        Route::get('purchase-requests/summary', [\App\Http\Controllers\PurchaseRequestController::class, 'summary']);
+        Route::get('purchase-requests', [\App\Http\Controllers\PurchaseRequestController::class, 'index']);
+        Route::post('purchase-requests', [\App\Http\Controllers\PurchaseRequestController::class, 'store']);
+        Route::get('purchase-requests/{id}', [\App\Http\Controllers\PurchaseRequestController::class, 'show']);
+        Route::put('purchase-requests/{id}', [\App\Http\Controllers\PurchaseRequestController::class, 'update']);
+        Route::post('purchase-requests/{id}/approve', [\App\Http\Controllers\PurchaseRequestController::class, 'approve']);
+        Route::post('purchase-requests/{id}/reject', [\App\Http\Controllers\PurchaseRequestController::class, 'reject']);
+        Route::post('purchase-requests/{id}/mark-ordered', [\App\Http\Controllers\PurchaseRequestController::class, 'markOrdered']);
+        Route::post('purchase-requests/{id}/complete', [\App\Http\Controllers\PurchaseRequestController::class, 'complete']);
+        Route::post('purchase-requests/{id}/cancel', [\App\Http\Controllers\PurchaseRequestController::class, 'cancel']);
+        Route::delete('purchase-requests/{id}', [\App\Http\Controllers\PurchaseRequestController::class, 'destroy']);
+        
+        // Transfer Management (Chuyển kho)
+        Route::get('transfers', [\App\Http\Controllers\TransferController::class, 'index']);
+        Route::post('transfers', [\App\Http\Controllers\TransferController::class, 'store']);
+        Route::get('transfers/{id}', [\App\Http\Controllers\TransferController::class, 'show']);
+        Route::post('transfers/{id}/ship', [\App\Http\Controllers\TransferController::class, 'ship']);
+        Route::post('transfers/{id}/receive', [\App\Http\Controllers\TransferController::class, 'receive']);
+        Route::post('transfers/{id}/cancel', [\App\Http\Controllers\TransferController::class, 'cancel']);
+        Route::delete('transfers/{id}', [\App\Http\Controllers\TransferController::class, 'destroy']);
+        
+        // Finance - Expense Management
+        Route::get('expenses/categories', [\App\Http\Controllers\ExpenseController::class, 'categories']);
+        Route::post('expenses/categories', [\App\Http\Controllers\ExpenseController::class, 'createCategory']);
+        Route::get('expenses/summary', [\App\Http\Controllers\ExpenseController::class, 'summary']);
+        Route::get('expenses', [\App\Http\Controllers\ExpenseController::class, 'index']);
+        Route::post('expenses', [\App\Http\Controllers\ExpenseController::class, 'store']);
+        Route::get('expenses/{id}', [\App\Http\Controllers\ExpenseController::class, 'show']);
+        Route::put('expenses/{id}', [\App\Http\Controllers\ExpenseController::class, 'update']);
+        Route::delete('expenses/{id}', [\App\Http\Controllers\ExpenseController::class, 'destroy']);
+        
+        // Reports
+        Route::get('reports/pnl', [\App\Http\Controllers\ReportController::class, 'pnl']);
+        Route::get('reports/sales', [\App\Http\Controllers\ReportController::class, 'sales']);
+        Route::get('reports/inventory', [\App\Http\Controllers\ReportController::class, 'inventory']);
+        
+        // COD Reconciliation
+        Route::get('cod-reconciliations/shipping-partners', [\App\Http\Controllers\CodReconciliationController::class, 'shippingPartners']);
+        Route::get('cod-reconciliations', [\App\Http\Controllers\CodReconciliationController::class, 'index']);
+        Route::post('cod-reconciliations', [\App\Http\Controllers\CodReconciliationController::class, 'store']);
+        Route::get('cod-reconciliations/{id}', [\App\Http\Controllers\CodReconciliationController::class, 'show']);
+        Route::put('cod-reconciliations/{id}/items', [\App\Http\Controllers\CodReconciliationController::class, 'updateItems']);
+        Route::post('cod-reconciliations/{id}/reconcile', [\App\Http\Controllers\CodReconciliationController::class, 'reconcile']);
+        Route::delete('cod-reconciliations/{id}', [\App\Http\Controllers\CodReconciliationController::class, 'destroy']);
+        
+        // Returns/RMA
+        Route::get('returns', [\App\Http\Controllers\ReturnController::class, 'index']);
+        Route::post('returns', [\App\Http\Controllers\ReturnController::class, 'store']);
+        Route::get('returns/{id}', [\App\Http\Controllers\ReturnController::class, 'show']);
+        Route::post('returns/{id}/approve', [\App\Http\Controllers\ReturnController::class, 'approve']);
+        Route::post('returns/{id}/reject', [\App\Http\Controllers\ReturnController::class, 'reject']);
+        Route::put('returns/{id}/receive', [\App\Http\Controllers\ReturnController::class, 'receiveItems']);
+        Route::post('returns/{id}/complete', [\App\Http\Controllers\ReturnController::class, 'complete']);
+        Route::post('returns/{id}/cancel', [\App\Http\Controllers\ReturnController::class, 'cancel']);
+        
+        // Membership & Points
+        Route::get('membership/tiers', [\App\Http\Controllers\MembershipController::class, 'tiers']);
+        Route::post('membership/tiers', [\App\Http\Controllers\MembershipController::class, 'createTier']);
+        Route::put('membership/tiers/{id}', [\App\Http\Controllers\MembershipController::class, 'updateTier']);
+        Route::delete('membership/tiers/{id}', [\App\Http\Controllers\MembershipController::class, 'deleteTier']);
+        Route::get('membership/customers/{customerId}', [\App\Http\Controllers\MembershipController::class, 'customerMembership']);
+        Route::get('membership/customers/{customerId}/transactions', [\App\Http\Controllers\MembershipController::class, 'transactions']);
+        Route::post('membership/customers/{customerId}/redeem', [\App\Http\Controllers\MembershipController::class, 'redeem']);
+        Route::post('membership/calculate-discount', [\App\Http\Controllers\MembershipController::class, 'calculateDiscount']);
+        
         Route::apiResource('suppliers', SupplierController::class);
 
         // Article/Blog Management

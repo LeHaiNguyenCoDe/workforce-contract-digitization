@@ -130,16 +130,22 @@ export const useProductStore = defineStore('admin-products', () => {
   }
 
   async function deleteProduct(id: number): Promise<boolean> {
+    console.log('[store.deleteProduct] Starting delete for id:', id)
     try {
+      console.log('[store.deleteProduct] Calling adminProductService.delete...')
       await adminProductService.delete(id)
+      console.log('[store.deleteProduct] API call successful')
       // Remove from current list
+      const beforeCount = products.value.length
       products.value = products.value.filter(p => p.id !== id)
+      console.log('[store.deleteProduct] Removed from list. Before:', beforeCount, 'After:', products.value.length)
       // Refresh to update pagination if needed
       await fetchProducts({ page: currentPage.value })
+      console.log('[store.deleteProduct] Products refreshed. Count:', products.value.length)
       return true
     } catch (error) {
-      console.error('Failed to delete product:', error)
-      return false
+      console.error('[store.deleteProduct] Failed to delete product:', error)
+      throw error // Re-throw to let composable handle the error
     }
   }
 

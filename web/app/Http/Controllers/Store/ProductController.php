@@ -386,20 +386,30 @@ class ProductController extends Controller
     public function destroy(Product $product): JsonResponse
     {
         try {
+            \Log::info('Delete product request', ['product_id' => $product->id ?? null]);
+            
             if (!$product || !$product->id) {
+                \Log::warning('Delete product failed: Product not found');
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Product not found',
                 ], 404);
             }
 
+            // Check if product has related stocks
+            $stockCount = \DB::table('stocks')->where('product_id', $product->id)->count();
+            \Log::info('Product stock check', ['product_id' => $product->id, 'stock_count' => $stockCount]);
+
             $this->productService->delete($product->id);
+            
+            \Log::info('Product deleted successfully', ['product_id' => $product->id]);
 
             return response()->json([
                 'status' => 'success',
                 'message' => 'Product deleted',
             ]);
         } catch (NotFoundException $ex) {
+            \Log::warning('Delete product failed: Not found', ['message' => $ex->getMessage()]);
             return response()->json([
                 'status' => 'error',
                 'message' => $ex->getMessage(),

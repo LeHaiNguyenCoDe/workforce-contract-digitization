@@ -17,7 +17,9 @@ class UserRepository implements UserRepositoryInterface
      */
     public function getAll(int $perPage = 15, ?string $search = null): LengthAwarePaginator
     {
-        $query = User::query()->select(['id', 'name', 'email', 'created_at']);
+        $query = User::query()
+            ->select(['id', 'name', 'email', 'active', 'created_at'])
+            ->with('roles:id,name');
 
         if ($search) {
             $query->where(function ($q) use ($search) {

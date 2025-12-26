@@ -238,14 +238,21 @@ export function useProducts() {
   }
 
   async function deleteProduct(id: number) {
+    console.log('[deleteProduct] Starting delete for id:', id)
     const confirmed = await swal.confirmDelete('Bạn có chắc muốn xóa sản phẩm này?')
-    if (!confirmed) return
+    if (!confirmed) {
+      console.log('[deleteProduct] User cancelled')
+      return
+    }
 
     try {
-      await store.deleteProduct(id)
+      console.log('[deleteProduct] Calling store.deleteProduct...')
+      const result = await store.deleteProduct(id)
+      console.log('[deleteProduct] Delete result:', result)
       await swal.success('Xóa sản phẩm thành công!')
     } catch (error: any) {
-      console.error('Failed to delete product:', error)
+      console.error('[deleteProduct] Failed to delete product:', error)
+      console.error('[deleteProduct] Error response:', error.response)
       await swal.error(error.response?.data?.message || 'Xóa sản phẩm thất bại!')
     }
   }

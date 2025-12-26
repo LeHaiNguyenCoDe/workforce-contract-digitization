@@ -16,7 +16,7 @@ export interface WarehouseProduct {
   sku: string
   category: string
   quantity: number
-  available_quantity: number // BR-06.1: Tồn kho có thể xuất
+  available_quantity: number
   minStock: number
   status: string
   location: string
@@ -41,7 +41,7 @@ export interface ProductForm {
 export interface StockForm {
   type: 'in' | 'adjust' | 'outbound'
   quantity: number
-  reason?: string // BR-05.2: Lý do điều chỉnh
+  reason?: string
   note: string
 }
 
@@ -50,6 +50,14 @@ export const useWarehouseStore = defineStore('warehouse-products', () => {
   const products = ref<WarehouseProduct[]>([])
   const categories = ref<any[]>([])
   const suppliers = ref<any[]>([])
+  const warehouses = ref<any[]>([])
+  const stocks = ref<any[]>([])
+  const availableStocks = ref<any[]>([])
+  const inboundReceipts = ref<any[]>([])
+  const outboundReceipts = ref<any[]>([])
+  const stockAdjustments = ref<any[]>([])
+  const selectedReceipt = ref<any>(null)
+  
   const isLoading = ref(false)
   const isSubmitting = ref(false)
   const selectedProduct = ref<WarehouseProduct | null>(null)
@@ -73,7 +81,6 @@ export const useWarehouseStore = defineStore('warehouse-products', () => {
     warehouse_type: 'stock'
   })
 
-  // Last stock form data for remembering values
   const lastStockFormData = ref<{
     productId: number | null
     type: 'in' | 'adjust' | 'outbound'
@@ -90,11 +97,10 @@ export const useWarehouseStore = defineStore('warehouse-products', () => {
   // Getters
   const hasProducts = computed(() => products.value.length > 0)
 
-  // Actions
+  // Actions - Fetch
   async function fetchProducts() {
     isLoading.value = true
     try {
-      // Fetch all products
       const productsResponse = await httpClient.get('/admin/products', {
         params: { per_page: 1000 }
       })
@@ -103,21 +109,15 @@ export const useWarehouseStore = defineStore('warehouse-products', () => {
         ? productsData.data
         : (Array.isArray(productsData) ? productsData : [])
 
-      // Fetch stocks for warehouse
       let stocksData: Stock[] = []
       try {
-        // Only fetch if warehouse ID is valid
         if (selectedWarehouseId.value && selectedWarehouseId.value > 0) {
           stocksData = await warehouseService.getStocks(selectedWarehouseId.value)
-        } else {
-          console.warn('Invalid warehouse ID:', selectedWarehouseId.value, 'skipping stock fetch')
         }
       } catch (error: any) {
-        console.warn('Failed to fetch stocks, will show all products with quantity 0:', error)
-        // Don't throw error, just log it and continue with empty stocks
+        console.warn('Failed to fetch stocks:', error)
       }
 
-      // Create stocks map
       const stocksMap = new Map(
         stocksData.map((stock) => {
           if (stock.quantity !== undefined && stock.quantity !== null) {
@@ -127,7 +127,6 @@ export const useWarehouseStore = defineStore('warehouse-products', () => {
         })
       )
 
-      // Merge products with stocks
       const productMap = new Map<number, WarehouseProduct>()
 
       allProducts.forEach((product: any) => {
@@ -141,7 +140,7 @@ export const useWarehouseStore = defineStore('warehouse-products', () => {
             : 0
           availableQuantity = stock.available_quantity !== undefined && stock.available_quantity !== null
             ? Number(stock.available_quantity)
-            : quantity // Fallback to quantity if available_quantity not set
+            : quantity
         }
 
         productMap.set(product.id, {
@@ -151,10 +150,9 @@ export const useWarehouseStore = defineStore('warehouse-products', () => {
           category: product.category?.name || 'Chưa phân loại',
           category_id: product.category_id,
           quantity: quantity,
-          available_quantity: availableQuantity, // BR-06.1: Tồn kho có thể xuất
-          minStock: Number(product.min_stock_level) || 5, // Ensure it's a number
+          available_quantity: availableQuantity,
+          minStock: Number(product.min_stock_level) || 5,
           status: product.warehouse_type || 'stock',
-          // Use storage_location from product, not warehouse name
           location: product.storage_location || '',
           supplier: product.supplier?.name || product.supplier || '-',
           supplier_id: product.supplier_id,
@@ -163,12 +161,56 @@ export const useWarehouseStore = defineStore('warehouse-products', () => {
         })
       })
 
-      // Replace entire array to trigger reactivity
       products.value = Array.from(productMap.values()).sort((a, b) => b.id - a.id)
-      console.log('Fetched and merged products:', products.value.length, 'items')
     } catch (error) {
       console.error('Failed to fetch products:', error)
       products.value = []
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  async function fetchWarehouses() {
+    try {
+      const res = await httpClient.get('/admin/warehouses')
+      warehouses.value = (res.data as any).data || []
+    } catch (error) {
+      console.error('Failed to fetch warehouses:', error)
+      warehouses.value = []
+    }
+  }
+
+  async function fetchSuppliers() {
+    try {
+      const res = await httpClient.get('/admin/suppliers')
+      suppliers.value = (res.data as any).data?.data || (res.data as any).data || []
+    } catch (error) {
+      console.error('Failed to fetch suppliers:', error)
+      suppliers.value = []
+    }
+  }
+
+  async function fetchAllStocks() {
+    isLoading.value = true
+    try {
+      // Fetch stocks from all warehouses
+      const allStocks: any[] = []
+      for (const wh of warehouses.value) {
+        try {
+          const whStocks = await warehouseService.getStocks(wh.id)
+          allStocks.push(...whStocks.map((s: any) => ({ 
+            ...s, 
+            warehouse: wh,
+            warehouse_id: wh.id // Ensure warehouse_id is set for filtering
+          })))
+        } catch (e) {
+          console.warn(`Failed to fetch stocks for warehouse ${wh.id}`)
+        }
+      }
+      stocks.value = allStocks
+      availableStocks.value = allStocks.filter((s: any) => (s.available_quantity || 0) > 0)
+    } catch (error) {
+      console.error('Failed to fetch all stocks:', error)
     } finally {
       isLoading.value = false
     }
@@ -185,17 +227,127 @@ export const useWarehouseStore = defineStore('warehouse-products', () => {
       categories.value = (catRes.data as any).data || []
       suppliers.value = (supRes.data as any).data?.data || (supRes.data as any).data || []
 
-      // Set default warehouse if available
       if (warehousesRes && (warehousesRes.data as any)?.data) {
-        const warehouses = Array.isArray((warehousesRes.data as any).data)
+        warehouses.value = Array.isArray((warehousesRes.data as any).data)
           ? (warehousesRes.data as any).data
           : []
-        if (warehouses.length > 0 && selectedWarehouseId.value === 1) {
-          selectedWarehouseId.value = warehouses[0].id
+        if (warehouses.value.length > 0 && selectedWarehouseId.value === 1) {
+          selectedWarehouseId.value = warehouses.value[0].id
         }
       }
     } catch (error) {
       console.error('Failed to fetch metadata:', error)
+    }
+  }
+
+  // Inbound Receipts
+  async function fetchInboundReceipts() {
+    isLoading.value = true
+    try {
+      const res = await httpClient.get('/admin/warehouses/inbound-receipts')
+      inboundReceipts.value = (res.data as any).data || []
+    } catch (error) {
+      console.error('Failed to fetch inbound receipts:', error)
+      inboundReceipts.value = []
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  async function createInboundReceipt(data: any) {
+    isSubmitting.value = true
+    try {
+      await httpClient.post('/admin/warehouses/inbound-receipts', data)
+    } finally {
+      isSubmitting.value = false
+    }
+  }
+
+  async function updateInboundReceipt(id: number, data: any) {
+    isSubmitting.value = true
+    try {
+      await httpClient.put(`/admin/warehouses/inbound-receipts/${id}`, data)
+    } finally {
+      isSubmitting.value = false
+    }
+  }
+
+  async function approveInboundReceipt(id: number) {
+    await httpClient.post(`/admin/warehouses/inbound-receipts/${id}/approve`)
+  }
+
+  async function cancelInboundReceipt(id: number) {
+    await httpClient.post(`/admin/warehouses/inbound-receipts/${id}/cancel`)
+  }
+
+  async function deleteInboundReceipt(id: number) {
+    await httpClient.delete(`/admin/warehouses/inbound-receipts/${id}`)
+  }
+
+  // Outbound Receipts
+  async function fetchOutboundReceipts() {
+    isLoading.value = true
+    try {
+      const res = await httpClient.get('/admin/warehouses/outbound-receipts')
+      outboundReceipts.value = (res.data as any).data || []
+    } catch (error) {
+      console.error('Failed to fetch outbound receipts:', error)
+      outboundReceipts.value = []
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  async function createOutboundReceipt(data: any) {
+    isSubmitting.value = true
+    try {
+      await httpClient.post('/admin/warehouses/outbound-receipts', data)
+    } finally {
+      isSubmitting.value = false
+    }
+  }
+
+  async function updateOutboundReceipt(id: number, data: any) {
+    isSubmitting.value = true
+    try {
+      await httpClient.put(`/admin/warehouses/outbound-receipts/${id}`, data)
+    } finally {
+      isSubmitting.value = false
+    }
+  }
+
+  async function approveOutboundReceipt(id: number) {
+    await httpClient.post(`/admin/warehouses/outbound-receipts/${id}/approve`)
+  }
+
+  async function completeOutboundReceipt(id: number) {
+    await httpClient.post(`/admin/warehouses/outbound-receipts/${id}/complete`)
+  }
+
+  async function cancelOutboundReceipt(id: number) {
+    await httpClient.post(`/admin/warehouses/outbound-receipts/${id}/cancel`)
+  }
+
+  // Stock Adjustments
+  async function fetchStockAdjustments() {
+    isLoading.value = true
+    try {
+      const res = await httpClient.get('/admin/warehouses/stock-adjustments')
+      stockAdjustments.value = (res.data as any).data || []
+    } catch (error) {
+      console.error('Failed to fetch stock adjustments:', error)
+      stockAdjustments.value = []
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  async function createStockAdjustment(data: any) {
+    isSubmitting.value = true
+    try {
+      await httpClient.post('/admin/warehouses/stock-adjustments', data)
+    } finally {
+      isSubmitting.value = false
     }
   }
 
@@ -204,27 +356,18 @@ export const useWarehouseStore = defineStore('warehouse-products', () => {
     try {
       const stock = await warehouseService.updateStock(selectedWarehouseId.value, data)
       const newQuantity = Number(stock.quantity) || 0
-      console.log('Stock updated, new quantity:', newQuantity, 'for product:', data.product_id)
 
-      // Update product quantity in list immediately - this ensures table updates right away
       const productIndex = products.value.findIndex(p => p.id === data.product_id)
       if (productIndex !== -1) {
-        // Directly mutate the quantity to trigger reactivity
         products.value[productIndex].quantity = newQuantity
         products.value[productIndex].available_quantity = stock.available_quantity || newQuantity
-        console.log('Updated product in list, index:', productIndex, 'new quantity:', products.value[productIndex].quantity)
-      } else {
-        console.warn('Product not found in list:', data.product_id)
       }
 
-      // Update selectedProduct quantity if it's the same product
       if (selectedProduct.value && selectedProduct.value.id === data.product_id) {
         selectedProduct.value.quantity = newQuantity
         selectedProduct.value.available_quantity = stock.available_quantity || newQuantity
-        console.log('Updated selectedProduct quantity to:', newQuantity)
       }
 
-      // Save last form data
       if (selectedProduct.value && (data.type === 'in' || data.type === 'adjust')) {
         lastStockFormData.value = {
           productId: selectedProduct.value.id,
@@ -268,10 +411,6 @@ export const useWarehouseStore = defineStore('warehouse-products', () => {
       } else {
         const product = await adminProductService.create(payload)
         productId = product.id
-
-        // Note: BR-01.1 - Product không chứa thông tin tồn kho
-        // Không tạo stock trực tiếp khi tạo product
-        // Phải tạo qua Inbound Batch → QC → Inventory
       }
 
       return productId
@@ -287,6 +426,10 @@ export const useWarehouseStore = defineStore('warehouse-products', () => {
 
   function setSelectedWarehouse(id: number) {
     selectedWarehouseId.value = id
+  }
+
+  function setSelectedReceipt(receipt: any) {
+    selectedReceipt.value = receipt
   }
 
   function resetStockForm() {
@@ -315,6 +458,13 @@ export const useWarehouseStore = defineStore('warehouse-products', () => {
     products,
     categories,
     suppliers,
+    warehouses,
+    stocks,
+    availableStocks,
+    inboundReceipts,
+    outboundReceipts,
+    stockAdjustments,
+    selectedReceipt,
     isLoading,
     isSubmitting,
     selectedProduct,
@@ -326,11 +476,29 @@ export const useWarehouseStore = defineStore('warehouse-products', () => {
     hasProducts,
     // Actions
     fetchProducts,
+    fetchWarehouses,
+    fetchSuppliers,
+    fetchAllStocks,
     fetchMetadata,
+    fetchInboundReceipts,
+    createInboundReceipt,
+    updateInboundReceipt,
+    approveInboundReceipt,
+    cancelInboundReceipt,
+    deleteInboundReceipt,
+    fetchOutboundReceipts,
+    createOutboundReceipt,
+    updateOutboundReceipt,
+    approveOutboundReceipt,
+    completeOutboundReceipt,
+    cancelOutboundReceipt,
+    fetchStockAdjustments,
+    createStockAdjustment,
     updateStock,
     saveProduct,
     deleteProduct,
     setSelectedWarehouse,
+    setSelectedReceipt,
     resetStockForm,
     resetProductForm
   }

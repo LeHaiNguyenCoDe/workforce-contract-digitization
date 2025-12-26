@@ -58,15 +58,23 @@ class UserService
     {
         // Prepare data for creation
         $userData = $this->prepareUserData($data, 'create');
+        
+        // Extract role before creating user
+        $role = $userData['role'] ?? null;
+        unset($userData['role']);
 
         $user = $this->userRepository->create($userData);
+        
+        // Sync role if provided
+        if ($role) {
+            $this->syncUserRole($user, $role);
+        }
 
         // Log activity
         $this->logActivity(getAction($this->module), [], $data);
 
-        return $user->toArray();
+        return $user->load('roles')->toArray();
     }
-
     /**
      * Update user
      *
@@ -83,15 +91,30 @@ class UserService
             throw new NotFoundException("User with ID {$id} not found");
         }
 
+        \Log::info('User update request', ['user_id' => $id, 'data' => $data]);
+
         $oldValue = $user->toArray();
         $userData = $this->prepareUserData($data, 'update');
+        
+        \Log::info('Prepared user data', ['userData' => $userData]);
+        
+        // Extract role before updating user
+        $role = $userData['role'] ?? null;
+        unset($userData['role']);
 
         $user = $this->userRepository->update($user, $userData);
+        
+        \Log::info('User updated', ['user' => $user->toArray()]);
+        
+        // Sync role if provided
+        if ($role) {
+            $this->syncUserRole($user, $role);
+        }
 
         // Log activity
         $this->logActivity(getAction($this->module), [$user->id], $data, $oldValue);
 
-        return $user->toArray();
+        return $user->load('roles')->toArray();
     }
 
     /**
@@ -126,20 +149,56 @@ class UserService
      */
     private function prepareUserData(array $data, string $action): array
     {
-        $baseData = [
-            'name' => $data['name'],
-            'email' => $data['email'],
-        ];
+        $baseData = [];
+
+        // Basic fields
+        if (isset($data['name'])) {
+            $baseData['name'] = $data['name'];
+        }
+        if (isset($data['email'])) {
+            $baseData['email'] = $data['email'];
+        }
+        // Handle is_active properly - could be bool, string "true"/"false", or 0/1
+        if (array_key_exists('is_active', $data)) {
+            $value = $data['is_active'];
+            if (is_bool($value)) {
+                $baseData['active'] = $value;
+            } else if (is_string($value)) {
+                $baseData['active'] = !in_array(strtolower($value), ['false', '0', '', 'no']);
+            } else {
+                $baseData['active'] = (bool)$value;
+            }
+        }
 
         // Add password if provided
         if (isset($data['password']) && !empty($data['password'])) {
             $baseData['password'] = Hash::make($data['password']);
         }
 
+        // Handle role assignment
+        if (isset($data['role']) && !empty($data['role'])) {
+            $baseData['role'] = $data['role'];
+        }
+
         // Add audit fields
         $auditData = $this->getAuditData($action);
 
         return array_merge($baseData, $auditData);
+    }
+
+    /**
+     * Sync user role
+     *
+     * @param  \App\Models\User  $user
+     * @param  string  $roleName
+     * @return void
+     */
+    private function syncUserRole($user, string $roleName): void
+    {
+        $role = \App\Models\Role::where('name', $roleName)->first();
+        if ($role) {
+            $user->roles()->sync([$role->id]);
+        }
     }
 
     /**

@@ -84,7 +84,8 @@ const togglePublish = async (article: Article) => {
 }
 
 const deleteArticle = async (id: number) => {
-    if (!confirm('Bạn có chắc muốn xóa bài viết này?')) return
+    console.log('deleteArticle clicked:', id)
+    if (!window.confirm('Bạn có chắc muốn xóa bài viết này?')) return
     try {
         await httpClient.delete(`/admin/articles/${id}`)
         articles.value = articles.value.filter(a => a.id !== id)
@@ -131,7 +132,7 @@ onMounted(fetchArticles)
                             <th class="px-6 py-4 text-left text-sm font-semibold text-slate-400">Lượt xem</th>
                             <th class="px-6 py-4 text-left text-sm font-semibold text-slate-400">Ngày tạo</th>
                             <th class="px-6 py-4 text-right text-sm font-semibold text-slate-400">{{ t('common.actions')
-                                }}</th>
+                            }}</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-white/5">
@@ -195,8 +196,7 @@ onMounted(fetchArticles)
         </div>
 
         <!-- Modal -->
-        <BaseModal :show="showModal" :title="editingArticle ? 'Chỉnh sửa bài viết' : 'Tạo bài viết mới'" size="lg"
-            @close="showModal = false">
+        <BaseModal v-model="showModal" :title="editingArticle ? 'Chỉnh sửa bài viết' : 'Tạo bài viết mới'" size="lg">
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-slate-300 mb-2">Tiêu đề *</label>

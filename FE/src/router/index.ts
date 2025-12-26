@@ -190,22 +190,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'warehouse',
         name: 'admin-warehouse',
-        component: () => import('@/modules/admin/warehouses/views/WarehouseDashboard.vue')
-      },
-      {
-        path: 'warehouse/products',
-        name: 'admin-warehouse-products',
-        component: () => import('@/modules/admin/warehouses/views/WarehouseProductsView.vue')
-      },
-      {
-        path: 'warehouse/suppliers',
-        name: 'admin-warehouse-suppliers',
-        component: () => import('@/modules/admin/warehouses/views/SuppliersView.vue')
-      },
-      {
-        path: 'warehouse/quality',
-        name: 'admin-warehouse-quality',
-        component: () => import('@/modules/admin/warehouses/views/QualityCheckView.vue')
+        redirect: '/admin/warehouse/list'
       },
       {
         path: 'warehouse/list',
@@ -213,14 +198,39 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/modules/admin/warehouses/views/WarehouseListView.vue')
       },
       {
+        path: 'warehouse/inventory',
+        name: 'admin-warehouse-inventory',
+        component: () => import('@/modules/admin/warehouses/views/InventoryView.vue')
+      },
+      {
+        path: 'warehouse/inbound-receipts',
+        name: 'admin-warehouse-inbound-receipts',
+        component: () => import('@/modules/admin/warehouses/views/InboundReceiptView.vue')
+      },
+      {
         path: 'warehouse/inbound-batches',
         name: 'admin-warehouse-inbound-batches',
         component: () => import('@/modules/admin/warehouses/views/InboundBatchView.vue')
       },
       {
+        path: 'warehouse/outbound-receipts',
+        name: 'admin-warehouse-outbound-receipts',
+        component: () => import('@/modules/admin/warehouses/views/OutboundReceiptView.vue')
+      },
+      {
+        path: 'warehouse/adjustments',
+        name: 'admin-warehouse-adjustments',
+        component: () => import('@/modules/admin/warehouses/views/StockAdjustmentView.vue')
+      },
+      {
         path: 'warehouse/inventory-logs',
         name: 'admin-warehouse-inventory-logs',
         component: () => import('@/modules/admin/warehouses/views/InventoryLogsView.vue')
+      },
+      {
+        path: 'warehouse/suppliers',
+        name: 'admin-warehouse-suppliers',
+        component: () => import('@/modules/admin/warehouses/views/SuppliersView.vue')
       },
       {
         path: 'articles',
@@ -232,6 +242,116 @@ const routes: RouteRecordRaw[] = [
         name: 'admin-reviews',
         component: () => import('@/modules/admin/reviews/views/ReviewListView.vue')
       },
+      
+      // === NEW ERP ROUTES ===
+      
+      // Sales - Returns/RMA
+      {
+        path: 'returns',
+        name: 'admin-returns',
+        component: () => import('@/modules/admin/erp/views/ReturnsView.vue')
+      },
+      // Sales - Customers
+      {
+        path: 'customers',
+        name: 'admin-customers',
+        component: () => import('@/modules/admin/erp/views/CustomersView.vue')
+      },
+      
+      // Warehouse - Batches
+      {
+        path: 'warehouse/batches',
+        name: 'admin-warehouse-batches',
+        component: () => import('@/modules/admin/erp/views/BatchesView.vue')
+      },
+      // Warehouse - Stocktakes
+      {
+        path: 'warehouse/stocktakes',
+        name: 'admin-warehouse-stocktakes',
+        component: () => import('@/modules/admin/erp/views/StocktakesView.vue')
+      },
+      // Warehouse - Transfers
+      {
+        path: 'warehouse/transfers',
+        name: 'admin-warehouse-transfers',
+        component: () => import('@/modules/admin/erp/views/TransfersView.vue')
+      },
+      // Warehouse - Inventory Alerts
+      {
+        path: 'warehouse/alerts',
+        name: 'admin-warehouse-alerts',
+        component: () => import('@/modules/admin/erp/views/InventoryAlertsView.vue')
+      },
+      
+      // Purchase - Requests
+      {
+        path: 'purchase/requests',
+        name: 'admin-purchase-requests',
+        component: () => import('@/modules/admin/erp/views/PurchaseRequestsView.vue')
+      },
+      
+      // Finance - Expenses
+      {
+        path: 'finance/expenses',
+        name: 'admin-finance-expenses',
+        component: () => import('@/modules/admin/erp/views/ExpensesView.vue')
+      },
+      // Finance - COD Reconciliation
+      {
+        path: 'finance/cod-reconciliation',
+        name: 'admin-finance-cod',
+        component: () => import('@/modules/admin/erp/views/CODReconciliationView.vue')
+      },
+      
+      // Reports
+      {
+        path: 'reports/sales',
+        name: 'admin-reports-sales',
+        component: () => import('@/modules/admin/erp/views/SalesReportView.vue')
+      },
+      {
+        path: 'reports/inventory',
+        name: 'admin-reports-inventory',
+        component: () => import('@/modules/admin/erp/views/InventoryReportView.vue')
+      },
+      {
+        path: 'reports/pnl',
+        name: 'admin-reports-pnl',
+        component: () => import('@/modules/admin/erp/views/PnLReportView.vue')
+      },
+      
+      // Marketing - Membership
+      {
+        path: 'marketing/membership',
+        name: 'admin-marketing-membership',
+        component: () => import('@/modules/admin/erp/views/MembershipView.vue')
+      },
+      // Marketing - Points
+      {
+        path: 'marketing/points',
+        name: 'admin-marketing-points',
+        component: () => import('@/modules/admin/erp/views/PointsView.vue')
+      },
+      // Marketing - Automations
+      {
+        path: 'marketing/automations',
+        name: 'admin-marketing-automations',
+        component: () => import('@/modules/admin/erp/views/AutomationsView.vue')
+      },
+      
+      // Settings - Permissions
+      {
+        path: 'settings/permissions',
+        name: 'admin-settings-permissions',
+        component: () => import('@/modules/admin/erp/views/PermissionsView.vue')
+      },
+      // Settings - Audit Logs
+      {
+        path: 'settings/audit-logs',
+        name: 'admin-settings-audit-logs',
+        component: () => import('@/modules/admin/erp/views/AuditLogsView.vue')
+      },
+      
       // 404 for admin
       {
         path: ':pathMatch(.*)*',

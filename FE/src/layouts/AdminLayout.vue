@@ -11,7 +11,7 @@ const route = useRoute()
 const authStore = useAuthStore()
 
 const isSidebarCollapsed = ref(false)
-const expandedMenus = ref<string[]>(['warehouses']) // Default expanded
+const expandedMenus = ref<string[]>(['sales', 'warehouse']) // Default expanded
 
 interface MenuItem {
     icon: string
@@ -22,27 +22,97 @@ interface MenuItem {
 }
 
 const menuItems: MenuItem[] = [
-    { icon: 'dashboard', path: '/admin', label: 'admin.dashboard', exact: true },
-    { icon: 'users', path: '/admin/users', label: 'admin.users' },
-    { icon: 'products', path: '/admin/products', label: 'admin.products' },
-    { icon: 'categories', path: '/admin/categories', label: 'admin.categories' },
-    { icon: 'orders', path: '/admin/orders', label: 'admin.orders' },
-    { icon: 'promotions', path: '/admin/promotions', label: 'admin.promotions' },
+    { icon: 'dashboard', path: '/admin', label: 'Dashboard', exact: true },
+
+    // Bán hàng
     {
-        icon: 'warehouses',
-        path: '/admin/warehouse',
-        label: 'admin.warehouse',
+        icon: 'sales',
+        path: '/admin/sales',
+        label: 'Bán hàng',
         children: [
-            { icon: 'list', path: '/admin/warehouse/list', label: 'Danh sách kho' },
-            { icon: 'box', path: '/admin/warehouse/products', label: 'Sản phẩm' },
-            { icon: 'inbound', path: '/admin/warehouse/inbound-batches', label: 'Lô nhập' },
-            { icon: 'quality', path: '/admin/warehouse/quality', label: 'Kiểm tra CL' },
-            { icon: 'logs', path: '/admin/warehouse/inventory-logs', label: 'Lịch sử biến động' },
-            { icon: 'supplier', path: '/admin/warehouse/suppliers', label: 'Nhà cung cấp' },
+            { icon: 'orders', path: '/admin/orders', label: 'Đơn hàng' },
+            { icon: 'returns', path: '/admin/returns', label: 'Trả hàng/RMA' },
+            { icon: 'customers', path: '/admin/customers', label: 'Khách hàng' },
         ]
     },
-    { icon: 'articles', path: '/admin/articles', label: 'admin.articles' },
-    { icon: 'reviews', path: '/admin/reviews', label: 'admin.reviews' },
+
+    // Kho
+    {
+        icon: 'warehouse',
+        path: '/admin/warehouse',
+        label: 'Kho',
+        children: [
+            { icon: 'products', path: '/admin/products', label: 'Sản phẩm' },
+            { icon: 'categories', path: '/admin/categories', label: 'Danh mục' },
+            { icon: 'batches', path: '/admin/warehouse/batches', label: 'Lô hàng & HSD' },
+            { icon: 'inbound', path: '/admin/warehouse/inbound-receipts', label: 'Nhập kho' },
+            { icon: 'outbound', path: '/admin/warehouse/outbound-receipts', label: 'Xuất kho' },
+            { icon: 'stocktake', path: '/admin/warehouse/stocktakes', label: 'Kiểm kê' },
+            { icon: 'transfer', path: '/admin/warehouse/transfers', label: 'Chuyển kho' },
+            { icon: 'alerts', path: '/admin/warehouse/alerts', label: 'Cảnh báo tồn kho' },
+            { icon: 'inventory', path: '/admin/warehouse/inventory', label: 'Tồn kho' },
+        ]
+    },
+
+    // Mua hàng
+    {
+        icon: 'purchase',
+        path: '/admin/purchase',
+        label: 'Mua hàng',
+        children: [
+            { icon: 'supplier', path: '/admin/warehouse/suppliers', label: 'Nhà cung cấp' },
+            { icon: 'po', path: '/admin/purchase/requests', label: 'Phiếu đề nghị nhập' },
+        ]
+    },
+
+    // Tài chính
+    {
+        icon: 'finance',
+        path: '/admin/finance',
+        label: 'Tài chính',
+        children: [
+            { icon: 'expense', path: '/admin/finance/expenses', label: 'Thu chi' },
+            { icon: 'cod', path: '/admin/finance/cod-reconciliation', label: 'Đối soát COD' },
+        ]
+    },
+
+    // Báo cáo
+    {
+        icon: 'reports',
+        path: '/admin/reports',
+        label: 'Báo cáo',
+        children: [
+            { icon: 'sales-report', path: '/admin/reports/sales', label: 'Báo cáo bán hàng' },
+            { icon: 'inventory-report', path: '/admin/reports/inventory', label: 'Báo cáo kho' },
+            { icon: 'finance-report', path: '/admin/reports/pnl', label: 'Báo cáo P&L' },
+        ]
+    },
+
+    // Marketing
+    {
+        icon: 'marketing',
+        path: '/admin/marketing',
+        label: 'Marketing',
+        children: [
+            { icon: 'membership', path: '/admin/marketing/membership', label: 'Hạng thành viên' },
+            { icon: 'points', path: '/admin/marketing/points', label: 'Điểm thưởng' },
+            { icon: 'promotions', path: '/admin/promotions', label: 'Khuyến mãi' },
+            { icon: 'automation', path: '/admin/marketing/automations', label: 'Automation' },
+        ]
+    },
+
+    // Cấu hình
+    {
+        icon: 'settings',
+        path: '/admin/settings',
+        label: 'Cấu hình',
+        children: [
+            { icon: 'users', path: '/admin/users', label: 'Nhân sự' },
+            { icon: 'permissions', path: '/admin/settings/permissions', label: 'Phân quyền' },
+            { icon: 'warehouses', path: '/admin/warehouse/list', label: 'Chi nhánh/Kho' },
+            { icon: 'audit', path: '/admin/settings/audit-logs', label: 'Nhật ký hệ thống' },
+        ]
+    },
 ]
 
 const toggleSubmenu = (icon: string) => {
@@ -104,11 +174,56 @@ const pageTitle = computed(() => {
                             :class="{ 'bg-primary/10 text-white': isActiveRoute(item) }"
                             :title="isSidebarCollapsed ? t(item.label) : undefined">
                             <span class="flex-shrink-0">
-                                <!-- Warehouses -->
-                                <svg v-if="item.icon === 'warehouses'" xmlns="http://www.w3.org/2000/svg" width="20"
+                                <!-- Sales -->
+                                <svg v-if="item.icon === 'sales'" xmlns="http://www.w3.org/2000/svg" width="20"
+                                    height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="8" cy="21" r="1" />
+                                    <circle cx="19" cy="21" r="1" />
+                                    <path
+                                        d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
+                                </svg>
+                                <!-- Warehouse -->
+                                <svg v-else-if="item.icon === 'warehouse'" xmlns="http://www.w3.org/2000/svg" width="20"
                                     height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
                                     <polyline points="9 22 9 12 15 12 15 22" />
+                                </svg>
+                                <!-- Purchase -->
+                                <svg v-else-if="item.icon === 'purchase'" xmlns="http://www.w3.org/2000/svg" width="20"
+                                    height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
+                                    <path d="M3 6h18" />
+                                    <path d="M16 10a4 4 0 0 1-8 0" />
+                                </svg>
+                                <!-- Finance -->
+                                <svg v-else-if="item.icon === 'finance'" xmlns="http://www.w3.org/2000/svg" width="20"
+                                    height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="12" x2="12" y1="2" y2="22" />
+                                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                                </svg>
+                                <!-- Reports -->
+                                <svg v-else-if="item.icon === 'reports'" xmlns="http://www.w3.org/2000/svg" width="20"
+                                    height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M3 3v18h18" />
+                                    <path d="m19 9-5 5-4-4-3 3" />
+                                </svg>
+                                <!-- Marketing -->
+                                <svg v-else-if="item.icon === 'marketing'" xmlns="http://www.w3.org/2000/svg" width="20"
+                                    height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="m22 8-6 4 6 4V8Z" />
+                                    <rect width="14" height="12" x="2" y="6" rx="2" ry="2" />
+                                </svg>
+                                <!-- Settings -->
+                                <svg v-else-if="item.icon === 'settings'" xmlns="http://www.w3.org/2000/svg" width="20"
+                                    height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path
+                                        d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                                <!-- Default -->
+                                <svg v-else xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10" />
                                 </svg>
                             </span>
                             <span v-if="!isSidebarCollapsed" class="font-medium text-sm flex-1 text-left">{{
@@ -249,7 +364,7 @@ const pageTitle = computed(() => {
             </header>
 
             <!-- Content -->
-            <main class="flex-1 overflow-hidden">
+            <main class="flex-1 overflow-y-auto">
                 <RouterView v-slot="{ Component }">
                     <transition enter-active-class="transition-all duration-200 ease-out"
                         enter-from-class="opacity-0 translate-y-2" enter-to-class="opacity-100 translate-y-0"

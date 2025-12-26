@@ -70,7 +70,8 @@ const saveWarehouse = async () => {
 }
 
 const deleteWarehouse = async (id: number) => {
-    if (!confirm('Bạn có chắc muốn xóa kho hàng này?')) return
+    console.log('deleteWarehouse clicked:', id)
+    if (!window.confirm('Bạn có chắc muốn xóa kho hàng này?')) return
     try {
         await httpClient.delete(`/admin/warehouses/${id}`)
         warehouses.value = warehouses.value.filter(w => w.id !== id)
@@ -154,8 +155,7 @@ onMounted(fetchWarehouses)
         </div>
 
         <!-- Modal -->
-        <BaseModal :show="showModal" :title="editingWarehouse ? 'Chỉnh sửa kho' : 'Tạo kho mới'" size="md"
-            @close="showModal = false">
+        <BaseModal v-model="showModal" :title="editingWarehouse ? 'Chỉnh sửa kho' : 'Tạo kho mới'" size="md">
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-slate-300 mb-2">Tên kho *</label>

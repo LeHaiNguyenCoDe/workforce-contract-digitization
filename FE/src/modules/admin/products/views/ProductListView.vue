@@ -51,13 +51,15 @@ onMounted(async () => {
         <h1 class="text-2xl font-bold text-white">{{ t('admin.products') }}</h1>
         <p class="text-slate-400 mt-1">Quản lý danh sách sản phẩm</p>
         <div class="mt-2 bg-info/10 border border-info/20 rounded-lg p-2 text-xs text-info max-w-2xl">
-          <strong>Lưu ý:</strong> Trang này quản lý danh sách sản phẩm (master data). 
-          Để thêm tồn kho cho sản phẩm, vui lòng sử dụng quy trình 
-          <router-link :to="{ name: 'admin-warehouse-inbound-batches' }" class="underline font-semibold hover:text-info-light">
+          <strong>Lưu ý:</strong> Trang này quản lý danh sách sản phẩm (master data).
+          Để thêm tồn kho cho sản phẩm, vui lòng sử dụng quy trình
+          <router-link :to="{ name: 'admin-warehouse-inbound-batches' }"
+            class="underline font-semibold hover:text-info-light">
             Kho hàng → Lô nhập
           </router-link>
-          (Tạo lô nhập → Nhận hàng → QC → Tự động tạo tồn kho). 
-          Xem sản phẩm trong kho tại <router-link :to="{ name: 'admin-warehouse-products' }" class="underline font-semibold hover:text-info-light">Kho hàng → Sản phẩm</router-link>.
+          (Tạo lô nhập → Nhận hàng → QC → Tự động tạo tồn kho).
+          Xem tồn kho tại <router-link :to="{ name: 'admin-warehouse-inventory' }"
+            class="underline font-semibold hover:text-info-light">Kho hàng → Tồn kho</router-link>.
         </div>
       </div>
       <button @click="openCreateModal" class="btn btn-primary">
@@ -74,9 +76,8 @@ onMounted(async () => {
     <div class="bg-dark-800 rounded-xl border border-white/10 p-4 mb-6 flex-shrink-0">
       <div class="flex gap-4">
         <div class="relative flex-1">
-          <svg class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-            xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2">
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" xmlns="http://www.w3.org/2000/svg"
+            width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="11" cy="11" r="8" />
             <path d="m21 21-4.3-4.3" />
           </svg>
@@ -138,12 +139,10 @@ onMounted(async () => {
                   ]">
                     {{ product.stock_quantity || 0 }}
                   </span>
-                  <router-link 
-                    v-if="(product.stock_quantity || 0) === 0"
+                  <router-link v-if="(product.stock_quantity || 0) === 0"
                     :to="{ name: 'admin-warehouse-inbound-batches' }"
                     class="text-xs text-info hover:text-info-light underline"
-                    title="Thêm tồn kho qua quy trình kho hàng"
-                  >
+                    title="Thêm tồn kho qua quy trình kho hàng">
                     Thêm tồn kho
                   </router-link>
                 </div>
@@ -184,13 +183,12 @@ onMounted(async () => {
       <div v-if="totalPages > 1" class="border-t border-white/10 p-4 flex items-center justify-between">
         <span class="text-sm text-slate-400">Trang {{ currentPage }} / {{ totalPages }}</span>
         <div class="flex gap-2">
-          <button @click="changePage(currentPage - 1)" :disabled="currentPage <= 1"
-            class="btn btn-secondary btn-sm" :class="{ 'opacity-50 cursor-not-allowed': currentPage <= 1 }">
+          <button @click="changePage(currentPage - 1)" :disabled="currentPage <= 1" class="btn btn-secondary btn-sm"
+            :class="{ 'opacity-50 cursor-not-allowed': currentPage <= 1 }">
             Trước
           </button>
           <button @click="changePage(currentPage + 1)" :disabled="currentPage >= totalPages"
-            class="btn btn-secondary btn-sm"
-            :class="{ 'opacity-50 cursor-not-allowed': currentPage >= totalPages }">
+            class="btn btn-secondary btn-sm" :class="{ 'opacity-50 cursor-not-allowed': currentPage >= totalPages }">
             Sau
           </button>
         </div>
@@ -219,7 +217,7 @@ onMounted(async () => {
           </div>
           <div>
             <label class="block text-sm font-medium text-slate-300 mb-2">Giá *</label>
-            <input v-model.number="store.productForm.price" type="number" min="0" step="1" class="form-input" 
+            <input v-model.number="store.productForm.price" type="number" min="0" step="1" class="form-input"
               placeholder="0" />
           </div>
         </div>

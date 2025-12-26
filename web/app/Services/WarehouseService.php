@@ -15,6 +15,7 @@ use App\Models\InventoryLog;
 use App\Models\Supplier;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -435,7 +436,7 @@ class WarehouseService
     /**
      * Store a new quality check (legacy - use createQualityCheck instead)
      */
-    public function storeQualityCheck(array $data): QualityCheck
+    public function storeQualityCheck(array $data): array
     {
         return $this->createQualityCheck($data);
     }
@@ -508,4 +509,323 @@ class WarehouseService
     {
         return 'BATCH-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -6));
     }
+
+    /**
+     * Helper: Generate receipt number
+     */
+    private function generateReceiptNumber(string $prefix): string
+    {
+        return $prefix . date('Ymd') . '-' . strtoupper(substr(uniqid(), -6));
+    }
+
+    // ==================== INBOUND RECEIPTS ====================
+
+    /**
+     * Get inbound receipts (Phiếu nhập)
+     */
+    public function getInboundReceipts(array $filters = []): Collection
+    {
+        // For now, use InboundBatch as receipts since the flow is similar
+        // In production, may want separate InboundReceipt model
+        $query = InboundBatch::with(['warehouse', 'supplier', 'items.product']);
+
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        if (!empty($filters['warehouse_id'])) {
+            $query->where('warehouse_id', $filters['warehouse_id']);
+        }
+
+        return $query->latest()->get();
+    }
+
+    /**
+     * Create inbound receipt (Phiếu nhập)
+     */
+    public function createInboundReceipt(array $data): array
+    {
+        return DB::transaction(function () use ($data) {
+            $data['created_by'] = Auth::id();
+            $data['batch_number'] = $this->generateReceiptNumber('IN-');
+            $data['status'] = 'pending'; // Using 'pending' as it's valid in DB enum
+
+            $receipt = InboundBatch::create([
+                'batch_number' => $data['batch_number'],
+                'warehouse_id' => $data['warehouse_id'],
+                'supplier_id' => $data['supplier_id'],
+                'created_by' => $data['created_by'],
+                'status' => $data['status'],
+                'notes' => $data['notes'] ?? null,
+            ]);
+
+            // Create items
+            if (isset($data['items']) && is_array($data['items'])) {
+                foreach ($data['items'] as $item) {
+                    InboundBatchItem::create([
+                        'inbound_batch_id' => $receipt->id,
+                        'product_id' => $item['product_id'],
+                        'quantity_received' => $item['expected_qty'] ?? 0,
+                    ]);
+                }
+            }
+
+            return $receipt->load(['warehouse', 'supplier', 'items.product'])->toArray();
+        });
+    }
+
+    /**
+     * Update inbound receipt
+     */
+    public function updateInboundReceipt(int $id, array $data): array
+    {
+        $receipt = InboundBatch::findOrFail($id);
+
+        if ($receipt->status !== 'pending') {
+            throw new BusinessLogicException('Only pending receipts can be updated');
+        }
+
+        $receipt->update([
+            'supplier_id' => $data['supplier_id'] ?? $receipt->supplier_id,
+            'warehouse_id' => $data['warehouse_id'] ?? $receipt->warehouse_id,
+            'notes' => $data['notes'] ?? $receipt->notes,
+        ]);
+
+        return $receipt->fresh(['warehouse', 'supplier', 'items.product'])->toArray();
+    }
+
+    /**
+     * Approve inbound receipt
+     */
+    public function approveInboundReceipt(int $id): array
+    {
+        $receipt = InboundBatch::findOrFail($id);
+
+        if ($receipt->status !== 'pending') {
+            throw new BusinessLogicException('Only pending receipts can be approved');
+        }
+
+        $receipt->update(['status' => 'received']);
+
+        return $receipt->fresh(['warehouse', 'supplier', 'items.product'])->toArray();
+    }
+
+    /**
+     * Cancel inbound receipt
+     */
+    public function cancelInboundReceipt(int $id): array
+    {
+        $receipt = InboundBatch::findOrFail($id);
+
+        if (!in_array($receipt->status, ['pending', 'received'])) {
+            throw new BusinessLogicException('Cannot cancel receipt in current status');
+        }
+
+        $receipt->update(['status' => 'cancelled']);
+
+        return $receipt->fresh(['warehouse', 'supplier', 'items.product'])->toArray();
+    }
+
+    /**
+     * Delete inbound receipt (only pending)
+     */
+    public function deleteInboundReceipt(int $id): void
+    {
+        $receipt = InboundBatch::findOrFail($id);
+
+        if ($receipt->status !== 'pending') {
+            throw new BusinessLogicException('Only pending receipts can be deleted');
+        }
+
+        // Delete related items first
+        $receipt->items()->delete();
+        $receipt->delete();
+    }
+
+    // ==================== OUTBOUND RECEIPTS ====================
+
+    /**
+     * Get outbound receipts (Phiếu xuất)
+     * Note: Using InventoryLog as proxy for outbound receipts for now
+     * Transform to proper receipt format for frontend
+     */
+    public function getOutboundReceipts(array $filters = []): SupportCollection
+    {
+        $query = InventoryLog::with(['warehouse', 'product', 'user'])
+            ->where('movement_type', InventoryLog::MOVEMENT_TYPE_OUTBOUND);
+
+        if (!empty($filters['warehouse_id'])) {
+            $query->where('warehouse_id', $filters['warehouse_id']);
+        }
+
+        if (!empty($filters['purpose'])) {
+            $query->where('note', 'like', "%Purpose: {$filters['purpose']}%");
+        }
+
+        $logs = $query->latest()->get();
+
+        // Transform logs to receipt format for frontend
+        return $logs->map(function ($log) {
+            // Extract purpose from note if exists
+            $purpose = 'sales';
+            if (preg_match('/Purpose:\s*(\w+)/', $log->note ?? '', $matches)) {
+                $purpose = $matches[1];
+            }
+
+            // Extract receipt number from note
+            $receiptNumber = 'OUT-' . date('Ymd', strtotime($log->created_at)) . '-' . strtoupper(substr(md5($log->id), 0, 6));
+            if (preg_match('/Outbound receipt\s*(OUT-[\w-]+)/', $log->note ?? '', $matches)) {
+                $receiptNumber = $matches[1];
+            }
+
+            return [
+                'id' => $log->id,
+                'receipt_number' => $receiptNumber,
+                'warehouse_id' => $log->warehouse_id,
+                'warehouse' => $log->warehouse,
+                'purpose' => $purpose,
+                'status' => 'completed', // InventoryLog = already completed
+                'items' => [[
+                    'product_id' => $log->product_id,
+                    'product' => $log->product,
+                    'quantity' => abs($log->quantity),
+                ]],
+                'notes' => $log->note,
+                'created_by' => $log->user_id,
+                'user' => $log->user,
+                'created_at' => $log->created_at->format('d/m/Y H:i'),
+                'updated_at' => $log->updated_at?->format('d/m/Y H:i'),
+            ];
+        });
+    }
+
+    /**
+     * Create outbound receipt (Phiếu xuất)
+     */
+    public function createOutboundReceipt(array $data): array
+    {
+        return DB::transaction(function () use ($data) {
+            $receiptNumber = $this->generateReceiptNumber('OUT-');
+            $results = [];
+
+            foreach ($data['items'] as $item) {
+                $stock = Stock::findOrFail($item['stock_id']);
+
+                if ($stock->available_quantity < $item['quantity']) {
+                    throw new BusinessLogicException(
+                        "Insufficient stock for product {$stock->product_id}. Available: {$stock->available_quantity}"
+                    );
+                }
+
+                // Record outbound (create log entry)
+                $log = $this->createInventoryLog([
+                    'warehouse_id' => $data['warehouse_id'],
+                    'product_id' => $stock->product_id,
+                    'product_variant_id' => $stock->product_variant_id,
+                    'movement_type' => InventoryLog::MOVEMENT_TYPE_OUTBOUND,
+                    'quantity' => $item['quantity'],
+                    'quantity_before' => $stock->quantity,
+                    'quantity_after' => $stock->quantity - $item['quantity'],
+                    'user_id' => Auth::id(),
+                    'note' => "Outbound receipt {$receiptNumber} - Purpose: {$data['purpose']}",
+                ]);
+
+                $results[] = $log;
+            }
+
+            return [
+                'receipt_number' => $receiptNumber,
+                'status' => 'pending',
+                'items' => $results,
+            ];
+        });
+    }
+
+    /**
+     * Update outbound receipt
+     */
+    public function updateOutboundReceipt(int $id, array $data): array
+    {
+        throw new BusinessLogicException('Outbound receipts cannot be updated');
+    }
+
+    /**
+     * Approve outbound receipt (reserve stock)
+     */
+    public function approveOutboundReceipt(int $id): array
+    {
+        // For now, this is a placeholder
+        // Would implement stock reservation logic
+        return ['status' => 'approved', 'id' => $id];
+    }
+
+    /**
+     * Complete outbound receipt (deduct stock)
+     */
+    public function completeOutboundReceipt(int $id): array
+    {
+        // For now, this is a placeholder
+        // Would implement final stock deduction
+        return ['status' => 'completed', 'id' => $id];
+    }
+
+    /**
+     * Cancel outbound receipt
+     */
+    public function cancelOutboundReceipt(int $id): array
+    {
+        // For now, this is a placeholder
+        // Would implement stock release logic
+        return ['status' => 'cancelled', 'id' => $id];
+    }
+
+    // ==================== STOCK ADJUSTMENTS ====================
+
+    /**
+     * Get stock adjustments
+     */
+    public function getStockAdjustments(array $filters = []): Collection
+    {
+        $query = InventoryLog::with(['warehouse', 'product', 'user'])
+            ->where('movement_type', InventoryLog::MOVEMENT_TYPE_ADJUST);
+
+        if (!empty($filters['warehouse_id'])) {
+            $query->where('warehouse_id', $filters['warehouse_id']);
+        }
+
+        return $query->latest()->get();
+    }
+
+    /**
+     * Create stock adjustment (BR-05)
+     */
+    public function createStockAdjustment(array $data): array
+    {
+        return DB::transaction(function () use ($data) {
+            $stock = Stock::findOrFail($data['stock_id']);
+
+            // Update stock quantity
+            $stock->update([
+                'quantity' => $data['new_quantity'],
+                'available_quantity' => max(0, $data['new_quantity'] - ($stock->quantity - $stock->available_quantity)),
+            ]);
+
+            // Create adjustment log
+            $log = $this->createInventoryLog([
+                'warehouse_id' => $data['warehouse_id'],
+                'product_id' => $stock->product_id,
+                'product_variant_id' => $stock->product_variant_id,
+                'movement_type' => InventoryLog::MOVEMENT_TYPE_ADJUST,
+                'quantity' => abs($data['adjustment_quantity']),
+                'quantity_before' => $data['previous_quantity'],
+                'quantity_after' => $data['new_quantity'],
+                'user_id' => Auth::id(),
+                'reason' => $data['reason'],
+                'note' => $data['notes'] ?? "Stock adjusted from {$data['previous_quantity']} to {$data['new_quantity']}",
+            ]);
+
+            return $log->toArray();
+        });
+    }
 }
+

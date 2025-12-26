@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { storeToRefs } from 'pinia'
 import BaseModal from '@/shared/components/BaseModal.vue'
 import { useCategoryStore } from '../store/store'
 import { useCategories } from '../composables/useCategories'
@@ -9,6 +10,9 @@ const { t } = useI18n()
 
 // Store
 const store = useCategoryStore()
+
+// Extract reactive refs from store
+const { categories, isLoading, isSaving, categoryForm } = storeToRefs(store)
 
 // Composables
 const {
@@ -20,12 +24,6 @@ const {
   saveCategory,
   deleteCategory
 } = useCategories()
-
-// Computed from store
-const categories = computed(() => store.categories)
-const isLoading = computed(() => store.isLoading)
-const isSaving = computed(() => store.isSaving)
-const categoryForm = store.categoryForm
 
 // Lifecycle
 onMounted(async () => {

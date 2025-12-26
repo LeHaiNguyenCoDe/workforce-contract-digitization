@@ -146,6 +146,18 @@ class ProductService
             throw new NotFoundException("Product with ID {$id} not found");
         }
 
+        // Delete related records first to avoid FK constraint errors
+        // Order matters: delete child tables before parent references
+        \DB::table('quality_checks')->where('product_id', $id)->delete();
+        \DB::table('stocks')->where('product_id', $id)->delete();
+        \DB::table('product_images')->where('product_id', $id)->delete();
+        \DB::table('product_variants')->where('product_id', $id)->delete();
+        \DB::table('reviews')->where('product_id', $id)->delete();
+        \DB::table('wishlist_items')->where('product_id', $id)->delete();
+        \DB::table('cart_items')->where('product_id', $id)->delete();
+        \DB::table('order_items')->where('product_id', $id)->delete();
+        \DB::table('inbound_batch_items')->where('product_id', $id)->delete();
+
         $this->productRepository->delete($product);
     }
 

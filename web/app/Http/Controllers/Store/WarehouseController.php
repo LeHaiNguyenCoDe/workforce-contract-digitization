@@ -586,4 +586,353 @@ class WarehouseController extends Controller
             ], 500);
         }
     }
+
+    // ==================== INBOUND RECEIPTS ====================
+
+    /**
+     * Get all inbound receipts
+     */
+    public function inboundReceipts(Request $request): JsonResponse
+    {
+        try {
+            $receipts = $this->warehouseService->getInboundReceipts($request->only(['status', 'warehouse_id']));
+            return response()->json([
+                'status' => 'success',
+                'data' => $receipts,
+            ]);
+        } catch (\Exception $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Create inbound receipt (Phiếu nhập)
+     */
+    public function createInboundReceipt(Request $request): JsonResponse
+    {
+        try {
+            $request->validate([
+                'warehouse_id' => 'required|exists:warehouses,id',
+                'supplier_id' => 'required|exists:suppliers,id',
+                'expected_date' => 'nullable|date',
+                'notes' => 'nullable|string',
+                'items' => 'required|array|min:1',
+                'items.*.product_id' => 'required|exists:products,id',
+                'items.*.expected_qty' => 'required|integer|min:1',
+                'items.*.unit_price' => 'nullable|numeric|min:0',
+            ]);
+
+            $receipt = $this->warehouseService->createInboundReceipt($request->all());
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Inbound receipt created',
+                'data' => $receipt,
+            ], 201);
+        } catch (\Exception $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Update inbound receipt
+     */
+    public function updateInboundReceipt(int $id, Request $request): JsonResponse
+    {
+        try {
+            $receipt = $this->warehouseService->updateInboundReceipt($id, $request->all());
+            return response()->json([
+                'status' => 'success',
+                'data' => $receipt,
+            ]);
+        } catch (\Exception $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Approve inbound receipt
+     */
+    public function approveInboundReceipt(int $id): JsonResponse
+    {
+        try {
+            $receipt = $this->warehouseService->approveInboundReceipt($id);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Receipt approved',
+                'data' => $receipt,
+            ]);
+        } catch (BusinessLogicException $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 400);
+        } catch (\Exception $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Cancel inbound receipt
+     */
+    public function cancelInboundReceipt(int $id): JsonResponse
+    {
+        try {
+            $receipt = $this->warehouseService->cancelInboundReceipt($id);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Receipt cancelled',
+                'data' => $receipt,
+            ]);
+        } catch (BusinessLogicException $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 400);
+        } catch (\Exception $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete inbound receipt (only pending)
+     */
+    public function deleteInboundReceipt(int $id): JsonResponse
+    {
+        try {
+            $this->warehouseService->deleteInboundReceipt($id);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Receipt deleted',
+            ]);
+        } catch (BusinessLogicException $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 400);
+        } catch (\Exception $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 500);
+        }
+    }
+
+    // ==================== OUTBOUND RECEIPTS ====================
+
+    /**
+     * Get all outbound receipts
+     */
+    public function outboundReceipts(Request $request): JsonResponse
+    {
+        try {
+            $receipts = $this->warehouseService->getOutboundReceipts($request->only(['status', 'purpose']));
+            return response()->json([
+                'status' => 'success',
+                'data' => $receipts,
+            ]);
+        } catch (\Exception $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Create outbound receipt (Phiếu xuất)
+     */
+    public function createOutboundReceipt(Request $request): JsonResponse
+    {
+        try {
+            $request->validate([
+                'warehouse_id' => 'required|exists:warehouses,id',
+                'purpose' => 'required|in:sales,transfer,internal,return',
+                'destination_warehouse_id' => 'nullable|exists:warehouses,id',
+                'notes' => 'nullable|string',
+                'items' => 'required|array|min:1',
+                'items.*.stock_id' => 'required|exists:stocks,id',
+                'items.*.quantity' => 'required|integer|min:1',
+            ]);
+
+            $receipt = $this->warehouseService->createOutboundReceipt($request->all());
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Outbound receipt created',
+                'data' => $receipt,
+            ], 201);
+        } catch (\Exception $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Update outbound receipt
+     */
+    public function updateOutboundReceipt(int $id, Request $request): JsonResponse
+    {
+        try {
+            $receipt = $this->warehouseService->updateOutboundReceipt($id, $request->all());
+            return response()->json([
+                'status' => 'success',
+                'data' => $receipt,
+            ]);
+        } catch (\Exception $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Approve outbound receipt (reserve stock)
+     */
+    public function approveOutboundReceipt(int $id): JsonResponse
+    {
+        try {
+            $receipt = $this->warehouseService->approveOutboundReceipt($id);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Receipt approved, stock reserved',
+                'data' => $receipt,
+            ]);
+        } catch (BusinessLogicException $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 400);
+        } catch (\Exception $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Complete outbound receipt (deduct stock)
+     */
+    public function completeOutboundReceipt(int $id): JsonResponse
+    {
+        try {
+            $receipt = $this->warehouseService->completeOutboundReceipt($id);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Outbound completed, stock deducted',
+                'data' => $receipt,
+            ]);
+        } catch (BusinessLogicException $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 400);
+        } catch (\Exception $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Cancel outbound receipt
+     */
+    public function cancelOutboundReceipt(int $id): JsonResponse
+    {
+        try {
+            $receipt = $this->warehouseService->cancelOutboundReceipt($id);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Receipt cancelled',
+                'data' => $receipt,
+            ]);
+        } catch (BusinessLogicException $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 400);
+        } catch (\Exception $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 500);
+        }
+    }
+
+    // ==================== STOCK ADJUSTMENTS ====================
+
+    /**
+     * Get all stock adjustments
+     */
+    public function stockAdjustments(Request $request): JsonResponse
+    {
+        try {
+            $adjustments = $this->warehouseService->getStockAdjustments($request->only(['warehouse_id']));
+            return response()->json([
+                'status' => 'success',
+                'data' => $adjustments,
+            ]);
+        } catch (\Exception $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Create stock adjustment (BR-05)
+     */
+    public function createStockAdjustment(Request $request): JsonResponse
+    {
+        try {
+            $request->validate([
+                'warehouse_id' => 'required|exists:warehouses,id',
+                'stock_id' => 'required|exists:stocks,id',
+                'previous_quantity' => 'required|integer|min:0',
+                'new_quantity' => 'required|integer|min:0',
+                'adjustment_quantity' => 'required|integer',
+                'reason' => 'required|string|min:3', // BR-05.2: Bắt buộc có lý do
+                'notes' => 'nullable|string',
+            ]);
+
+            $adjustment = $this->warehouseService->createStockAdjustment($request->all());
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Stock adjusted successfully',
+                'data' => $adjustment,
+            ], 201);
+        } catch (BusinessLogicException $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 400);
+        } catch (\Exception $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 500);
+        }
+    }
 }

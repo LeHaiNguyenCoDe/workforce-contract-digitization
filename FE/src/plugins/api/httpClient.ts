@@ -8,8 +8,12 @@ class HttpClient {
   private axiosInstance: AxiosInstance
 
   private constructor() {
+    // Sử dụng relative path để Vite proxy forward requests
+    // Điều này giúp session/cookies hoạt động đúng khi truy cập từ network
+    const apiPrefix = import.meta.env.VITE_API_PREFIX || '/api/v1'
+    
     this.axiosInstance = axios.create({
-      baseURL: import.meta.env.VITE_API_PREFIX || '/api/v1',
+      baseURL: apiPrefix,
       timeout: 30000,
       withCredentials: true,
       headers: {

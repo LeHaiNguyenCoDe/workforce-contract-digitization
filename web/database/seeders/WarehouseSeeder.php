@@ -53,7 +53,8 @@ class WarehouseSeeder extends Seeder
             foreach ($products as $product) {
                 // Tạo stock cho product (không có variant)
                 $quantity = rand(50, 500);
-                $stock = Stock::firstOrCreate(
+                $availableQty = rand((int)($quantity * 0.7), $quantity);
+                $stock = Stock::updateOrCreate(
                     [
                     'warehouse_id' => $warehouse->id,
                     'product_id' => $product->id,
@@ -61,6 +62,7 @@ class WarehouseSeeder extends Seeder
                     ],
                     [
                     'quantity' => $quantity,
+                    'available_quantity' => $availableQty,
                     ]
                 );
 
