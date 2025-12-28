@@ -329,15 +329,18 @@ class OrderService
                 ->first();
 
             if ($stock) {
+                $quantityBefore = $stock->quantity;
                 $stock->decrement('quantity', $item->qty);
 
-                // Record movement
-                \App\Models\StockMovement::create([
+                // Record movement using InventoryLog (BR-09.2)
+                \App\Models\InventoryLog::create([
                     'warehouse_id' => $stock->warehouse_id,
                     'product_id' => $item->product_id,
                     'product_variant_id' => $item->product_variant_id,
-                    'type' => 'out',
-                    'quantity' => $item->qty,
+                    'movement_type' => \App\Models\InventoryLog::MOVEMENT_TYPE_OUTBOUND,
+                    'quantity' => -$item->qty,
+                    'quantity_before' => $quantityBefore,
+                    'quantity_after' => $quantityBefore - $item->qty,
                     'reference_type' => 'order',
                     'reference_id' => $order->id,
                     'note' => 'Order approval for ' . $order->code,
@@ -457,14 +460,18 @@ class OrderService
                 ->first();
 
             if ($stock) {
+                $quantityBefore = $stock->quantity;
                 $stock->increment('quantity', $item->qty);
 
-                \App\Models\StockMovement::create([
+                // Record return movement using InventoryLog (BR-09.2)
+                \App\Models\InventoryLog::create([
                     'warehouse_id' => $stock->warehouse_id,
                     'product_id' => $item->product_id,
                     'product_variant_id' => $item->product_variant_id,
-                    'type' => 'in',
+                    'movement_type' => \App\Models\InventoryLog::MOVEMENT_TYPE_RETURN,
                     'quantity' => $item->qty,
+                    'quantity_before' => $quantityBefore,
+                    'quantity_after' => $quantityBefore + $item->qty,
                     'reference_type' => 'order_cancel',
                     'reference_id' => $order->id,
                     'note' => 'Order cancelled: ' . $order->code,

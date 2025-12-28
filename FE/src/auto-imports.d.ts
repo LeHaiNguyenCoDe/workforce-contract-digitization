@@ -102,36 +102,43 @@ declare global {
   const useAdminOrderStore: typeof import('./modules/admin/orders/store/store').useAdminOrderStore
   const useAdminProductStore: typeof import('./modules/admin/products/store/store').useAdminProductStore
   const useAdminPromotionStore: typeof import('./modules/admin/promotions/store/store').useAdminPromotionStore
-  const useArticleStore: typeof import('./modules/landing/articles/store').useArticleStore
+  const useArticleStore: typeof import('./modules/landing/articles/store/store').useArticleStore
+  const useArticles: typeof import('./modules/landing/articles/composables/useArticles').useArticles
   const useAttrs: typeof import('vue').useAttrs
   const useAuditLogs: typeof import('./modules/admin/erp/audit-logs/composables/useAuditLogs').useAuditLogs
+  const useAuth: typeof import('./modules/landing/auth/composables/useAuth').useAuth
   const useAuthStore: typeof import('@/stores').useAuthStore
   const useAutomations: typeof import('./modules/admin/erp/automations/composables/useAutomations').useAutomations
-  const useCartStore: typeof import('./modules/landing/cart/store').useCartStore
-  const useCategories: typeof import('./modules/admin/categories/composables/useCategories').useCategories
+  const useCart: typeof import('./modules/landing/cart/composables/useCart').useCart
+  const useCartStore: typeof import('./modules/landing/cart/store/store').useCartStore
+  const useCategories: typeof import('./modules/landing/categories/composables/useCategories').useCategories
+  const useCheckout: typeof import('./modules/landing/orders/composables/useCheckout').useCheckout
   const useCssModule: typeof import('vue').useCssModule
   const useCssVars: typeof import('vue').useCssVars
   const useCustomers: typeof import('./modules/admin/erp/customers/composables/useCustomers').useCustomers
   const useExpenseCategories: typeof import('./modules/admin/erp/expenses/composables/useExpenseCategories').useExpenseCategories
   const useExpenses: typeof import('./modules/admin/erp/expenses/composables/useExpenses').useExpenses
-  const useHomeStore: typeof import('./modules/landing/home/store').useHomeStore
+  const useHome: typeof import('./modules/landing/home/composables/useHome').useHome
+  const useHomeStore: typeof import('./modules/landing/home/store/store').useHomeStore
   const useI18n: typeof import('vue-i18n').useI18n
   const useId: typeof import('vue').useId
-  const useLandingCategoryStore: typeof import('./modules/landing/categories/store').useLandingCategoryStore
-  const useLandingOrderStore: typeof import('./modules/landing/orders/store').useLandingOrderStore
-  const useLandingProductStore: typeof import('./modules/landing/products/store').useLandingProductStore
-  const useLandingPromotionStore: typeof import('./modules/landing/promotions/store').useLandingPromotionStore
+  const useLandingCategoryStore: typeof import('./modules/landing/categories/store/store').useLandingCategoryStore
+  const useLandingOrderStore: typeof import('./modules/landing/orders/store/store').useLandingOrderStore
+  const useLandingProductStore: typeof import('./modules/landing/products/store/store').useLandingProductStore
+  const useLandingPromotionStore: typeof import('./modules/landing/promotions/store/store').useLandingPromotionStore
   const useLink: typeof import('vue-router').useLink
-  const useLoyaltyStore: typeof import('./modules/landing/loyalty/store').useLoyaltyStore
+  const useLoyalty: typeof import('./modules/landing/loyalty/composables/useLoyalty').useLoyalty
+  const useLoyaltyStore: typeof import('./modules/landing/loyalty/store/store').useLoyaltyStore
   const useMembership: typeof import('./modules/admin/erp/membership/composables/useMembership').useMembership
   const useModel: typeof import('vue').useModel
-  const useOrders: typeof import('./modules/admin/orders/composables/useOrders').useOrders
+  const useOrders: typeof import('./modules/landing/orders/composables/useOrders').useOrders
   const usePermission: typeof import('./composables/usePermission').usePermission
   const usePermissions: typeof import('./modules/admin/erp/permissions/composables/usePermissions').usePermissions
   const usePoints: typeof import('./modules/admin/erp/points/composables/usePoints').usePoints
   const useProductModal: typeof import('./modules/admin/warehouses/composables/useProductModal').useProductModal
-  const useProducts: typeof import('./modules/admin/products/composables/useProducts').useProducts
-  const usePromotions: typeof import('./modules/admin/promotions/composables/usePromotions').usePromotions
+  const useProducts: typeof import('./modules/landing/products/composables/useProducts').useProducts
+  const useProfile: typeof import('./modules/landing/profile/composables/useProfile').useProfile
+  const usePromotions: typeof import('./modules/landing/promotions/composables/usePromotions').usePromotions
   const useReturns: typeof import('./modules/admin/erp/returns/composables/useReturns').useReturns
   const useReviewStore: typeof import('./modules/admin/reviews/store/store').useReviewStore
   const useReviews: typeof import('./modules/admin/reviews/composables/useReviews').useReviews
@@ -143,7 +150,8 @@ declare global {
   const useUsers: typeof import('./modules/admin/users/composables/useUsers').useUsers
   const useWarehouseProducts: typeof import('./modules/admin/warehouses/composables/useWarehouseProducts').useWarehouseProducts
   const useWarehouseStore: typeof import('./modules/admin/warehouses/store/store').useWarehouseStore
-  const useWishlistStore: typeof import('./modules/landing/wishlist/store').useWishlistStore
+  const useWishlist: typeof import('./modules/landing/wishlist/composables/useWishlist').useWishlist
+  const useWishlistStore: typeof import('./modules/landing/wishlist/store/store').useWishlistStore
   const userStatusClasses: typeof import('./shared/helpers/statusHelpers').userStatusClasses
   const userStatusLabels: typeof import('./shared/helpers/statusHelpers').userStatusLabels
   const warehouseService: typeof import('@/plugins/api/services').warehouseService
@@ -157,6 +165,12 @@ declare global {
   // @ts-ignore
   export type { Component, Slot, Slots, ComponentPublicInstance, ComputedRef, DirectiveBinding, ExtractDefaultPropTypes, ExtractPropTypes, ExtractPublicPropTypes, InjectionKey, PropType, Ref, ShallowRef, MaybeRef, MaybeRefOrGetter, VNode, WritableComputedRef } from 'vue'
   import('vue')
+  // @ts-ignore
+  export type { CartItem, Cart } from './modules/landing/cart/composables/useCart'
+  import('./modules/landing/cart/composables/useCart')
+  // @ts-ignore
+  export type { ShippingAddress, CheckoutForm, PaymentMethod } from './modules/landing/orders/composables/useCheckout'
+  import('./modules/landing/orders/composables/useCheckout')
   // @ts-ignore
   export type { Category } from './modules/admin/categories/store/store'
   import('./modules/admin/categories/store/store')
@@ -272,36 +286,43 @@ declare module 'vue' {
     readonly useAdminOrderStore: UnwrapRef<typeof import('./modules/admin/orders/store/store')['useAdminOrderStore']>
     readonly useAdminProductStore: UnwrapRef<typeof import('./modules/admin/products/store/store')['useAdminProductStore']>
     readonly useAdminPromotionStore: UnwrapRef<typeof import('./modules/admin/promotions/store/store')['useAdminPromotionStore']>
-    readonly useArticleStore: UnwrapRef<typeof import('./modules/landing/articles/store')['useArticleStore']>
+    readonly useArticleStore: UnwrapRef<typeof import('./modules/landing/articles/store/store')['useArticleStore']>
+    readonly useArticles: UnwrapRef<typeof import('./modules/landing/articles/composables/useArticles')['useArticles']>
     readonly useAttrs: UnwrapRef<typeof import('vue')['useAttrs']>
     readonly useAuditLogs: UnwrapRef<typeof import('./modules/admin/erp/audit-logs/composables/useAuditLogs')['useAuditLogs']>
+    readonly useAuth: UnwrapRef<typeof import('./modules/landing/auth/composables/useAuth')['useAuth']>
     readonly useAuthStore: UnwrapRef<typeof import('@/stores')['useAuthStore']>
     readonly useAutomations: UnwrapRef<typeof import('./modules/admin/erp/automations/composables/useAutomations')['useAutomations']>
-    readonly useCartStore: UnwrapRef<typeof import('./modules/landing/cart/store')['useCartStore']>
-    readonly useCategories: UnwrapRef<typeof import('./modules/admin/categories/composables/useCategories')['useCategories']>
+    readonly useCart: UnwrapRef<typeof import('./modules/landing/cart/composables/useCart')['useCart']>
+    readonly useCartStore: UnwrapRef<typeof import('./modules/landing/cart/store/store')['useCartStore']>
+    readonly useCategories: UnwrapRef<typeof import('./modules/landing/categories/composables/useCategories')['useCategories']>
+    readonly useCheckout: UnwrapRef<typeof import('./modules/landing/orders/composables/useCheckout')['useCheckout']>
     readonly useCssModule: UnwrapRef<typeof import('vue')['useCssModule']>
     readonly useCssVars: UnwrapRef<typeof import('vue')['useCssVars']>
     readonly useCustomers: UnwrapRef<typeof import('./modules/admin/erp/customers/composables/useCustomers')['useCustomers']>
     readonly useExpenseCategories: UnwrapRef<typeof import('./modules/admin/erp/expenses/composables/useExpenseCategories')['useExpenseCategories']>
     readonly useExpenses: UnwrapRef<typeof import('./modules/admin/erp/expenses/composables/useExpenses')['useExpenses']>
-    readonly useHomeStore: UnwrapRef<typeof import('./modules/landing/home/store')['useHomeStore']>
+    readonly useHome: UnwrapRef<typeof import('./modules/landing/home/composables/useHome')['useHome']>
+    readonly useHomeStore: UnwrapRef<typeof import('./modules/landing/home/store/store')['useHomeStore']>
     readonly useI18n: UnwrapRef<typeof import('vue-i18n')['useI18n']>
     readonly useId: UnwrapRef<typeof import('vue')['useId']>
-    readonly useLandingCategoryStore: UnwrapRef<typeof import('./modules/landing/categories/store')['useLandingCategoryStore']>
-    readonly useLandingOrderStore: UnwrapRef<typeof import('./modules/landing/orders/store')['useLandingOrderStore']>
-    readonly useLandingProductStore: UnwrapRef<typeof import('./modules/landing/products/store')['useLandingProductStore']>
-    readonly useLandingPromotionStore: UnwrapRef<typeof import('./modules/landing/promotions/store')['useLandingPromotionStore']>
+    readonly useLandingCategoryStore: UnwrapRef<typeof import('./modules/landing/categories/store/store')['useLandingCategoryStore']>
+    readonly useLandingOrderStore: UnwrapRef<typeof import('./modules/landing/orders/store/store')['useLandingOrderStore']>
+    readonly useLandingProductStore: UnwrapRef<typeof import('./modules/landing/products/store/store')['useLandingProductStore']>
+    readonly useLandingPromotionStore: UnwrapRef<typeof import('./modules/landing/promotions/store/store')['useLandingPromotionStore']>
     readonly useLink: UnwrapRef<typeof import('vue-router')['useLink']>
-    readonly useLoyaltyStore: UnwrapRef<typeof import('./modules/landing/loyalty/store')['useLoyaltyStore']>
+    readonly useLoyalty: UnwrapRef<typeof import('./modules/landing/loyalty/composables/useLoyalty')['useLoyalty']>
+    readonly useLoyaltyStore: UnwrapRef<typeof import('./modules/landing/loyalty/store/store')['useLoyaltyStore']>
     readonly useMembership: UnwrapRef<typeof import('./modules/admin/erp/membership/composables/useMembership')['useMembership']>
     readonly useModel: UnwrapRef<typeof import('vue')['useModel']>
-    readonly useOrders: UnwrapRef<typeof import('./modules/admin/orders/composables/useOrders')['useOrders']>
+    readonly useOrders: UnwrapRef<typeof import('./modules/landing/orders/composables/useOrders')['useOrders']>
     readonly usePermission: UnwrapRef<typeof import('./composables/usePermission')['usePermission']>
     readonly usePermissions: UnwrapRef<typeof import('./modules/admin/erp/permissions/composables/usePermissions')['usePermissions']>
     readonly usePoints: UnwrapRef<typeof import('./modules/admin/erp/points/composables/usePoints')['usePoints']>
     readonly useProductModal: UnwrapRef<typeof import('./modules/admin/warehouses/composables/useProductModal')['useProductModal']>
-    readonly useProducts: UnwrapRef<typeof import('./modules/admin/products/composables/useProducts')['useProducts']>
-    readonly usePromotions: UnwrapRef<typeof import('./modules/admin/promotions/composables/usePromotions')['usePromotions']>
+    readonly useProducts: UnwrapRef<typeof import('./modules/landing/products/composables/useProducts')['useProducts']>
+    readonly useProfile: UnwrapRef<typeof import('./modules/landing/profile/composables/useProfile')['useProfile']>
+    readonly usePromotions: UnwrapRef<typeof import('./modules/landing/promotions/composables/usePromotions')['usePromotions']>
     readonly useReturns: UnwrapRef<typeof import('./modules/admin/erp/returns/composables/useReturns')['useReturns']>
     readonly useReviewStore: UnwrapRef<typeof import('./modules/admin/reviews/store/store')['useReviewStore']>
     readonly useReviews: UnwrapRef<typeof import('./modules/admin/reviews/composables/useReviews')['useReviews']>
@@ -313,7 +334,8 @@ declare module 'vue' {
     readonly useUsers: UnwrapRef<typeof import('./modules/admin/users/composables/useUsers')['useUsers']>
     readonly useWarehouseProducts: UnwrapRef<typeof import('./modules/admin/warehouses/composables/useWarehouseProducts')['useWarehouseProducts']>
     readonly useWarehouseStore: UnwrapRef<typeof import('./modules/admin/warehouses/store/store')['useWarehouseStore']>
-    readonly useWishlistStore: UnwrapRef<typeof import('./modules/landing/wishlist/store')['useWishlistStore']>
+    readonly useWishlist: UnwrapRef<typeof import('./modules/landing/wishlist/composables/useWishlist')['useWishlist']>
+    readonly useWishlistStore: UnwrapRef<typeof import('./modules/landing/wishlist/store/store')['useWishlistStore']>
     readonly userStatusClasses: UnwrapRef<typeof import('./shared/helpers/statusHelpers')['userStatusClasses']>
     readonly userStatusLabels: UnwrapRef<typeof import('./shared/helpers/statusHelpers')['userStatusLabels']>
     readonly warehouseService: UnwrapRef<typeof import('@/plugins/api/services')['warehouseService']>

@@ -1,6 +1,17 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import httpClient from '@/plugins/api/httpClient'
+/**
+ * Shipping Address View
+ * Uses useProfile composable for address management
+ */
+import { ref, onMounted, watch } from 'vue'
+import { useProfile } from '../composables/useProfile'
+
+const {
+    user,
+    isSaving: isUpdating,
+    message,
+    updateAddress
+} = useProfile()
 
 const addressForm = ref({
     province: '',
@@ -9,118 +20,85 @@ const addressForm = ref({
     address_detail: ''
 })
 
-const isUpdating = ref(false)
-const message = ref('')
+const syncForm = () => {
+    if (user.value) {
+        addressForm.value.province = (user.value as any).province || ''
+        addressForm.value.district = (user.value as any).district || ''
+        addressForm.value.ward = (user.value as any).ward || ''
+        addressForm.value.address_detail = (user.value as any).address_detail || ''
+    }
+}
 
-const updateAddress = async () => {
-    isUpdating.value = true
-    message.value = ''
+onMounted(syncForm)
+watch(user, syncForm)
+
+const handleUpdateAddress = async () => {
     try {
-        await httpClient.put('/frontend/profile/address', addressForm.value)
-        message.value = 'Cập nhật địa chỉ thành công!'
-    } catch (error: any) {
-        message.value = error.response?.data?.message || 'Cập nhật thất bại!'
-    } finally {
-        isUpdating.value = false
+        await updateAddress(addressForm.value)
+    } catch (err) {
+        // Error handled in composable/message
     }
 }
 </script>
 
 <template>
     <div class="shipping-address">
-        <h2 class="section-title">Địa chỉ nhận hàng</h2>
+        <h2 class="text-xl font-bold text-white mb-8 border-b border-white/5 pb-4">Địa chỉ nhận hàng</h2>
 
-        <form @submit.prevent="updateAddress" class="address-form">
-            <div class="form-row">
+        <form @submit.prevent="handleUpdateAddress" class="max-w-2xl mx-auto space-y-8">
+            <div class="grid md:grid-cols-2 gap-6">
                 <div class="form-group">
-                    <label>Tỉnh / Thành phố</label>
-                    <input v-model="addressForm.province" type="text" class="form-input" placeholder="Thanh Hóa" />
+                    <label class="form-label">Tỉnh / Thành phố</label>
+                    <input v-model="addressForm.province" type="text" class="form-input" placeholder="Tỉnh / Thành phố" />
                 </div>
                 <div class="form-group">
-                    <label>Quận / Huyện</label>
-                    <input v-model="addressForm.district" type="text" class="form-input" placeholder="Hậu Lộc" />
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Phường / Xã</label>
-                    <input v-model="addressForm.ward" type="text" class="form-input" placeholder="Hưng Lộc" />
+                    <label class="form-label">Quận / Huyện</label>
+                    <input v-model="addressForm.district" type="text" class="form-input" placeholder="Quận / Huyện" />
                 </div>
                 <div class="form-group">
-                    <label>Ghi chú (số nhà, địa chỉ chi tiết)</label>
+                    <label class="form-label">Phường / Xã</label>
+                    <input v-model="addressForm.ward" type="text" class="form-input" placeholder="Phường / Xã" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Địa chỉ chi tiết (số nhà, tên đường...)</label>
                     <input v-model="addressForm.address_detail" type="text" class="form-input"
-                        placeholder="Số nhà 21" />
+                        placeholder="Số nhà 21, Đường ABC..." />
                 </div>
             </div>
 
-            <div v-if="message" class="message" :class="{ success: message.includes('thành công') }">
+            <div v-if="message" class="p-4 rounded-xl text-center text-sm" 
+                :class="message.includes('thành công') ? 'bg-success/10 text-success' : 'bg-error/10 text-error'">
                 {{ message }}
             </div>
 
-            <button type="submit" class="btn btn-primary" :disabled="isUpdating">
-                {{ isUpdating ? 'Đang cập nhật...' : 'Cập nhật' }}
-            </button>
+            <div class="flex justify-center pt-4">
+                <button type="submit" class="btn btn-primary px-12 py-3 font-bold" :disabled="isUpdating">
+                    <span v-if="isUpdating" class="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin mr-2"></span>
+                    {{ isUpdating ? 'Đang cập nhật...' : 'Lưu địa chỉ' }}
+                </button>
+            </div>
         </form>
+
+        <!-- Address Card Visualization -->
+        <div v-if="addressForm.province" class="mt-12 p-6 bg-dark-700/30 border border-white/5 rounded-2xl relative overflow-hidden group">
+            <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                <span class="text-6xl">📮</span>
+            </div>
+            <div class="relative z-10">
+                <span class="text-xs font-bold text-primary uppercase tracking-widest mb-2 block">Địa chỉ hiện tại</span>
+                <p class="text-white text-lg font-medium leading-relaxed">
+                    {{ addressForm.address_detail }}{{ addressForm.address_detail ? ', ' : '' }}
+                    {{ addressForm.ward }}{{ addressForm.ward ? ', ' : '' }}
+                    {{ addressForm.district }}{{ addressForm.district ? ', ' : '' }}
+                    {{ addressForm.province }}
+                </p>
+                <div class="flex items-center gap-2 mt-4 text-slate-400 text-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                    </svg>
+                    <span>Mặc định cho mọi đơn hàng</span>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
-
-<style scoped>
-.section-title {
-    font-size: var(--text-xl);
-    font-weight: 600;
-    color: var(--color-primary);
-    margin-bottom: var(--space-6);
-    text-align: center;
-}
-
-.address-form {
-    max-width: 600px;
-    margin: 0 auto;
-}
-
-.form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-4);
-    margin-bottom: var(--space-4);
-}
-
-.form-group {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-}
-
-.form-group label {
-    font-size: var(--text-sm);
-    font-weight: 500;
-    color: var(--color-text-secondary);
-}
-
-.message {
-    padding: var(--space-3);
-    border-radius: var(--radius-md);
-    margin-bottom: var(--space-4);
-    text-align: center;
-    background: rgba(239, 68, 68, 0.1);
-    color: var(--color-error);
-}
-
-.message.success {
-    background: rgba(34, 197, 94, 0.1);
-    color: var(--color-success);
-}
-
-.btn {
-    display: block;
-    margin: 0 auto;
-    min-width: 150px;
-}
-
-@media (max-width: 640px) {
-    .form-row {
-        grid-template-columns: 1fr;
-    }
-}
-</style>

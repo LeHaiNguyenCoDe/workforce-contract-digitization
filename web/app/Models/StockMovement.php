@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class StockMovement extends Model
 {
+    // Table was renamed from stock_movements to inventory_logs in BR-09.2 migration
+    protected $table = 'inventory_logs';
+
     public const TYPE_IN = 'in';
     public const TYPE_OUT = 'out';
     public const TYPE_ADJUST = 'adjust';

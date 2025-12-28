@@ -2,6 +2,8 @@
 import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { orderColumns } from '../../configs/columns'
+import { useOrders } from '../../composables/useOrders'
+import OrderDetailModal from '../../components/OrderDetailModal.vue'
 
 const { t } = useI18n()
 
@@ -11,6 +13,8 @@ const store = useAdminOrderStore()
 // Composables
 const {
   searchQuery,
+  selectedOrder,
+  showOrderDetail,
   filteredOrders,
   canApproveOrders,
   getStatusInfo,
@@ -19,13 +23,10 @@ const {
   formatPrice,
   formatDate,
   setSearchQuery,
-  handleStatusUpdate,
-  handleAssignShipper,
   confirmAssignShipper,
-  handleCheckStock,
+  viewOrderDetail,
+  closeOrderDetail,
   cancelOrder,
-  viewTracking,
-  approveOrder,
   handleConfirmOrder,
   handleMarkDelivered,
   handleCompleteOrder
@@ -103,8 +104,8 @@ onMounted(async () => {
 
     <!-- Table -->
     <AdminTable :columns="orderColumns" :data="filteredOrders" :loading="isLoading" empty-text="Không có đơn hàng nào">
-      <template #cell-order_number="{ value }">
-        <code class="text-xs font-mono text-primary font-bold">{{ value }}</code>
+      <template #cell-order_number="{ item, value }">
+        <code class="text-xs font-mono text-primary font-bold">{{ value || item.code || `#${item.id}` }}</code>
       </template>
 
       <template #cell-customer="{ item }">
@@ -157,7 +158,7 @@ onMounted(async () => {
               icon="delete" title="Hủy đơn" variant="danger" 
               @click.stop="cancelOrder(item.id)" :loading="isUpdating === item.id" />
           </template>
-          <DAction icon="view" title="Chi tiết" variant="info" @click.stop="handleCheckStock(item)" />
+          <DAction icon="view" title="Chi tiết" variant="info" @click.stop="viewOrderDetail(item)" />
         </div>
       </template>
 
@@ -190,5 +191,16 @@ onMounted(async () => {
         </div>
       </template>
     </DModal>
+
+    <!-- Order Detail Modal -->
+    <OrderDetailModal
+      v-model="showOrderDetail"
+      :order="selectedOrder"
+      :isUpdating="isUpdating"
+      @confirm="handleConfirmOrder"
+      @deliver="handleMarkDelivered"
+      @complete="handleCompleteOrder"
+      @cancel="(order) => cancelOrder(order.id)"
+    />
   </div>
 </template>

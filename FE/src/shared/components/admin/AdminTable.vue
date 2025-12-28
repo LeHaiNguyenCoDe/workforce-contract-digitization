@@ -21,6 +21,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  data: () => [],
   loading: false,
   emptyText: 'Không có dữ liệu',
   emptyIcon: 'inbox',

@@ -1,61 +1,56 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+/**
+ * Category Products View
+ * Uses useCategories composable for category logic
+ */
+import { ref, watch, onMounted } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { useCategories } from '../composables/useCategories'
 import httpClient from '@/plugins/api/httpClient'
+import type { Product } from '@/modules/landing/products/types'
 
 const { t } = useI18n()
 const route = useRoute()
 
-interface Product {
-    id: number
-    name: string
-    slug: string
-    price: number
-    sale_price?: number
-    discount_percentage?: number
-    thumbnail?: string
-    images?: Array<{ id: number; image_url: string; is_main: boolean }>
-}
+// Use composable for categories
+const { categories } = useCategories()
 
-interface Category {
-    id: number
-    name: string
-    slug: string
-    description?: string
-}
-
+// Local state
 const products = ref<Product[]>([])
-const category = ref<Category | null>(null)
+const category = ref<any>(null)
 const isLoading = ref(true)
 const currentPage = ref(1)
 const totalPages = ref(1)
 
+// Format price helper
 const formatPrice = (price: number) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price)
 }
 
+// Get product image
 const getProductImage = (product: Product) => {
     if (product.thumbnail) return product.thumbnail
     if (product.images?.[0]?.image_url) return product.images[0].image_url
     return null
 }
 
+// Fetch category and products
 const fetchCategoryAndProducts = async () => {
     isLoading.value = true
     const categoryId = route.params.id
 
     try {
         // Fetch category info
-        const catResponse: any = await httpClient.get(`/frontend/categories/${categoryId}`)
-        const catData = catResponse.data
+        const catResponse = await httpClient.get(`/frontend/categories/${categoryId}`)
+        const catData = catResponse.data as any
         category.value = catData?.data || catData
 
         // Fetch products in category
-        const productsResponse: any = await httpClient.get('/frontend/products', {
+        const productsResponse = await httpClient.get('/frontend/products', {
             params: { category_id: categoryId, page: currentPage.value, per_page: 12 }
         })
-        const productsData = productsResponse.data
+        const productsData = productsResponse.data as any
 
         if (productsData?.data?.data && Array.isArray(productsData.data.data)) {
             products.value = productsData.data.data
@@ -73,6 +68,13 @@ const fetchCategoryAndProducts = async () => {
     }
 }
 
+// Pagination
+const changePage = (page: number) => {
+    currentPage.value = page
+    fetchCategoryAndProducts()
+}
+
+// Watch route changes
 watch(() => route.params.id, () => {
     currentPage.value = 1
     fetchCategoryAndProducts()
@@ -89,8 +91,7 @@ onMounted(fetchCategoryAndProducts)
                 <nav class="flex items-center gap-2 text-sm">
                     <RouterLink to="/" class="text-slate-400 hover:text-white transition-colors">Trang chủ</RouterLink>
                     <span class="text-slate-600">/</span>
-                    <RouterLink to="/products" class="text-slate-400 hover:text-white transition-colors">Sản phẩm
-                    </RouterLink>
+                    <RouterLink to="/products" class="text-slate-400 hover:text-white transition-colors">Sản phẩm</RouterLink>
                     <span class="text-slate-600">/</span>
                     <span class="text-white">{{ category?.name || 'Danh mục' }}</span>
                 </nav>
@@ -140,13 +141,11 @@ onMounted(fetchCategoryAndProducts)
                         </div>
 
                         <!-- Product Info -->
-                        <h3
-                            class="font-semibold text-white mb-2 line-clamp-2 group-hover:text-primary-light transition-colors">
+                        <h3 class="font-semibold text-white mb-2 line-clamp-2 group-hover:text-primary-light transition-colors">
                             {{ product.name }}
                         </h3>
                         <div class="flex items-center gap-2">
-                            <span class="text-lg font-bold gradient-text">{{ formatPrice(product.sale_price ||
-                                product.price) }}</span>
+                            <span class="text-lg font-bold gradient-text">{{ formatPrice(product.sale_price || product.price) }}</span>
                             <span v-if="product.sale_price && product.sale_price < product.price"
                                 class="text-sm text-slate-500 line-through">
                                 {{ formatPrice(product.price) }}
@@ -160,8 +159,7 @@ onMounted(fetchCategoryAndProducts)
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-20 h-20 mx-auto text-slate-600 mb-6"
                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
                         <path d="m7.5 4.27 9 5.15" />
-                        <path
-                            d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+                        <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
                     </svg>
                     <h3 class="text-xl font-semibold text-white mb-2">Không có sản phẩm</h3>
                     <p class="text-slate-400 mb-6">Danh mục này chưa có sản phẩm nào</p>
@@ -172,15 +170,14 @@ onMounted(fetchCategoryAndProducts)
 
                 <!-- Pagination -->
                 <div v-if="totalPages > 1" class="flex items-center justify-center gap-4 mt-12">
-                    <button @click="currentPage--; fetchCategoryAndProducts()" :disabled="currentPage <= 1"
+                    <button @click="changePage(currentPage - 1)" :disabled="currentPage <= 1"
                         class="btn btn-secondary" :class="{ 'opacity-50 cursor-not-allowed': currentPage <= 1 }">
-                        {{ t('common.previous') }}
+                        ← Trước
                     </button>
                     <span class="text-slate-400">{{ currentPage }} / {{ totalPages }}</span>
-                    <button @click="currentPage++; fetchCategoryAndProducts()" :disabled="currentPage >= totalPages"
-                        class="btn btn-secondary"
-                        :class="{ 'opacity-50 cursor-not-allowed': currentPage >= totalPages }">
-                        {{ t('common.next') }}
+                    <button @click="changePage(currentPage + 1)" :disabled="currentPage >= totalPages"
+                        class="btn btn-secondary" :class="{ 'opacity-50 cursor-not-allowed': currentPage >= totalPages }">
+                        Sau →
                     </button>
                 </div>
             </div>

@@ -122,19 +122,33 @@ export function useOrders() {
     }
   }
 
-  async function handleCheckStock(order: Order) {
+  // State for order detail modal
+  const selectedOrder = ref<Order | null>(null)
+  const showOrderDetail = ref(false)
+  const isLoadingDetail = ref(false)
+
+  async function viewOrderDetail(order: Order) {
+    // Open modal immediately with basic info
+    selectedOrder.value = order
+    showOrderDetail.value = true
+    
+    // Fetch full order details with items
+    isLoadingDetail.value = true
     try {
-      const stockCheck = await store.checkStock(order.id)
-      // Update order with stock check result
-      const orderIndex = store.orders.findIndex((o: Order) => o.id === order.id)
-      if (orderIndex !== -1) {
-        store.orders[orderIndex].stock_check = stockCheck
+      const detailedOrder = await store.fetchOrderDetail(order.id)
+      if (detailedOrder) {
+        selectedOrder.value = detailedOrder
       }
-      await swal.success('Kiểm tra tồn kho thành công!')
-    } catch (error: any) {
-      console.error('Check stock error:', error)
-      await swal.error(error.response?.data?.message || 'Kiểm tra tồn kho thất bại!')
+    } catch (error) {
+      console.error('Failed to fetch order details:', error)
+    } finally {
+      isLoadingDetail.value = false
     }
+  }
+
+  function closeOrderDetail() {
+    showOrderDetail.value = false
+    selectedOrder.value = null
   }
 
   async function cancelOrder(orderId: number) {
@@ -211,6 +225,8 @@ export function useOrders() {
   return {
     // State
     searchQuery,
+    selectedOrder,
+    showOrderDetail,
     // Computed
     filteredOrders,
     canApproveOrders,
@@ -224,7 +240,8 @@ export function useOrders() {
     handleStatusUpdate,
     handleAssignShipper,
     confirmAssignShipper,
-    handleCheckStock,
+    viewOrderDetail,
+    closeOrderDetail,
     cancelOrder,
     viewTracking,
     approveOrder,

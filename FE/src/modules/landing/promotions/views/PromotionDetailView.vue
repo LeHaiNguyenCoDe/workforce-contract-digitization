@@ -1,19 +1,28 @@
 <script setup lang="ts">
+/**
+ * Promotion Detail View
+ * Uses usePromotions composable for logic and formatting
+ */
 import { ref, onMounted } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import apiClient from '@/plugins/api/httpClient'
+import { usePromotions } from '../composables/usePromotions'
+import httpClient from '@/plugins/api/httpClient'
 
 const { t } = useI18n()
 const route = useRoute()
+
+// Use composable
+const { formatDiscount } = usePromotions()
 
 const promo = ref<any>(null)
 const isLoading = ref(true)
 
 const fetchPromotion = async () => {
     try {
-        const response = await apiClient.get(`/frontend/promotions/${route.params.id}`)
-        promo.value = response.data?.data || response.data
+        const response = await httpClient.get(`/frontend/promotions/${route.params.id}`)
+        const data = response.data as any
+        promo.value = data?.data || data
     } catch (error) {
         console.error('Failed to fetch promotion:', error)
     } finally {
@@ -22,18 +31,12 @@ const fetchPromotion = async () => {
 }
 
 const formatDate = (date: string) => {
+    if (!date) return 'N/A'
     return new Date(date).toLocaleDateString('vi-VN', {
         day: '2-digit',
         month: 'long',
         year: 'numeric'
     })
-}
-
-const formatDiscount = (promo: any) => {
-    if (promo.discount_type === 'percent') {
-        return `${promo.discount_value}%`
-    }
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(promo.discount_value)
 }
 
 const copyCode = () => {

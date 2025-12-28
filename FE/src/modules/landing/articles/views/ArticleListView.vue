@@ -1,60 +1,26 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+/**
+ * Article List View
+ * Uses useArticles composable for article logic
+ */
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import httpClient from '@/plugins/api/httpClient'
+import { useArticles } from '../composables/useArticles'
 
 const { t } = useI18n()
 
-interface Article {
-    id: number
-    title: string
-    slug: string
-    content?: string
-    excerpt?: string
-    image?: string
-    thumbnail?: string
-    created_at: string
-}
+// Use composable
+const {
+    filteredArticles,
+    isLoading,
+    searchQuery,
+    formatDate,
+    setSearch
+} = useArticles()
 
-const articles = ref<Article[]>([])
-const isLoading = ref(true)
-
-const fetchArticles = async () => {
-    try {
-        const response = await httpClient.get('/frontend/articles', { params: { per_page: 12 } })
-        const data = response.data
-
-        // Handle paginated response: { status: "success", data: { data: [...], current_page, last_page, ... } }
-        if (data?.data?.data && Array.isArray(data.data.data)) {
-            articles.value = data.data.data
-        } else if (Array.isArray(data?.data)) {
-            articles.value = data.data
-        } else {
-            articles.value = []
-        }
-
-        console.log('Articles fetched:', articles.value.length)
-    } catch (error) {
-        console.error('Failed to fetch articles:', error)
-    } finally {
-        isLoading.value = false
-    }
-}
-
-const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('vi-VN', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-    })
-}
-
-const getArticleImage = (article: Article) => {
+const getArticleImage = (article: any) => {
     return article.image || article.thumbnail || null
 }
-
-onMounted(fetchArticles)
 </script>
 
 <template>
@@ -63,6 +29,17 @@ onMounted(fetchArticles)
         <div class="text-center max-w-2xl mx-auto mb-12">
             <h1 class="text-3xl md:text-4xl font-bold text-white mb-4">{{ t('nav.articles') }}</h1>
             <p class="text-slate-400">Cập nhật những tin tức và bài viết mới nhất về sản phẩm và xu hướng</p>
+            
+            <!-- Search -->
+            <div class="mt-8">
+                <input 
+                    type="text" 
+                    v-model="searchQuery" 
+                    :placeholder="t('common.search') + '...'" 
+                    class="form-input max-w-md mx-auto"
+                    @input="setSearch(($event.target as HTMLInputElement).value)"
+                />
+            </div>
         </div>
 
         <!-- Loading -->
@@ -71,8 +48,8 @@ onMounted(fetchArticles)
         </div>
 
         <!-- Articles Grid -->
-        <div v-else-if="articles.length" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <RouterLink v-for="article in articles" :key="article.id" :to="`/articles/${article.id}`"
+        <div v-else-if="filteredArticles.length" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <RouterLink v-for="article in filteredArticles" :key="article.id" :to="`/articles/${article.id}`"
                 class="group card overflow-hidden hover:scale-[1.02] transition-all duration-300">
                 <!-- Image -->
                 <div class="aspect-video bg-dark-700 rounded-xl mb-4 overflow-hidden -mx-6 -mt-6">
@@ -103,8 +80,7 @@ onMounted(fetchArticles)
                         {{ article.title }}
                     </h3>
 
-                    <p class="text-sm text-slate-400 line-clamp-3">{{ article.excerpt || article.content?.substring(0,
-                        150) }}</p>
+                    <p class="text-sm text-slate-400 line-clamp-3">{{ article.excerpt || article.content?.substring(0, 150) }}</p>
                 </div>
             </RouterLink>
         </div>

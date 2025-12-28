@@ -1,9 +1,18 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useAuthStore } from '@/stores'
-import httpClient from '@/plugins/api/httpClient'
+/**
+ * Profile Info View
+ * Uses useProfile composable for personal info and password updates
+ */
+import { ref, onMounted, watch } from 'vue'
+import { useProfile } from '../composables/useProfile'
 
-const authStore = useAuthStore()
+const {
+    user,
+    isSaving: isUpdating,
+    message,
+    updateProfile,
+    changePassword
+} = useProfile()
 
 // Profile form
 const profileForm = ref({
@@ -21,265 +30,143 @@ const passwordForm = ref({
     confirm_password: ''
 })
 
-const isUpdatingProfile = ref(false)
-const isUpdatingPassword = ref(false)
-const profileMessage = ref('')
 const passwordMessage = ref('')
 
-onMounted(() => {
-    if (authStore.user) {
-        profileForm.value.name = authStore.user.name || ''
-        profileForm.value.email = authStore.user.email || ''
-        profileForm.value.phone = (authStore.user as any).phone || ''
-        profileForm.value.gender = (authStore.user as any).gender || ''
-        profileForm.value.birthday = (authStore.user as any).birthday || ''
-    }
-})
-
-const updateProfile = async () => {
-    isUpdatingProfile.value = true
-    profileMessage.value = ''
-    try {
-        await httpClient.put('/frontend/profile', profileForm.value)
-        profileMessage.value = 'Cập nhật thông tin thành công!'
-        await authStore.fetchUser()
-    } catch (error: any) {
-        profileMessage.value = error.response?.data?.message || 'Cập nhật thất bại!'
-    } finally {
-        isUpdatingProfile.value = false
+const syncForm = () => {
+    if (user.value) {
+        profileForm.value.name = user.value.name || ''
+        profileForm.value.email = user.value.email || ''
+        profileForm.value.phone = (user.value as any).phone || ''
+        profileForm.value.gender = (user.value as any).gender || ''
+        profileForm.value.birthday = (user.value as any).birthday || ''
     }
 }
 
-const updatePassword = async () => {
+onMounted(syncForm)
+watch(user, syncForm)
+
+const handleUpdateProfile = async () => {
+    try {
+        await updateProfile(profileForm.value)
+    } catch (err) {
+        // Error handled in composable/message
+    }
+}
+
+const handleUpdatePassword = async () => {
     if (passwordForm.value.new_password !== passwordForm.value.confirm_password) {
         passwordMessage.value = 'Mật khẩu xác nhận không khớp!'
         return
     }
 
-    isUpdatingPassword.value = true
-    passwordMessage.value = ''
     try {
-        await httpClient.put('/frontend/profile/password', {
-            current_password: passwordForm.value.current_password,
-            password: passwordForm.value.new_password,
-            password_confirmation: passwordForm.value.confirm_password
-        })
-        passwordMessage.value = 'Đổi mật khẩu thành công!'
+        await changePassword(passwordForm.value)
         passwordForm.value = { current_password: '', new_password: '', confirm_password: '' }
+        passwordMessage.value = 'Đổi mật khẩu thành công!'
     } catch (error: any) {
         passwordMessage.value = error.response?.data?.message || 'Đổi mật khẩu thất bại!'
-    } finally {
-        isUpdatingPassword.value = false
     }
 }
 </script>
 
 <template>
-    <div class="profile-info">
-        <h2 class="section-title">Thông tin tài khoản</h2>
+    <div class="space-y-12">
+        <section>
+            <h2 class="text-xl font-bold text-white mb-8 border-b border-white/5 pb-4">Thông tin cá nhân</h2>
 
-        <!-- Avatar Section -->
-        <div class="avatar-section">
-            <div class="avatar">
-                <span>{{ authStore.userName.charAt(0) || 'U' }}</span>
-            </div>
-            <button class="avatar-btn">Thay ảnh đại diện</button>
-        </div>
-
-        <!-- Profile Form -->
-        <form @submit.prevent="updateProfile" class="profile-form">
-            <div class="form-row">
-                <div class="form-group">
-                    <label>SĐT</label>
-                    <input v-model="profileForm.phone" type="tel" class="form-input" placeholder="0901234567" />
+            <!-- Avatar Section -->
+            <div class="flex flex-col items-center gap-4 mb-8">
+                <div class="w-24 h-24 rounded-full bg-gradient-primary flex items-center justify-center text-3xl font-bold text-white shadow-xl shadow-primary/20">
+                    <span>{{ user?.name?.charAt(0)?.toUpperCase() || 'U' }}</span>
                 </div>
+                <button class="text-sm text-primary hover:text-primary-light font-medium transition-colors">Thay ảnh đại diện</button>
             </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Họ và Tên</label>
-                    <input v-model="profileForm.name" type="text" class="form-input" placeholder="Nguyễn Văn A" />
-                </div>
-                <div class="form-group">
-                    <label>Email</label>
-                    <input v-model="profileForm.email" type="email" class="form-input"
-                        placeholder="email@example.com" />
-                </div>
-            </div>
+            <!-- Profile Form -->
+            <form @submit.prevent="handleUpdateProfile" class="max-w-2xl mx-auto space-y-6">
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="form-group md:col-span-2">
+                        <label class="form-label">Số điện thoại</label>
+                        <input v-model="profileForm.phone" type="tel" class="form-input" placeholder="0901234567" />
+                    </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Giới tính</label>
-                    <div class="radio-group">
-                        <label class="radio-item">
-                            <input type="radio" v-model="profileForm.gender" value="male" />
-                            <span>Nam</span>
-                        </label>
-                        <label class="radio-item">
-                            <input type="radio" v-model="profileForm.gender" value="female" />
-                            <span>Nữ</span>
-                        </label>
+                    <div class="form-group">
+                        <label class="form-label">Họ và Tên</label>
+                        <input v-model="profileForm.name" type="text" class="form-input" placeholder="Nguyễn Văn A" />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input v-model="profileForm.email" type="email" class="form-input" placeholder="email@example.com" disabled />
+                        <p class="text-[10px] text-slate-500 mt-1 italic">Email không thể thay đổi</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Giới tính</label>
+                        <div class="flex gap-6 mt-2">
+                            <label class="flex items-center gap-2 cursor-pointer group text-slate-300">
+                                <input type="radio" v-model="profileForm.gender" value="male" class="text-primary focus:ring-primary bg-dark-700" />
+                                <span class="group-hover:text-white transition-colors">Nam</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer group text-slate-300">
+                                <input type="radio" v-model="profileForm.gender" value="female" class="text-primary focus:ring-primary bg-dark-700" />
+                                <span class="group-hover:text-white transition-colors">Nữ</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Ngày sinh</label>
+                        <input v-model="profileForm.birthday" type="date" class="form-input" />
                     </div>
                 </div>
-                <div class="form-group">
-                    <label>Ngày sinh</label>
-                    <input v-model="profileForm.birthday" type="date" class="form-input" />
+
+                <div v-if="message" class="p-4 rounded-xl text-center text-sm" 
+                    :class="message.includes('thành công') ? 'bg-success/10 text-success' : 'bg-error/10 text-error'">
+                    {{ message }}
                 </div>
-            </div>
 
-            <div v-if="profileMessage" class="message" :class="{ success: profileMessage.includes('thành công') }">
-                {{ profileMessage }}
-            </div>
-
-            <button type="submit" class="btn btn-primary" :disabled="isUpdatingProfile">
-                {{ isUpdatingProfile ? 'Đang cập nhật...' : 'Cập nhật' }}
-            </button>
-        </form>
+                <div class="flex justify-center pt-4">
+                    <button type="submit" class="btn btn-primary px-12 py-3 font-bold" :disabled="isUpdating">
+                        <span v-if="isUpdating" class="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin mr-2"></span>
+                        {{ isUpdating ? 'Đang cập nhật...' : 'Lưu thông tin' }}
+                    </button>
+                </div>
+            </form>
+        </section>
 
         <!-- Password Section -->
-        <div class="password-section">
-            <h3>Đổi mật khẩu</h3>
+        <section class="pt-12 border-t border-white/5">
+            <h3 class="text-lg font-bold text-white mb-8 text-center">🔐 Đổi mật khẩu</h3>
 
-            <form @submit.prevent="updatePassword" class="password-form">
+            <form @submit.prevent="handleUpdatePassword" class="max-w-xl mx-auto space-y-6">
                 <div class="form-group">
-                    <label>Mật khẩu hiện tại</label>
+                    <label class="form-label">Mật khẩu hiện tại</label>
                     <input v-model="passwordForm.current_password" type="password" class="form-input" />
                 </div>
 
-                <div class="form-row">
+                <div class="grid md:grid-cols-2 gap-6">
                     <div class="form-group">
-                        <label>Mật khẩu mới</label>
+                        <label class="form-label">Mật khẩu mới</label>
                         <input v-model="passwordForm.new_password" type="password" class="form-input" />
                     </div>
                     <div class="form-group">
-                        <label>Nhập lại mật khẩu mới</label>
+                        <label class="form-label">Xác nhận mật khẩu</label>
                         <input v-model="passwordForm.confirm_password" type="password" class="form-input" />
                     </div>
                 </div>
 
-                <div v-if="passwordMessage" class="message"
-                    :class="{ success: passwordMessage.includes('thành công') }">
+                <div v-if="passwordMessage" class="p-4 rounded-xl text-center text-sm"
+                    :class="passwordMessage.includes('thành công') ? 'bg-success/10 text-success' : 'bg-error/10 text-error'">
                     {{ passwordMessage }}
                 </div>
 
-                <button type="submit" class="btn btn-secondary" :disabled="isUpdatingPassword">
-                    {{ isUpdatingPassword ? 'Đang cập nhật...' : 'Cập nhật' }}
-                </button>
+                <div class="flex justify-center">
+                    <button type="submit" class="btn btn-secondary border border-white/10 px-8 py-3 font-bold" :disabled="isUpdating">
+                        Đổi mật khẩu
+                    </button>
+                </div>
             </form>
-        </div>
+        </section>
     </div>
 </template>
-
-<style scoped>
-.section-title {
-    font-size: var(--text-xl);
-    font-weight: 600;
-    color: var(--color-primary);
-    margin-bottom: var(--space-6);
-    text-align: center;
-}
-
-.avatar-section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--space-3);
-    margin-bottom: var(--space-6);
-}
-
-.avatar {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2rem;
-    font-weight: 700;
-    color: white;
-}
-
-.avatar-btn {
-    font-size: var(--text-sm);
-    color: var(--color-primary);
-    background: none;
-    border: none;
-    cursor: pointer;
-}
-
-.profile-form,
-.password-form {
-    max-width: 600px;
-    margin: 0 auto;
-}
-
-.form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-4);
-    margin-bottom: var(--space-4);
-}
-
-.form-group {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-}
-
-.form-group label {
-    font-size: var(--text-sm);
-    font-weight: 500;
-    color: var(--color-text-secondary);
-}
-
-.radio-group {
-    display: flex;
-    gap: var(--space-4);
-}
-
-.radio-item {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    cursor: pointer;
-}
-
-.password-section {
-    margin-top: var(--space-8);
-    padding-top: var(--space-6);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.password-section h3 {
-    font-size: var(--text-lg);
-    margin-bottom: var(--space-4);
-    text-align: center;
-}
-
-.message {
-    padding: var(--space-3);
-    border-radius: var(--radius-md);
-    margin-bottom: var(--space-4);
-    text-align: center;
-    background: rgba(239, 68, 68, 0.1);
-    color: var(--color-error);
-}
-
-.message.success {
-    background: rgba(34, 197, 94, 0.1);
-    color: var(--color-success);
-}
-
-.btn {
-    display: block;
-    margin: 0 auto;
-    min-width: 150px;
-}
-
-@media (max-width: 640px) {
-    .form-row {
-        grid-template-columns: 1fr;
-    }
-}
-</style>

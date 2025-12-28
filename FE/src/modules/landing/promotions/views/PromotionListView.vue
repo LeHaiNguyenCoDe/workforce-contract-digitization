@@ -1,47 +1,22 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+/**
+ * Promotion List View
+ * Uses usePromotions composable for logic separation
+ */
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import httpClient from '@/plugins/api/httpClient'
+import { usePromotions } from '../composables/usePromotions'
 
 const { t } = useI18n()
 
-interface Promotion {
-    id: number
-    name: string
-    code?: string
-    description?: string
-    discount_type: 'percent' | 'fixed'
-    discount_value: number
-    start_date: string
-    end_date: string
-}
+// Use composable for all promotion logic
+const {
+    promotions,
+    isLoading,
+    formatDiscount
+} = usePromotions()
 
-const promotions = ref<Promotion[]>([])
-const isLoading = ref(true)
-
-const fetchPromotions = async () => {
-    try {
-        const response = await httpClient.get('/frontend/promotions', { params: { per_page: 12 } })
-        const data = response.data
-
-        // Handle paginated response: { status: "success", data: { data: [...], current_page, last_page, ... } }
-        if (data?.data?.data && Array.isArray(data.data.data)) {
-            promotions.value = data.data.data
-        } else if (Array.isArray(data?.data)) {
-            promotions.value = data.data
-        } else {
-            promotions.value = []
-        }
-
-        console.log('Promotions fetched:', promotions.value.length)
-    } catch (error) {
-        console.error('Failed to fetch promotions:', error)
-    } finally {
-        isLoading.value = false
-    }
-}
-
+// Format date helper
 const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('vi-VN', {
         day: '2-digit',
@@ -49,15 +24,6 @@ const formatDate = (date: string) => {
         year: 'numeric'
     })
 }
-
-const formatDiscount = (promo: Promotion) => {
-    if (promo.discount_type === 'percent') {
-        return `${promo.discount_value}%`
-    }
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(promo.discount_value)
-}
-
-onMounted(fetchPromotions)
 </script>
 
 <template>

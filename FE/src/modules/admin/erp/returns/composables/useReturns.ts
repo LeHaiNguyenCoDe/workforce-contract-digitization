@@ -1,10 +1,11 @@
 /**
  * useReturns Composable - Business logic
  */
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useSwal } from '@/shared/utils'
 import { erpReturnService } from '../services/returnService'
-import type { Return, ReturnStatus, ReturnFilters, CreateReturnPayload } from '../models/return'
+import { adminOrderService } from '@/plugins/api/services/OrderService'
+import type { Return, ReturnStatus } from '../models/return'
 
 // Mock data for development
 const getMockReturns = (): Return[] => [
@@ -59,15 +60,17 @@ export function useReturns() {
     const totalPages = ref(1)
     const searchQuery = ref('')
     const statusFilter = ref<ReturnStatus | ''>('')
+    const availableOrders = ref<any[]>([])
 
     // Modals
     const showDetailModal = ref(false)
     const showCreateModal = ref(false)
     const selectedReturn = ref<Return | null>(null)
+    const selectedOrder = ref<any | null>(null)
 
     // Form
-    const form = ref<CreateReturnPayload>({
-        order_id: 0,
+    const form = ref<any>({
+        order_id: '',
         reason: '',
         notes: ''
     })
@@ -105,6 +108,35 @@ export function useReturns() {
         }
     }
 
+    async function fetchOrderDetails(orderId: number) {
+        try {
+            const order = await adminOrderService.getById(orderId)
+            selectedOrder.value = order
+            // Default to all items being returned
+            form.value.items = order.items?.map((item: any) => ({
+                order_item_id: item.id,
+                product_id: item.product_id,
+                quantity: item.quantity,
+                reason: ''
+            })) || []
+        } catch (error) {
+            console.error('Failed to fetch order details:', error)
+        }
+    }
+
+    async function fetchAvailableOrders() {
+        try {
+            // Fetch delivered or completed orders for return
+            const response = await adminOrderService.getAll({ 
+                per_page: 100,
+                status: 'delivered' // Or maybe also 'completed'
+            })
+            availableOrders.value = (response as any).data || []
+        } catch (error) {
+            console.error('Failed to fetch orders:', error)
+        }
+    }
+
     function openDetail(item: Return) {
         selectedReturn.value = item
         showDetailModal.value = true
@@ -116,8 +148,34 @@ export function useReturns() {
     }
 
     function openCreate() {
-        form.value = { order_id: 0, reason: '', notes: '' }
+        form.value = { order_id: '', type: 'return', reason: '', notes: '', items: [] }
+        selectedOrder.value = null
+        fetchAvailableOrders()
         showCreateModal.value = true
+    }
+
+    async function handleCreate() {
+        if (!form.value.order_id || !form.value.reason || !form.value.type || form.value.items.length === 0) {
+            await swal.error('Vui lòng chọn đơn hàng, loại hình và ít nhất một sản phẩm.')
+            return
+        }
+
+        isSaving.value = true
+        try {
+            await erpReturnService.create({
+                ...form.value,
+                order_id: Number(form.value.order_id),
+                customer_id: selectedOrder.value?.customer_id
+            })
+            await swal.success('Đã tạo phiếu trả hàng thành công!')
+            showCreateModal.value = false
+            fetchReturns()
+        } catch (error) {
+            console.error('Failed to create return:', error)
+            await swal.error('Không thể tạo phiếu trả hàng. Vui lòng kiểm tra lại.')
+        } finally {
+            isSaving.value = false
+        }
     }
 
     async function handleApprove(id: number) {
@@ -185,6 +243,16 @@ export function useReturns() {
         fetchReturns()
     }
 
+    // Watches
+    watch(() => form.value.order_id, (newOrderId) => {
+        if (newOrderId) {
+            fetchOrderDetails(Number(newOrderId))
+        } else {
+            selectedOrder.value = null
+            form.value.items = []
+        }
+    })
+
     // Initialize
     onMounted(fetchReturns)
 
@@ -197,6 +265,8 @@ export function useReturns() {
         totalPages,
         searchQuery,
         statusFilter,
+        availableOrders,
+        selectedOrder,
         // Modals
         showDetailModal,
         showCreateModal,
@@ -206,9 +276,12 @@ export function useReturns() {
         filteredReturns,
         // Methods
         fetchReturns,
+        fetchAvailableOrders,
+        fetchOrderDetails,
         openDetail,
         closeDetail,
         openCreate,
+        handleCreate,
         handleApprove,
         handleReject,
         handleComplete,

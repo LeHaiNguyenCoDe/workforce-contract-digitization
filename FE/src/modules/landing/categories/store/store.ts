@@ -5,8 +5,8 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import httpClient from '@/plugins/api/httpClient'
-import type { CategoryWithProducts } from './types'
-import { buildCategoryTree } from './helpers'
+import type { CategoryWithProducts } from '../types'
+import { buildCategoryTree } from '../helpers'
 
 export const useLandingCategoryStore = defineStore('landing-categories', () => {
   // State

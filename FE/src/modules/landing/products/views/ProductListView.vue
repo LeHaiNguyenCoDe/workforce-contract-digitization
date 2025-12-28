@@ -1,96 +1,46 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+/**
+ * Product List View
+ * Uses useProducts composable for logic separation
+ */
+import { watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import httpClient from '@/plugins/api/httpClient'
+import { useProducts } from '../composables/useProducts'
+import { sortOptions } from '../configs'
+import type { Product } from '../types'
 
 const { t } = useI18n()
 
-interface Product {
-    id: number
-    name: string
-    slug: string
-    price: number
-    sale_price?: number
-    discount_percentage?: number
-    thumbnail?: string
-    images?: Array<{ id: number; image_url: string; is_main: boolean }>
-}
+// Use composable for all product logic
+const {
+    products,
+    isLoading,
+    currentPage,
+    totalPages,
+    searchQuery,
+    selectedCategory,
+    sortBy,
+    formatPrice,
+    setSearch,
+    setCategory,
+    setSortBy,
+    changePage
+} = useProducts()
 
-interface Category {
-    id: number
-    name: string
-    slug: string
-}
+// Categories from store
+const { categories } = useLandingCategoryStore()
 
-const products = ref<Product[]>([])
-const categories = ref<Category[]>([])
-const isLoading = ref(true)
-const currentPage = ref(1)
-const totalPages = ref(1)
-const selectedCategory = ref<string>('')
-const searchQuery = ref('')
-
-const fetchProducts = async () => {
-    isLoading.value = true
-    try {
-        const params: any = { page: currentPage.value, per_page: 12 }
-        if (selectedCategory.value) params.category_id = selectedCategory.value
-        if (searchQuery.value) params.search = searchQuery.value
-
-        const response = await httpClient.get('/frontend/products', { params })
-        const data = response.data
-
-        // Handle paginated response: { status: "success", data: { data: [...], current_page, last_page, ... } }
-        if (data?.data?.data && Array.isArray(data.data.data)) {
-            products.value = data.data.data
-            totalPages.value = data.data.last_page || 1
-        } else if (Array.isArray(data?.data)) {
-            products.value = data.data
-            totalPages.value = 1
-        } else {
-            products.value = []
-        }
-
-        console.log('Products fetched:', products.value.length)
-    } catch (error) {
-        console.error('Failed to fetch products:', error)
-        products.value = []
-    } finally {
-        isLoading.value = false
-    }
-}
-
-const fetchCategories = async () => {
-    try {
-        const response = await httpClient.get('/frontend/categories', { params: { per_page: 20 } })
-        const data = response.data
-        // Categories returns direct array: { status: "success", data: [...] }
-        categories.value = Array.isArray(data?.data) ? data.data : []
-        console.log('Categories fetched:', categories.value.length)
-    } catch (error) {
-        console.error('Failed to fetch categories:', error)
-    }
-}
-
-const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price)
-}
-
+// Helpers
 const getProductImage = (product: Product) => {
     if (product.thumbnail) return product.thumbnail
     if (product.images?.[0]?.image_url) return product.images[0].image_url
     return null
 }
 
-watch([selectedCategory, searchQuery], () => {
-    currentPage.value = 1
-    fetchProducts()
-})
-
-onMounted(() => {
-    fetchCategories()
-    fetchProducts()
+// Watch for filter changes
+watch([searchQuery, selectedCategory], () => {
+    changePage(1)
 })
 </script>
 
@@ -105,12 +55,18 @@ onMounted(() => {
         <!-- Filters -->
         <div class="flex flex-col md:flex-row gap-4 mb-8">
             <div class="flex-1">
-                <input v-model="searchQuery" type="text" :placeholder="t('common.search') + '...'" class="form-input" />
+                <input v-model="searchQuery" type="text" :placeholder="t('common.search') + '...'" class="form-input"
+                    @input="setSearch(($event.target as HTMLInputElement).value)" />
             </div>
 
-            <select v-model="selectedCategory" class="form-input md:w-64">
+            <select v-model="selectedCategory" class="form-input md:w-48"
+                @change="setCategory(selectedCategory ? Number(selectedCategory) : null)">
                 <option value="">{{ t('common.categories') }}</option>
                 <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+            </select>
+
+            <select v-model="sortBy" class="form-input md:w-48" @change="setSortBy(sortBy)">
+                <option v-for="opt in sortOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
             </select>
         </div>
 
@@ -166,12 +122,11 @@ onMounted(() => {
 
         <!-- Pagination -->
         <div v-if="totalPages > 1" class="flex items-center justify-center gap-4 mt-12">
-            <button @click="currentPage--; fetchProducts()" :disabled="currentPage <= 1" class="btn btn-secondary">
+            <button @click="changePage(currentPage - 1)" :disabled="currentPage <= 1" class="btn btn-secondary">
                 ← Trước
             </button>
             <span class="text-slate-400">{{ currentPage }} / {{ totalPages }}</span>
-            <button @click="currentPage++; fetchProducts()" :disabled="currentPage >= totalPages"
-                class="btn btn-secondary">
+            <button @click="changePage(currentPage + 1)" :disabled="currentPage >= totalPages" class="btn btn-secondary">
                 Sau →
             </button>
         </div>

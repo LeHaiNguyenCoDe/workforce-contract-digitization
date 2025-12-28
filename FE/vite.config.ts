@@ -18,6 +18,7 @@ export default defineConfig(({ mode }) => {
           'src/shared/helpers/**',
           'src/modules/**/composables/**',
           'src/modules/**/store.ts',
+          'src/modules/**/store/store.ts',
           // Only import from module services, not from plugins/api/services
           // to avoid duplicates with the centralized index.ts exports
         ],

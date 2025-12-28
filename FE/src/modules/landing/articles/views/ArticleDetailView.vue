@@ -1,35 +1,29 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+/**
+ * Article Detail View
+ * Uses useArticles composable for article fetching and formatting
+ */
+import { onMounted } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import apiClient from '@/plugins/api/httpClient'
+import { useArticles } from '../composables/useArticles'
 
 const { t } = useI18n()
 const route = useRoute()
 
-const article = ref<any>(null)
-const isLoading = ref(true)
+// Use composable
+const {
+    currentArticle: article,
+    isLoading,
+    formatDate,
+    fetchArticleById
+} = useArticles()
 
-const fetchArticle = async () => {
-    try {
-        const response = await apiClient.get(`/frontend/articles/${route.params.id}`)
-        article.value = response.data?.data || response.data
-    } catch (error) {
-        console.error('Failed to fetch article:', error)
-    } finally {
-        isLoading.value = false
+onMounted(() => {
+    if (route.params.id) {
+        fetchArticleById(route.params.id as string)
     }
-}
-
-const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('vi-VN', {
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric'
-    })
-}
-
-onMounted(fetchArticle)
+})
 </script>
 
 <template>

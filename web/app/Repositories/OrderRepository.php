@@ -23,7 +23,7 @@ class OrderRepository implements OrderRepositoryInterface
             $query->where('user_id', $userId);
         }
 
-        return $query->latest()->paginate($perPage);
+        return $query->with('items')->latest()->paginate($perPage);
     }
 
     /**

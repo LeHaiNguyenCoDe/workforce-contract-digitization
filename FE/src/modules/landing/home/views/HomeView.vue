@@ -1,84 +1,48 @@
 <script setup lang="ts">
+/**
+ * Home View
+ * Uses useHome composable for logic separation
+ */
 import { ref, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import httpClient from '@/plugins/api/httpClient'
+import { useHome } from '../composables/useHome'
+import { homeConfig } from '../configs'
+import type { Product } from '@/modules/landing/products/types'
 
 const { t } = useI18n()
 
-interface Product {
-    id: number
-    name: string
-    slug: string
-    price: number
-    sale_price?: number
-    discount_percentage?: number
-    thumbnail?: string
-    images?: Array<{ id: number; image_url: string; is_main: boolean }>
-}
+// Use composable for home data
+const {
+    featuredProducts,
+    featuredCategories,
+    isLoading,
+    loadHomeData
+} = useHome()
 
-interface Category {
-    id: number
-    name: string
-    slug: string
-}
-
-const featuredProducts = ref<Product[]>([])
-const categories = ref<Category[]>([])
-const isLoading = ref(true)
 const error = ref<string | null>(null)
 
-const fetchData = async () => {
-    isLoading.value = true
-    error.value = null
-    try {
-        const [productsRes, categoriesRes] = await Promise.all([
-            httpClient.get('/frontend/products', { params: { per_page: 8 } }),
-            httpClient.get('/frontend/categories', { params: { per_page: 6 } })
-        ])
-
-        // Products: { status: "success", data: { data: [...], current_page: 1, ... } }
-        // Categories: { status: "success", data: [...] }
-        const productsData = productsRes.data
-        const categoriesData = categoriesRes.data
-
-        // Handle paginated response for products (data.data.data)
-        if (productsData?.data?.data && Array.isArray(productsData.data.data)) {
-            featuredProducts.value = productsData.data.data
-        } else if (Array.isArray(productsData?.data)) {
-            featuredProducts.value = productsData.data
-        } else {
-            featuredProducts.value = []
-        }
-
-        // Categories is direct array
-        if (Array.isArray(categoriesData?.data)) {
-            categories.value = categoriesData.data
-        } else {
-            categories.value = []
-        }
-
-        console.log('Products loaded:', featuredProducts.value.length)
-        console.log('Categories loaded:', categories.value.length)
-    } catch (err: any) {
-        error.value = err.message || 'Failed to fetch data'
-        console.error('Failed to fetch data:', err)
-    } finally {
-        isLoading.value = false
-    }
-}
-
+// Format price helper
 const formatPrice = (price: number) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price)
 }
 
+// Get product image helper
 const getProductImage = (product: Product) => {
     if (product.thumbnail) return product.thumbnail
     if (product.images?.[0]?.image_url) return product.images[0].image_url
     return null
 }
 
-onMounted(fetchData)
+// Retry on error
+const handleRetry = async () => {
+    error.value = null
+    try {
+        await loadHomeData()
+    } catch (err: any) {
+        error.value = err.message || 'Failed to fetch data'
+    }
+}
 </script>
 
 <template>
@@ -119,7 +83,7 @@ onMounted(fetchData)
         <!-- Error Message -->
         <div v-if="error" class="container py-8">
             <div class="bg-error/10 border border-error text-error p-4 rounded-xl text-center">
-                {{ error }} - <button @click="fetchData" class="underline">Thử lại</button>
+                {{ error }} - <button @click="handleRetry" class="underline">Thử lại</button>
             </div>
         </div>
 
@@ -132,17 +96,14 @@ onMounted(fetchData)
                 </div>
 
                 <div v-if="isLoading" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                    <div v-for="i in 6" :key="i" class="h-32 bg-dark-700 rounded-2xl animate-pulse"></div>
+                    <div v-for="i in homeConfig.featuredCategoriesCount" :key="i" class="h-32 bg-dark-700 rounded-2xl animate-pulse"></div>
                 </div>
 
-                <div v-else-if="categories.length" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                    <RouterLink v-for="category in categories" :key="category.id" :to="`/categories/${category.id}`"
+                <div v-else-if="featuredCategories.length" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                    <RouterLink v-for="category in featuredCategories" :key="category.id" :to="`/categories/${category.id}`"
                         class="group relative h-32 bg-dark-800 rounded-2xl border border-white/10 hover:border-primary/50 transition-all duration-300 overflow-hidden flex items-center justify-center">
-                        <div
-                            class="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-10 transition-opacity">
-                        </div>
-                        <span class="font-semibold text-slate-200 group-hover:text-white transition-colors">{{
-                            category.name }}</span>
+                        <div class="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-10 transition-opacity"></div>
+                        <span class="font-semibold text-slate-200 group-hover:text-white transition-colors">{{ category.name }}</span>
                     </RouterLink>
                 </div>
 
@@ -157,8 +118,7 @@ onMounted(fetchData)
             <div class="container">
                 <div class="flex items-center justify-between mb-12">
                     <div>
-                        <h2 class="text-3xl md:text-4xl font-bold text-white mb-2">{{ t('common.featuredProducts') }}
-                        </h2>
+                        <h2 class="text-3xl md:text-4xl font-bold text-white mb-2">{{ t('common.featuredProducts') }}</h2>
                         <p class="text-slate-400">Sản phẩm được yêu thích nhất</p>
                     </div>
                     <RouterLink to="/products" class="btn btn-outline">
@@ -197,14 +157,12 @@ onMounted(fetchData)
                         </div>
 
                         <!-- Product Info -->
-                        <h3
-                            class="font-semibold text-white mb-2 line-clamp-2 group-hover:text-primary-light transition-colors">
+                        <h3 class="font-semibold text-white mb-2 line-clamp-2 group-hover:text-primary-light transition-colors">
                             {{ product.name }}
                         </h3>
 
                         <div class="flex items-center gap-2">
-                            <span class="text-lg font-bold gradient-text">{{ formatPrice(product.sale_price ||
-                                product.price) }}</span>
+                            <span class="text-lg font-bold gradient-text">{{ formatPrice(product.sale_price || product.price) }}</span>
                             <span v-if="product.sale_price && product.sale_price < product.price"
                                 class="text-sm text-slate-500 line-through">
                                 {{ formatPrice(product.price) }}
@@ -224,9 +182,7 @@ onMounted(fetchData)
             <div class="container">
                 <div class="relative bg-dark-800 rounded-3xl p-8 md:p-12 overflow-hidden border border-white/10">
                     <div class="absolute inset-0 bg-gradient-primary opacity-10"></div>
-                    <div
-                        class="absolute top-0 right-0 w-96 h-96 bg-primary/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2">
-                    </div>
+                    <div class="absolute top-0 right-0 w-96 h-96 bg-primary/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
 
                     <div class="relative z-10 max-w-2xl">
                         <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Đăng ký nhận thông báo</h2>

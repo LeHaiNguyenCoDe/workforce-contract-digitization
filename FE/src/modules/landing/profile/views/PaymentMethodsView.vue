@@ -1,4 +1,8 @@
 <script setup lang="ts">
+/**
+ * Payment Methods View
+ * Currently a placeholder for future payment method management
+ */
 import { ref } from 'vue'
 
 const paymentMethods = ref([
@@ -12,24 +16,24 @@ const paymentMethods = ref([
     {
         id: 'bank',
         icon: '🏦',
-        title: 'Thanh toán qua thẻ tín dụng',
-        description: 'Ngân hàng MBBank',
+        title: 'Chuyển khoản ngân hàng',
+        description: 'Sử dụng QR Code hoặc chuyển khoản',
+        active: false
+    },
+    {
+        id: 'ewallet',
+        icon: '📱',
+        title: 'Ví điện tử',
+        description: 'MoMo, ZaloPay, ShopeePay',
         active: false
     },
     {
         id: 'installment',
         icon: '📅',
         title: 'Trả góp',
-        description: 'Tính năng sắp bổ sung',
+        description: 'Tiết kiệm hơn với trả góp 0%',
         active: false,
         disabled: true
-    },
-    {
-        id: 'ewallet',
-        icon: '📱',
-        title: 'Ví điện tử',
-        description: 'MoMo',
-        active: false
     }
 ])
 
@@ -47,144 +51,55 @@ const selectMethod = (id: string) => {
 const updatePaymentMethod = async () => {
     isUpdating.value = true
     message.value = ''
-    // Simulated API call
+    // Placeholder for future logic
     setTimeout(() => {
-        message.value = 'Cập nhật phương thức thanh toán thành công!'
+        message.value = 'Đã lưu phương thức thanh toán mặc định!'
         isUpdating.value = false
-    }, 500)
+    }, 800)
 }
 </script>
 
 <template>
     <div class="payment-methods">
-        <h2 class="section-title">Phương thức thanh toán</h2>
+        <h2 class="text-xl font-bold text-white mb-8 border-b border-white/5 pb-4">Phương thức thanh toán</h2>
 
-        <div class="methods-grid">
-            <div v-for="method in paymentMethods" :key="method.id" class="method-card"
-                :class="{ active: selectedMethod === method.id, disabled: method.disabled }"
+        <div class="grid md:grid-cols-2 gap-4 mb-8 max-w-2xl mx-auto">
+            <div v-for="method in paymentMethods" :key="method.id" 
+                class="flex items-center gap-4 p-5 rounded-2xl border-2 transition-all duration-300 relative group"
+                :class="[
+                    selectedMethod === method.id ? 'bg-primary/5 border-primary shadow-lg shadow-primary/10' : 'bg-dark-700/50 border-white/5 hover:border-white/10',
+                    method.disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'
+                ]"
                 @click="selectMethod(method.id)">
-                <div class="method-icon">{{ method.icon }}</div>
-                <div class="method-info">
-                    <h4>{{ method.title }}</h4>
-                    <p>{{ method.description }}</p>
+                
+                <div class="text-3xl grayscale group-hover:grayscale-0 transition-all" :class="{ 'grayscale-0': selectedMethod === method.id }">
+                    {{ method.icon }}
                 </div>
-                <div class="method-check" v-if="selectedMethod === method.id">✓</div>
+                
+                <div class="flex-1">
+                    <h4 class="font-bold text-white text-sm mb-1">{{ method.title }}</h4>
+                    <p class="text-xs text-slate-400">{{ method.description }}</p>
+                </div>
+
+                <div v-if="selectedMethod === method.id" class="w-6 h-6 bg-primary rounded-full flex items-center justify-center text-white text-xs">
+                    ✓
+                </div>
+
+                <div v-if="method.disabled" class="absolute top-2 right-2 px-2 py-0.5 bg-dark-600 rounded text-[8px] font-bold text-slate-400 uppercase">
+                    Soon
+                </div>
             </div>
         </div>
 
-        <div v-if="message" class="message success">
+        <div v-if="message" class="max-w-2xl mx-auto mb-6 p-4 bg-success/10 border border-success/20 rounded-xl text-success text-center text-sm">
             {{ message }}
         </div>
 
-        <button @click="updatePaymentMethod" class="btn btn-primary" :disabled="isUpdating">
-            {{ isUpdating ? 'Đang cập nhật...' : 'Cập nhật' }}
-        </button>
+        <div class="flex justify-center">
+            <button @click="updatePaymentMethod" class="btn btn-primary px-12 py-3 font-bold" :disabled="isUpdating">
+                <span v-if="isUpdating" class="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin mr-2"></span>
+                {{ isUpdating ? 'Đang lưu...' : 'Lưu cài đặt' }}
+            </button>
+        </div>
     </div>
 </template>
-
-<style scoped>
-.section-title {
-    font-size: var(--text-xl);
-    font-weight: 600;
-    color: var(--color-primary);
-    margin-bottom: var(--space-6);
-    text-align: center;
-}
-
-.methods-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--space-4);
-    margin-bottom: var(--space-6);
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.method-card {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-    padding: var(--space-4);
-    background: var(--color-bg-tertiary);
-    border: 2px solid transparent;
-    border-radius: var(--radius-lg);
-    cursor: pointer;
-    transition: all 0.2s;
-    position: relative;
-}
-
-.method-card:hover:not(.disabled) {
-    border-color: var(--color-primary);
-}
-
-.method-card.active {
-    border-color: var(--color-primary);
-    background: rgba(var(--color-primary-rgb), 0.1);
-}
-
-.method-card.disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.method-icon {
-    font-size: 2rem;
-    flex-shrink: 0;
-}
-
-.method-info h4 {
-    font-size: var(--text-sm);
-    font-weight: 600;
-    color: var(--color-text-primary);
-    margin-bottom: var(--space-1);
-}
-
-.method-info p {
-    font-size: var(--text-xs);
-    color: var(--color-text-secondary);
-}
-
-.method-check {
-    position: absolute;
-    top: var(--space-2);
-    right: var(--space-2);
-    width: 20px;
-    height: 20px;
-    background: var(--color-primary);
-    color: white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: bold;
-}
-
-.message {
-    padding: var(--space-3);
-    border-radius: var(--radius-md);
-    margin-bottom: var(--space-4);
-    text-align: center;
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.message.success {
-    background: rgba(34, 197, 94, 0.1);
-    color: var(--color-success);
-}
-
-.btn {
-    display: block;
-    margin: 0 auto;
-    min-width: 150px;
-}
-
-@media (max-width: 640px) {
-    .methods-grid {
-        grid-template-columns: 1fr;
-    }
-}
-</style>

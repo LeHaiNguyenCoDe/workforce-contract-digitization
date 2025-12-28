@@ -143,6 +143,17 @@ export const useAdminOrderStore = defineStore('admin-orders', () => {
     }
   }
 
+  async function fetchOrderDetail(orderId: number): Promise<Order | null> {
+    try {
+      const response = await httpClient.get(`/admin/orders/${orderId}`)
+      const data = response.data as any
+      return data?.data || data || null
+    } catch (error) {
+      console.error('Failed to fetch order detail:', error)
+      return null
+    }
+  }
+
   // BR-SALES-02: Confirm order
   async function confirmOrder(orderId: number): Promise<boolean> {
     isUpdating.value = orderId
@@ -248,6 +259,7 @@ export const useAdminOrderStore = defineStore('admin-orders', () => {
     hasOrders,
     // Actions
     fetchOrders,
+    fetchOrderDetail,
     updateOrderStatus,
     assignShipper,
     checkStock,

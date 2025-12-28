@@ -1,22 +1,31 @@
 <script setup lang="ts">
+/**
+ * Login View
+ * Uses useAuth composable for authentication logic
+ */
 import { ref, computed } from 'vue'
 import { useRouter, useRoute, RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { useAuthStore } from '@/stores'
+import { useAuth } from '../composables/useAuth'
+import { authConfig } from '../configs'
 
 const { t } = useI18n()
 const router = useRouter()
 const route = useRoute()
-const authStore = useAuthStore()
 
+// Use composable
+const { isLoading, login } = useAuth()
+
+// Form state
 const form = ref({
     email: '',
     password: ''
 })
 
 const errors = ref<Record<string, string>>({})
-const isSubmitting = computed(() => authStore.isLoading)
+const isSubmitting = computed(() => isLoading.value)
 
+// Validation
 const validateForm = () => {
     errors.value = {}
     if (!form.value.email) {
@@ -26,20 +35,24 @@ const validateForm = () => {
     }
     if (!form.value.password) {
         errors.value.password = t('validation.required')
+    } else if (form.value.password.length < authConfig.minPasswordLength) {
+        errors.value.password = authConfig.passwordRequirements
     }
     return Object.keys(errors.value).length === 0
 }
 
+// Handle submit
 const handleSubmit = async () => {
     if (!validateForm()) return
 
-    const success = await authStore.login(form.value.email, form.value.password)
-
-    if (success) {
-        const redirect = route.query.redirect as string
-        router.push(redirect || '/')
-    } else {
-        errors.value.form = t('validation.loginFailed')
+    try {
+        const success = await login(form.value)
+        if (success) {
+            const redirect = route.query.redirect as string
+            router.push(redirect || '/')
+        }
+    } catch (error: any) {
+        errors.value.form = error.message || t('validation.loginFailed')
     }
 }
 </script>
@@ -57,27 +70,29 @@ const handleSubmit = async () => {
                 <!-- Form -->
                 <form @submit.prevent="handleSubmit" class="space-y-4">
                     <!-- Form Error -->
-                    <div v-if="errors.form" class="form-error">{{ errors.form }}</div>
+                    <div v-if="errors.form" class="p-4 rounded-lg bg-error/10 border border-error text-error text-sm">
+                        {{ errors.form }}
+                    </div>
 
                     <!-- Email -->
                     <div class="form-group">
                         <label for="email" class="form-label">{{ t('auth.email') }}</label>
                         <input id="email" v-model="form.email" type="email" class="form-input"
-                            :class="{ 'input-error': errors.email }" placeholder="example@email.com" />
-                        <span v-if="errors.email" class="error-text">{{ errors.email }}</span>
+                            :class="{ 'border-error': errors.email }" placeholder="example@email.com" />
+                        <span v-if="errors.email" class="text-error text-sm mt-1">{{ errors.email }}</span>
                     </div>
 
                     <!-- Password -->
                     <div class="form-group">
                         <label for="password" class="form-label">{{ t('auth.password') }}</label>
                         <input id="password" v-model="form.password" type="password" class="form-input"
-                            :class="{ 'input-error': errors.password }" />
-                        <span v-if="errors.password" class="error-text">{{ errors.password }}</span>
+                            :class="{ 'border-error': errors.password }" />
+                        <span v-if="errors.password" class="text-error text-sm mt-1">{{ errors.password }}</span>
                     </div>
 
                     <!-- Submit -->
                     <button type="submit" class="btn btn-primary w-full mt-6" :disabled="isSubmitting">
-                        <span v-if="isSubmitting" class="flex items-center gap-2">
+                        <span v-if="isSubmitting" class="flex items-center justify-center gap-2">
                             <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none"
                                 viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
