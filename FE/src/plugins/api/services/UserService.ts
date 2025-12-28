@@ -20,7 +20,7 @@ interface UpdateUserRequest {
  * Admin User Service
  */
 class AdminUserService extends BaseApiService<User, CreateUserRequest, UpdateUserRequest> {
-  protected readonly endpoint = '/admin/users'
+  protected readonly endpoint = 'admin/users'
 }
 
 export const adminUserService = new AdminUserService()

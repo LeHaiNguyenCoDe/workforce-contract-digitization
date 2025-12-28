@@ -13,7 +13,7 @@ import type {
  * For customer-facing product operations
  */
 class FrontendProductService extends BaseApiService<Product, CreateProductRequest, UpdateProductRequest> {
-  protected readonly endpoint = '/frontend/products'
+  protected readonly endpoint = 'frontend/categories'
 
   /**
    * Get products by category
@@ -24,7 +24,7 @@ class FrontendProductService extends BaseApiService<Product, CreateProductReques
     if (params?.page) searchParams.set('page', String(params.page))
     
     const query = searchParams.toString()
-    const url = `/frontend/categories/${categoryId}/products${query ? `?${query}` : ''}`
+    const url = `frontend/categories/${categoryId}/products${query ? `?${query}` : ''}`
     
     const response = await httpClient.get<ApiResponse<PaginatedResponse<Product>>>(url)
     return response.data.data!
@@ -36,7 +36,7 @@ class FrontendProductService extends BaseApiService<Product, CreateProductReques
  * For admin product management
  */
 class AdminProductService extends BaseApiService<Product, CreateProductRequest, UpdateProductRequest> {
-  protected readonly endpoint = '/admin/products'
+  protected readonly endpoint = 'admin/products'
 }
 
 // Export singleton instances

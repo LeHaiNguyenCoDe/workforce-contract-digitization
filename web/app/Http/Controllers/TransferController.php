@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\TransferStoreRequest;
 use App\Services\TransferService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -11,7 +12,8 @@ class TransferController extends Controller
 {
     public function __construct(
         private TransferService $transferService
-    ) {}
+    ) {
+    }
 
     public function index(Request $request): JsonResponse
     {
@@ -43,20 +45,10 @@ class TransferController extends Controller
         }
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(TransferStoreRequest $request): JsonResponse
     {
         try {
-            $validated = $request->validate([
-                'from_warehouse_id' => 'required|exists:warehouses,id',
-                'to_warehouse_id' => 'required|exists:warehouses,id',
-                'notes' => 'nullable|string',
-                'items' => 'required|array|min:1',
-                'items.*.product_id' => 'required|exists:products,id',
-                'items.*.batch_id' => 'nullable|exists:batches,id',
-                'items.*.quantity' => 'required|integer|min:1',
-            ]);
-
-            $transfer = $this->transferService->create($validated);
+            $transfer = $this->transferService->create($request->validated());
             return response()->json(['status' => 'success', 'message' => 'Tạo phiếu chuyển kho thành công', 'data' => $transfer], 201);
         } catch (Exception $e) {
             return response()->json(['status' => 'error', 'message' => $e->getMessage()], 422);

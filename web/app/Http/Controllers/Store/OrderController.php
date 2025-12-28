@@ -7,6 +7,9 @@ use App\Exceptions\NotFoundException;
 use App\Helpers\LanguageHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Store\OrderRequest;
+use App\Http\Requests\Store\OrderStatusRequest;
+use App\Http\Requests\Store\AssignShipperRequest;
+use App\Http\Requests\Store\UpdateTrackingRequest;
 use App\Models\Order;
 use App\Services\OrderService;
 use App\Traits\TranslatableResponse;
@@ -47,7 +50,7 @@ class OrderController extends Controller
     {
         try {
             $orderData = $this->orderService->getById($order->id);
-            
+
             // If admin, include stock check results
             if (Auth::user() && Auth::user()->role !== 'customer') {
                 $orderData->stock_check = $this->orderService->checkStockAvailability($orderData);
@@ -86,18 +89,14 @@ class OrderController extends Controller
     /**
      * Update order status
      */
-    public function updateStatus(Order $order, Request $request): JsonResponse
+    public function updateStatus(Order $order, OrderStatusRequest $request): JsonResponse
     {
         try {
             if (!$order || !$order->id) {
                 return $this->errorResponse('order_not_found', null, 404);
             }
 
-            $request->validate([
-                'status' => 'required|string|in:pending,processing,shipped,delivered,cancelled',
-            ]);
-
-            $order->update(['status' => $request->status]);
+            $order->update(['status' => $request->validated()['status']]);
 
             return response()->json([
                 'status' => 'success',
@@ -170,14 +169,10 @@ class OrderController extends Controller
     /**
      * Assign shipper to order
      */
-    public function assignShipper(Order $order, Request $request): JsonResponse
+    public function assignShipper(Order $order, AssignShipperRequest $request): JsonResponse
     {
         try {
-            $request->validate([
-                'shipper_id' => 'required|integer|exists:users,id',
-            ]);
-
-            $shipment = $this->orderService->assignShipper($order, $request->shipper_id);
+            $shipment = $this->orderService->assignShipper($order, $request->validated()['shipper_id']);
 
             return response()->json([
                 'status' => 'success',
@@ -192,24 +187,19 @@ class OrderController extends Controller
     /**
      * Update shipment tracking/GPS
      */
-    public function updateTracking(Order $order, Request $request): JsonResponse
+    public function updateTracking(Order $order, UpdateTrackingRequest $request): JsonResponse
     {
         try {
-            $request->validate([
-                'lat' => 'required|numeric',
-                'lng' => 'required|numeric',
-                'status' => 'sometimes|string',
-            ]);
-
+            $validated = $request->validated();
             $shipment = \App\Models\Shipment::where('order_id', $order->id)->firstOrFail();
-            
+
             $shipment->update([
-                'current_lat' => $request->lat,
-                'current_lng' => $request->lng,
+                'current_lat' => $validated['lat'],
+                'current_lng' => $validated['lng'],
             ]);
 
-            if ($request->has('status')) {
-                $shipment->update(['status' => $request->status]);
+            if (isset($validated['status'])) {
+                $shipment->update(['status' => $validated['status']]);
             }
 
             return response()->json([
@@ -221,6 +211,93 @@ class OrderController extends Controller
             return $this->genericErrorResponse(500, $ex);
         }
     }
+
+    /**
+     * Confirm order (BR-SALES-02)
+     */
+    public function confirmOrder(Order $order): JsonResponse
+    {
+        try {
+            $updatedOrder = $this->orderService->confirmOrder($order);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Đơn hàng đã được xác nhận và xuất kho',
+                'data' => $updatedOrder,
+            ]);
+        } catch (BusinessLogicException $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 400);
+        } catch (\Exception $ex) {
+            return $this->genericErrorResponse(500, $ex);
+        }
+    }
+
+    /**
+     * Mark order as delivered (BR-SALES-02)
+     */
+    public function markDelivered(Order $order): JsonResponse
+    {
+        try {
+            $updatedOrder = $this->orderService->markDelivered($order);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Đơn hàng đã được đánh dấu là đã giao',
+                'data' => $updatedOrder,
+            ]);
+        } catch (BusinessLogicException $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 400);
+        } catch (\Exception $ex) {
+            return $this->genericErrorResponse(500, $ex);
+        }
+    }
+
+    /**
+     * Complete order (BR-SALES-03)
+     */
+    public function completeOrder(Order $order): JsonResponse
+    {
+        try {
+            $updatedOrder = $this->orderService->completeOrder($order);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Đơn hàng đã hoàn thành. Doanh thu đã được ghi nhận.',
+                'data' => $updatedOrder,
+            ]);
+        } catch (BusinessLogicException $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 400);
+        } catch (\Exception $ex) {
+            return $this->genericErrorResponse(500, $ex);
+        }
+    }
+
+    /**
+     * Cancel order with stock return (BR-SALES-05)
+     */
+    public function cancelOrder(Order $order, Request $request): JsonResponse
+    {
+        try {
+            $reason = $request->input('reason');
+            $updatedOrder = $this->orderService->cancelOrder($order, $reason);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Đơn hàng đã được hủy' . ($order->status === Order::STATUS_CONFIRMED ? ' và hoàn kho' : ''),
+                'data' => $updatedOrder,
+            ]);
+        } catch (BusinessLogicException $ex) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $ex->getMessage(),
+            ], 400);
+        } catch (\Exception $ex) {
+            return $this->genericErrorResponse(500, $ex);
+        }
+    }
 }
-
-

@@ -276,9 +276,12 @@ onMounted(async () => {
                     <div>
                         <label class="block text-sm font-medium text-slate-300 mb-2">Danh mục *</label>
                         <select v-model="form.category_id" class="form-select w-full">
-                            <option :value="null">-- Chọn --</option>
+                            <option :value="null" disabled>-- Chọn danh mục --</option>
                             <option v-for="c in filteredCategories" :key="c.id" :value="c.id">{{ c.name }}</option>
                         </select>
+                        <p v-if="filteredCategories.length === 0" class="text-xs text-warning mt-1">
+                            Chưa có danh mục {{ form.type === 'income' ? 'thu' : 'chi' }}. Vui lòng tạo danh mục trước.
+                        </p>
                     </div>
                 </div>
 

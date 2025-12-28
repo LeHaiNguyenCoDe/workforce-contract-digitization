@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ReturnStoreRequest;
+use App\Http\Requests\ReturnReceiveItemRequest;
 use App\Services\ReturnService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -11,7 +13,8 @@ class ReturnController extends Controller
 {
     public function __construct(
         private ReturnService $returnService
-    ) {}
+    ) {
+    }
 
     public function index(Request $request): JsonResponse
     {
@@ -43,22 +46,10 @@ class ReturnController extends Controller
         }
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(ReturnStoreRequest $request): JsonResponse
     {
         try {
-            $validated = $request->validate([
-                'order_id' => 'required|exists:orders,id',
-                'customer_id' => 'nullable|exists:customers,id',
-                'type' => 'required|in:return,exchange,refund_only',
-                'reason' => 'required|string',
-                'notes' => 'nullable|string',
-                'items' => 'required|array|min:1',
-                'items.*.product_id' => 'required|exists:products,id',
-                'items.*.quantity' => 'required|integer|min:1',
-                'items.*.reason' => 'nullable|string',
-            ]);
-
-            $return = $this->returnService->create($validated);
+            $return = $this->returnService->create($request->validated());
             return response()->json(['status' => 'success', 'message' => 'Tạo yêu cầu RMA thành công', 'data' => $return], 201);
         } catch (Exception $e) {
             return response()->json(['status' => 'error', 'message' => $e->getMessage()], 422);
@@ -87,18 +78,10 @@ class ReturnController extends Controller
         }
     }
 
-    public function receiveItems(Request $request, int $id): JsonResponse
+    public function receiveItems(int $id, ReturnReceiveItemRequest $request): JsonResponse
     {
         try {
-            $validated = $request->validate([
-                'items' => 'required|array',
-                'items.*.id' => 'required|exists:return_items,id',
-                'items.*.received_quantity' => 'required|integer|min:0',
-                'items.*.condition' => 'required|in:new,good,damaged,defective',
-                'items.*.action' => 'nullable|in:restock,dispose,repair',
-            ]);
-
-            $return = $this->returnService->receiveItems($id, $validated['items']);
+            $return = $this->returnService->receiveItems($id, $request->validated()['items']);
             return response()->json(['status' => 'success', 'message' => 'Đã cập nhật nhận hàng', 'data' => $return]);
         } catch (Exception $e) {
             return response()->json(['status' => 'error', 'message' => $e->getMessage()], 422);

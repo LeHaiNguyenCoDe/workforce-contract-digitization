@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\LanguageSetRequest;
 use App\Services\LanguageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -35,14 +36,10 @@ class LanguageController extends Controller
     /**
      * Set language
      */
-    public function set(Request $request): JsonResponse
+    public function set(LanguageSetRequest $request): JsonResponse
     {
-        $request->validate([
-            'locale' => ['required', 'string', 'in:vi,en'],
-        ]);
-
         $userId = Auth::id();
-        $locale = $request->input('locale');
+        $locale = $request->validated()['locale'];
 
         $success = $this->languageService->setLocale($locale, $userId);
 

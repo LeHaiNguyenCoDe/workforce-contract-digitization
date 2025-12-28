@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\Expense;
+use App\Models\FinanceTransaction;
 use App\Models\Order;
 use Illuminate\Support\Facades\DB;
 
@@ -28,9 +28,9 @@ class ReportService
             COUNT(*) as order_count
         ')->first();
 
-        $revenue = (float)($orderData->revenue ?? 0);
-        $shippingCollected = (float)($orderData->shipping_collected ?? 0);
-        $orderCount = (int)($orderData->order_count ?? 0);
+        $revenue = (float) ($orderData->revenue ?? 0);
+        $shippingCollected = (float) ($orderData->shipping_collected ?? 0);
+        $orderCount = (int) ($orderData->order_count ?? 0);
 
         // COGS from product_costs
         $cogs = DB::table('product_cost_history')
@@ -38,40 +38,46 @@ class ReportService
             ->whereBetween('created_at', [$fromDate, $toDate . ' 23:59:59'])
             ->sum(DB::raw('ABS(quantity) * unit_cost'));
 
-        // Expenses
-        $expenseQuery = Expense::query()
-            ->where('type', 'expense')
-            ->where('status', 'approved')
+        // Expenses (từ finance_transactions type=payment)
+        $expenseQuery = FinanceTransaction::query()
+            ->where('type', 'payment')
+            ->approved()
             ->betweenDates($fromDate, $toDate);
 
         if ($warehouseId) {
             $expenseQuery->where('warehouse_id', $warehouseId);
         }
 
-        $totalExpenses = (float)$expenseQuery->sum('amount');
+        $totalExpenses = (float) $expenseQuery->sum('amount');
 
         // Expense breakdown by category
-        $expensesByCategory = Expense::query()
+        $expensesByCategory = FinanceTransaction::query()
             ->select('category_id', DB::raw('SUM(amount) as total'))
             ->with('category:id,name')
-            ->where('type', 'expense')
-            ->where('status', 'approved')
+            ->where('type', 'payment')
+            ->approved()
             ->betweenDates($fromDate, $toDate)
             ->when($warehouseId, fn($q) => $q->where('warehouse_id', $warehouseId))
+            ->whereNotNull('category_id')
             ->groupBy('category_id')
             ->get();
 
-        // Other income
-        $otherIncome = Expense::query()
-            ->where('type', 'income')
-            ->where('status', 'approved')
+        // Other income (từ finance_transactions type=receipt không phải order)
+        $otherIncome = FinanceTransaction::query()
+            ->where('type', 'receipt')
+            ->where(function ($q) {
+                $q->whereNull('reference_type')
+                    ->orWhere('reference_type', '!=', 'order');
+            })
+            ->approved()
             ->betweenDates($fromDate, $toDate)
             ->when($warehouseId, fn($q) => $q->where('warehouse_id', $warehouseId))
             ->sum('amount');
 
         // Calculate
-        $grossProfit = $revenue - (float)$cogs;
-        $operatingIncome = $grossProfit - $totalExpenses + (float)$otherIncome;
+        $grossProfit = $revenue - (float) $cogs;
+        $operatingIncome = $grossProfit - $totalExpenses + (float) $otherIncome;
+
 
         return [
             'period' => [
@@ -81,11 +87,11 @@ class ReportService
             'revenue' => [
                 'sales' => $revenue,
                 'shipping_collected' => $shippingCollected,
-                'other_income' => (float)$otherIncome,
-                'total' => $revenue + (float)$otherIncome,
+                'other_income' => (float) $otherIncome,
+                'total' => $revenue + (float) $otherIncome,
             ],
             'costs' => [
-                'cogs' => (float)$cogs,
+                'cogs' => (float) $cogs,
             ],
             'gross_profit' => $grossProfit,
             'gross_margin' => $revenue > 0 ? round(($grossProfit / $revenue) * 100, 2) : 0,
@@ -177,7 +183,7 @@ class ReportService
             ->join('products', 'products.id', '=', 'stocks.product_id')
             ->join('inventory_settings', function ($join) {
                 $join->on('inventory_settings.product_id', '=', 'stocks.product_id')
-                     ->on('inventory_settings.warehouse_id', '=', 'stocks.warehouse_id');
+                    ->on('inventory_settings.warehouse_id', '=', 'stocks.warehouse_id');
             })
             ->whereColumn('stocks.quantity', '<', 'inventory_settings.min_quantity')
             ->select('products.id', 'products.name', 'stocks.quantity', 'inventory_settings.min_quantity')

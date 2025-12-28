@@ -4,12 +4,11 @@
  */
 
 import { ref, computed } from 'vue'
-import { useProductStore } from '../store/store'
 import { useSwal } from '@/shared/utils'
 import type { Product } from '../types'
 
 export function useProducts() {
-  const store = useProductStore()
+  const store = useAdminProductStore()
   const swal = useSwal()
 
   // Local state
@@ -105,19 +104,19 @@ export function useProducts() {
 
   async function saveProduct() {
     if (store.isSaving) return
-    
+
     // Get current form values directly from store (reactive)
     const form = store.productForm
-    
+
     // Validate required fields - use actual form values
     const errors: string[] = []
-    
+
     // Check name - trim and check
     const name = String(form.name || '').trim()
     if (!name) {
       errors.push('Tên sản phẩm')
     }
-    
+
     // Check category_id - can be string or number
     const categoryId = form.category_id
     const categoryIdStr = String(categoryId || '').trim()
@@ -125,13 +124,13 @@ export function useProducts() {
     if (!categoryId || categoryIdStr === '' || categoryIdStr === '0' || categoryIdNum === 0 || isNaN(categoryIdNum)) {
       errors.push('Danh mục')
     }
-    
+
     // Check price - allow 0 but not undefined/null/empty string
     const price = form.price
-    if (price === undefined || price === null || price === '' || (typeof price === 'string' && price.trim() === '')) {
+    if (price === undefined || price === null || String(price).trim() === '') {
       errors.push('Giá')
     }
-    
+
     if (errors.length > 0) {
       console.log('Validation errors:', {
         name,
@@ -149,7 +148,7 @@ export function useProducts() {
     try {
       // Get fresh form values directly from store
       const form = store.productForm
-      
+
       // Parse category_id - handle both string and number
       let categoryIdParsed = 0
       if (typeof form.category_id === 'string') {
@@ -157,7 +156,7 @@ export function useProducts() {
       } else if (typeof form.category_id === 'number') {
         categoryIdParsed = form.category_id
       }
-      
+
       // Build payload with proper types
       const payload: any = {
         name: String(form.name || '').trim(),
@@ -166,7 +165,7 @@ export function useProducts() {
         price: Math.round(Number(form.price) || 0), // Backend expects integer
         is_active: form.is_active ?? true
       }
-      
+
       // Add optional fields
       if (form.sale_price) {
         payload.sale_price = Math.round(Number(form.sale_price))
@@ -180,7 +179,7 @@ export function useProducts() {
       if (form.thumbnail) {
         payload.thumbnail = String(form.thumbnail).trim()
       }
-      
+
       // Final validation after parsing
       if (!payload.name || payload.name === '') {
         await swal.warning('Tên sản phẩm không được để trống!')
@@ -190,7 +189,7 @@ export function useProducts() {
         await swal.warning('Vui lòng chọn danh mục!')
         return
       }
-      
+
       // Debug log
       console.log('Saving product with payload:', payload)
 
@@ -208,7 +207,7 @@ export function useProducts() {
       editingProduct.value = null
       store.selectedProduct = null
       store.resetProductForm()
-      
+
       // Force refresh products list - reset to page 1 for new products
       // Use setTimeout to ensure modal is closed first
       setTimeout(async () => {
@@ -217,7 +216,7 @@ export function useProducts() {
     } catch (error: any) {
       console.error('Failed to save product:', error)
       const errorData = error.response?.data
-      
+
       // Show detailed validation errors
       if (errorData?.errors) {
         const errorMessages: string[] = []
@@ -266,13 +265,13 @@ export function useProducts() {
   function handleNameChange() {
     if (!editingProduct.value && store.productForm.name) {
       const productName = store.productForm.name.trim()
-      
+
       // Auto-generate slug
       store.productForm.slug = generateSlug(productName)
-      
+
       // Auto-select category if product name contains category name
       autoSelectCategory(productName)
-      
+
       // Auto-generate short description and full description
       autoGenerateShortDescription(productName)
     }
@@ -281,16 +280,16 @@ export function useProducts() {
   // Auto-select category based on product name
   function autoSelectCategory(productName: string) {
     if (!productName || store.productForm.category_id || store.categories.length === 0) return // Skip if already selected or no categories
-    
+
     const nameLower = productName.toLowerCase().trim()
-    
+
     // Find category whose name is contained in product name (best match first)
     let matchedCategory = null
     let bestMatchLength = 0
-    
+
     for (const cat of store.categories) {
       const catNameLower = cat.name.toLowerCase().trim()
-      
+
       // Check if category name is in product name
       if (nameLower.includes(catNameLower)) {
         // Prefer longer category names (more specific)
@@ -307,7 +306,7 @@ export function useProducts() {
         }
       }
     }
-    
+
     if (matchedCategory) {
       store.productForm.category_id = matchedCategory.id.toString()
     }
@@ -316,7 +315,7 @@ export function useProducts() {
   // Auto-generate short description and full description
   function autoGenerateShortDescription(productName: string) {
     if (!productName) return
-    
+
     // Use selected category if available, otherwise find matched category
     let categoryName = 'sản phẩm'
     if (store.productForm.category_id) {
@@ -335,13 +334,13 @@ export function useProducts() {
         categoryName = matchedCategory.name
       }
     }
-    
+
     // Generate short description (only if empty)
     if (!store.productForm.short_description) {
       const shortDesc = `${productName} là ${categoryName} chất lượng cao, được thiết kế và sản xuất với tiêu chuẩn nghiêm ngặt. Sản phẩm phù hợp cho mọi nhu cầu sử dụng, mang lại trải nghiệm tuyệt vời cho người dùng.`
       store.productForm.short_description = shortDesc
     }
-    
+
     // Generate full description (only if empty)
     if (!store.productForm.description) {
       const fullDesc = `## ${productName}

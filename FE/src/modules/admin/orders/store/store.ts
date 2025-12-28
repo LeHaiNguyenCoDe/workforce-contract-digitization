@@ -47,7 +47,7 @@ export interface Shipper {
   phone: string
 }
 
-export const useOrderStore = defineStore('admin-orders', () => {
+export const useAdminOrderStore = defineStore('admin-orders', () => {
   // State
   const orders = ref<Order[]>([])
   const isLoading = ref(false)
@@ -55,7 +55,7 @@ export const useOrderStore = defineStore('admin-orders', () => {
   const currentPage = ref(1)
   const totalPages = ref(1)
   const statusFilter = ref('')
-  
+
   // Shipper management
   const shippers = ref<Shipper[]>([
     { id: 101, name: 'Nguyễn Văn Shipper', phone: '0901112223' },
@@ -77,7 +77,7 @@ export const useOrderStore = defineStore('admin-orders', () => {
         page: params?.page || currentPage.value,
         per_page: params?.per_page || 10
       }
-      
+
       if (params?.status) queryParams.status = params.status
       if (params?.search) queryParams.search = params.search
 
@@ -105,8 +105,8 @@ export const useOrderStore = defineStore('admin-orders', () => {
   async function updateOrderStatus(orderId: number, status: string): Promise<boolean> {
     isUpdating.value = orderId
     try {
-      await adminOrderService.update(orderId, { status })
-      const order = orders.value.find(o => o.id === orderId)
+      await adminOrderService.update(orderId, { status } as any)
+      const order = orders.value.find((o: Order) => o.id === orderId)
       if (order) {
         order.status = status
       }
@@ -122,7 +122,7 @@ export const useOrderStore = defineStore('admin-orders', () => {
   async function assignShipper(orderId: number, shipperId: number): Promise<boolean> {
     try {
       await httpClient.post(`/admin/orders/${orderId}/assign-shipper`, { shipper_id: shipperId })
-      const order = orders.value.find(o => o.id === orderId)
+      const order = orders.value.find((o: Order) => o.id === orderId)
       if (order) {
         // Update order with shipper info if needed
       }
@@ -136,10 +136,82 @@ export const useOrderStore = defineStore('admin-orders', () => {
   async function checkStock(orderId: number): Promise<any> {
     try {
       const response = await httpClient.get(`/admin/orders/${orderId}/check-stock`)
-      return response.data.data
+      return (response.data as any).data
     } catch (error) {
       console.error('Failed to check stock:', error)
       throw error
+    }
+  }
+
+  // BR-SALES-02: Confirm order
+  async function confirmOrder(orderId: number): Promise<boolean> {
+    isUpdating.value = orderId
+    try {
+      await httpClient.post(`/admin/orders/${orderId}/confirm`)
+      const order = orders.value.find((o: Order) => o.id === orderId)
+      if (order) {
+        order.status = 'confirmed'
+      }
+      return true
+    } catch (error) {
+      console.error('Failed to confirm order:', error)
+      throw error
+    } finally {
+      isUpdating.value = null
+    }
+  }
+
+  // BR-SALES-02: Mark as delivered
+  async function markDelivered(orderId: number): Promise<boolean> {
+    isUpdating.value = orderId
+    try {
+      await httpClient.post(`/admin/orders/${orderId}/deliver`)
+      const order = orders.value.find((o: Order) => o.id === orderId)
+      if (order) {
+        order.status = 'delivered'
+      }
+      return true
+    } catch (error) {
+      console.error('Failed to mark as delivered:', error)
+      throw error
+    } finally {
+      isUpdating.value = null
+    }
+  }
+
+  // BR-SALES-03: Complete order
+  async function completeOrder(orderId: number): Promise<boolean> {
+    isUpdating.value = orderId
+    try {
+      await httpClient.post(`/admin/orders/${orderId}/complete`)
+      const order = orders.value.find((o: Order) => o.id === orderId)
+      if (order) {
+        order.status = 'completed'
+      }
+      return true
+    } catch (error) {
+      console.error('Failed to complete order:', error)
+      throw error
+    } finally {
+      isUpdating.value = null
+    }
+  }
+
+  // BR-SALES-05: Cancel order
+  async function cancelOrderAction(orderId: number, reason?: string): Promise<boolean> {
+    isUpdating.value = orderId
+    try {
+      await httpClient.post(`/admin/orders/${orderId}/cancel`, { reason })
+      const order = orders.value.find((o: Order) => o.id === orderId)
+      if (order) {
+        order.status = 'cancelled'
+      }
+      return true
+    } catch (error) {
+      console.error('Failed to cancel order:', error)
+      throw error
+    } finally {
+      isUpdating.value = null
     }
   }
 
@@ -179,6 +251,10 @@ export const useOrderStore = defineStore('admin-orders', () => {
     updateOrderStatus,
     assignShipper,
     checkStock,
+    confirmOrder,
+    markDelivered,
+    completeOrder,
+    cancelOrderAction,
     setPage,
     setStatusFilter,
     reset

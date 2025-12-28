@@ -4,10 +4,11 @@ namespace App\Http\Controllers\Store;
 
 use App\Exceptions\NotFoundException;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Store\CategoryStoreRequest;
+use App\Http\Requests\Store\CategoryUpdateRequest;
 use App\Models\Category;
 use App\Services\CategoryService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
@@ -71,16 +72,10 @@ class CategoryController extends Controller
     /**
      * Create category
      */
-    public function store(Request $request): JsonResponse
+    public function store(CategoryStoreRequest $request): JsonResponse
     {
         try {
-            $request->validate([
-                'name' => 'required|string|max:255',
-                'slug' => 'required|string|max:255|unique:categories,slug',
-                'parent_id' => 'sometimes|integer|exists:categories,id',
-            ]);
-
-            $category = $this->categoryService->create($request->all());
+            $category = $this->categoryService->create($request->validated());
 
             return response()->json([
                 'status' => 'success',
@@ -98,7 +93,7 @@ class CategoryController extends Controller
     /**
      * Update category
      */
-    public function update(Category $category, Request $request): JsonResponse
+    public function update(Category $category, CategoryUpdateRequest $request): JsonResponse
     {
         try {
             if (!$category || !$category->id) {
@@ -108,13 +103,7 @@ class CategoryController extends Controller
                 ], 404);
             }
 
-            $request->validate([
-                'name' => 'sometimes|string|max:255',
-                'slug' => 'sometimes|string|max:255|unique:categories,slug,' . $category->id,
-                'parent_id' => 'sometimes|integer|exists:categories,id',
-            ]);
-
-            $categoryData = $this->categoryService->update($category->id, $request->all());
+            $categoryData = $this->categoryService->update($category->id, $request->validated());
 
             return response()->json([
                 'status' => 'success',

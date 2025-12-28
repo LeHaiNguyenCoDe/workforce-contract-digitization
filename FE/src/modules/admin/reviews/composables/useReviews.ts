@@ -4,7 +4,6 @@
  */
 
 import { computed } from 'vue'
-import { useReviewStore } from '../store/store'
 import { useSwal } from '@/shared/utils'
 import type { Review } from '@/plugins/api/services/ReviewService'
 

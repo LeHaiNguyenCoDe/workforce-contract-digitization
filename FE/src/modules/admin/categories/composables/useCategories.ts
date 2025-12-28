@@ -4,13 +4,12 @@
  */
 
 import { ref } from 'vue'
-import { useCategoryStore } from '../store/store'
 import { useSwal } from '@/shared/utils'
 import { adminCategoryService } from '@/plugins/api/services/CategoryService'
 import type { Category } from '../store/store'
 
 export function useCategories() {
-  const store = useCategoryStore()
+  const store = useAdminCategoryStore()
   const swal = useSwal()
 
   // Local state
@@ -51,7 +50,7 @@ export function useCategories() {
       store.selectedCategory = fullCategory
       store.categoryForm = {
         name: fullCategory.name,
-        slug: fullCategory.slug,
+        slug: fullCategory.slug || '',
         description: fullCategory.description || '',
         parent_id: fullCategory.parent_id?.toString() || ''
       }
@@ -62,7 +61,7 @@ export function useCategories() {
       store.selectedCategory = category
       store.categoryForm = {
         name: category.name,
-        slug: category.slug,
+        slug: category.slug || '',
         description: category.description || '',
         parent_id: category.parent_id?.toString() || ''
       }

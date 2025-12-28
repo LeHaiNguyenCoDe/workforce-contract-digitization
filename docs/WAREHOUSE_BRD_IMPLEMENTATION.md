@@ -228,3 +228,4 @@ Cần test các scenarios:
 - Xuất kho vượt tồn → Kiểm tra error
 - Xuất kho bình thường → Kiểm tra log và tồn kho
 
+

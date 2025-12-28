@@ -3,6 +3,7 @@ import { ref, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import httpClient from '@/plugins/api/httpClient'
 import BaseModal from '@/shared/components/BaseModal.vue'
+import { useSwal } from '@/shared/utils'
 
 const { t } = useI18n()
 
@@ -24,6 +25,7 @@ const showModal = ref(false)
 const editingArticle = ref<Article | null>(null)
 const isSaving = ref(false)
 const formData = ref({ title: '', slug: '', excerpt: '', content: '', thumbnail: '' })
+const swal = useSwal()
 
 const formatDate = (date: string) => new Date(date).toLocaleDateString('vi-VN')
 const generateSlug = (text: string): string => text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-').replace(/-+/g, '-')
@@ -64,12 +66,18 @@ const saveArticle = async () => {
         const payload: any = { title: formData.value.title, slug: formData.value.slug || generateSlug(formData.value.title), content: formData.value.content }
         if (formData.value.excerpt) payload.excerpt = formData.value.excerpt
         if (formData.value.thumbnail) payload.thumbnail = formData.value.thumbnail
-        if (editingArticle.value) await httpClient.put(`/admin/articles/${editingArticle.value.id}`, payload)
-        else await httpClient.post('/admin/articles', payload)
+        
+        if (editingArticle.value) {
+            await httpClient.put(`/admin/articles/${editingArticle.value.id}`, payload)
+            await swal.success('Cập nhật bài viết thành công!')
+        } else {
+            await httpClient.post('/admin/articles', payload)
+            await swal.success('Thêm bài viết thành công!')
+        }
         showModal.value = false
         fetchArticles()
     } catch (error: any) {
-        alert(error.response?.data?.message || 'Lưu thất bại!')
+        await swal.error(error.response?.data?.message || 'Lưu thất bại!')
     } finally {
         isSaving.value = false
     }
@@ -84,13 +92,15 @@ const togglePublish = async (article: Article) => {
 }
 
 const deleteArticle = async (id: number) => {
-    console.log('deleteArticle clicked:', id)
-    if (!window.confirm('Bạn có chắc muốn xóa bài viết này?')) return
+    const confirmed = await swal.confirmDelete('Bạn có chắc muốn xóa bài viết này?')
+    if (!confirmed) return
+    
     try {
         await httpClient.delete(`/admin/articles/${id}`)
         articles.value = articles.value.filter(a => a.id !== id)
+        await swal.success('Xóa bài viết thành công!')
     } catch (error: any) {
-        alert(error.response?.data?.message || 'Xóa thất bại!')
+        await swal.error(error.response?.data?.message || 'Xóa thất bại!')
     }
 }
 

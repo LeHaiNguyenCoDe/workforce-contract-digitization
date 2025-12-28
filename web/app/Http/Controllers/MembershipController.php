@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Store\MembershipTierStoreRequest;
+use App\Http\Requests\Store\MembershipTierUpdateRequest;
+use App\Http\Requests\Store\MembershipRedeemRequest;
 use App\Services\MembershipService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -11,7 +14,8 @@ class MembershipController extends Controller
 {
     public function __construct(
         private MembershipService $membershipService
-    ) {}
+    ) {
+    }
 
     /**
      * Get all tiers
@@ -29,21 +33,10 @@ class MembershipController extends Controller
     /**
      * Create tier
      */
-    public function createTier(Request $request): JsonResponse
+    public function createTier(MembershipTierStoreRequest $request): JsonResponse
     {
         try {
-            $validated = $request->validate([
-                'name' => 'required|string|max:100',
-                'code' => 'required|string|max:50|unique:membership_tiers,code',
-                'min_points' => 'required|integer|min:0',
-                'max_points' => 'nullable|integer|min:0',
-                'discount_percent' => 'nullable|numeric|min:0|max:100',
-                'point_multiplier' => 'nullable|numeric|min:1',
-                'benefits' => 'nullable|array',
-                'color' => 'nullable|string|max:20',
-            ]);
-
-            $tier = $this->membershipService->createTier($validated);
+            $tier = $this->membershipService->createTier($request->validated());
             return response()->json(['status' => 'success', 'data' => $tier], 201);
         } catch (Exception $e) {
             return response()->json(['status' => 'error', 'message' => $e->getMessage()], 422);
@@ -53,21 +46,10 @@ class MembershipController extends Controller
     /**
      * Update tier
      */
-    public function updateTier(Request $request, int $id): JsonResponse
+    public function updateTier(int $id, MembershipTierUpdateRequest $request): JsonResponse
     {
         try {
-            $validated = $request->validate([
-                'name' => 'nullable|string|max:100',
-                'min_points' => 'nullable|integer|min:0',
-                'max_points' => 'nullable|integer|min:0',
-                'discount_percent' => 'nullable|numeric|min:0|max:100',
-                'point_multiplier' => 'nullable|numeric|min:1',
-                'benefits' => 'nullable|array',
-                'color' => 'nullable|string|max:20',
-                'is_active' => 'nullable|boolean',
-            ]);
-
-            $tier = $this->membershipService->updateTier($id, $validated);
+            $tier = $this->membershipService->updateTier($id, $request->validated());
             return response()->json(['status' => 'success', 'data' => $tier]);
         } catch (Exception $e) {
             return response()->json(['status' => 'error', 'message' => $e->getMessage()], 422);
@@ -124,13 +106,10 @@ class MembershipController extends Controller
     /**
      * Redeem points
      */
-    public function redeem(Request $request, int $customerId): JsonResponse
+    public function redeem(int $customerId, MembershipRedeemRequest $request): JsonResponse
     {
         try {
-            $validated = $request->validate([
-                'points' => 'required|integer|min:1',
-                'reason' => 'nullable|string',
-            ]);
+            $validated = $request->validated();
 
             $transaction = $this->membershipService->redeemPoints(
                 $customerId,

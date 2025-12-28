@@ -4,6 +4,10 @@ namespace App\Http\Controllers\Store;
 
 use App\Exceptions\NotFoundException;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Store\ProductImageRequest;
+use App\Http\Requests\Store\ProductVariantRequest;
+use App\Http\Requests\Store\ProductStoreRequest;
+use App\Http\Requests\Store\ProductUpdateRequest;
 use App\Models\Category;
 use App\Models\Product;
 use App\Services\ProductService;
@@ -104,7 +108,7 @@ class ProductController extends Controller
     /**
      * Add image to product
      */
-    public function addImage(Product $product, Request $request): JsonResponse
+    public function addImage(Product $product, ProductImageRequest $request): JsonResponse
     {
         try {
             if (!$product || !$product->id) {
@@ -114,12 +118,7 @@ class ProductController extends Controller
                 ], 404);
             }
 
-            $request->validate([
-                'image_url' => 'required|string|url',
-                'is_main' => 'boolean',
-            ]);
-
-            $image = $this->productService->addImage($product->id, $request->only(['image_url', 'is_main']));
+            $image = $this->productService->addImage($product->id, $request->validated());
 
             return response()->json([
                 'status' => 'success',
@@ -174,7 +173,7 @@ class ProductController extends Controller
     /**
      * Add variant to product
      */
-    public function addVariant(Product $product, Request $request): JsonResponse
+    public function addVariant(Product $product, ProductVariantRequest $request): JsonResponse
     {
         try {
             if (!$product || !$product->id) {
@@ -184,12 +183,7 @@ class ProductController extends Controller
                 ], 404);
             }
 
-            $request->validate([
-                'color' => 'required|string',
-                'stock' => 'required|integer|min:0',
-            ]);
-
-            $variant = $this->productService->addVariant($product->id, $request->only(['color', 'stock']));
+            $variant = $this->productService->addVariant($product->id, $request->validated());
 
             return response()->json([
                 'status' => 'success',
@@ -212,7 +206,7 @@ class ProductController extends Controller
     /**
      * Update product variant
      */
-    public function updateVariant(Product $product, int $variant, Request $request): JsonResponse
+    public function updateVariant(Product $product, int $variant, ProductVariantRequest $request): JsonResponse
     {
         try {
             if (!$product || !$product->id) {
@@ -222,12 +216,7 @@ class ProductController extends Controller
                 ], 404);
             }
 
-            $request->validate([
-                'color' => 'sometimes|string',
-                'stock' => 'sometimes|integer|min:0',
-            ]);
-
-            $variantData = $this->productService->updateVariant($product->id, $variant, $request->only(['color', 'stock']));
+            $variantData = $this->productService->updateVariant($product->id, $variant, $request->validated());
 
             return response()->json([
                 'status' => 'success',
@@ -282,23 +271,10 @@ class ProductController extends Controller
     /**
      * Create product
      */
-    public function store(Request $request): JsonResponse
+    public function store(ProductStoreRequest $request): JsonResponse
     {
         try {
-            $request->validate([
-                'category_id' => 'required|integer|exists:categories,id',
-                'name' => 'required|string|max:255',
-                'slug' => 'sometimes|string|max:255|unique:products,slug',
-                'price' => 'sometimes|integer|min:0',
-                'sale_price' => 'sometimes|integer|min:0',
-                'short_description' => 'sometimes|string',
-                'description' => 'sometimes|string',
-                'thumbnail' => 'sometimes|string|url',
-                'is_active' => 'sometimes|boolean',
-                'specs' => 'sometimes|array',
-            ]);
-
-            $product = $this->productService->create($request->all());
+            $product = $this->productService->create($request->validated());
 
             return response()->json([
                 'status' => 'success',
@@ -326,7 +302,7 @@ class ProductController extends Controller
     /**
      * Update product
      */
-    public function update(Product $product, Request $request): JsonResponse
+    public function update(Product $product, ProductUpdateRequest $request): JsonResponse
     {
         try {
             if (!$product || !$product->id) {
@@ -336,20 +312,7 @@ class ProductController extends Controller
                 ], 404);
             }
 
-            $request->validate([
-                'category_id' => 'sometimes|integer|exists:categories,id',
-                'name' => 'sometimes|string|max:255',
-                'slug' => 'sometimes|string|max:255|unique:products,slug,' . $product->id,
-                'price' => 'sometimes|integer|min:0',
-                'sale_price' => 'sometimes|integer|min:0',
-                'short_description' => 'sometimes|string',
-                'description' => 'sometimes|string',
-                'thumbnail' => 'sometimes|string|url',
-                'is_active' => 'sometimes|boolean',
-                'specs' => 'sometimes|array',
-            ]);
-
-            $productData = $this->productService->update($product->id, $request->all());
+            $productData = $this->productService->update($product->id, $request->validated());
 
             return response()->json([
                 'status' => 'success',
@@ -387,7 +350,7 @@ class ProductController extends Controller
     {
         try {
             \Log::info('Delete product request', ['product_id' => $product->id ?? null]);
-            
+
             if (!$product || !$product->id) {
                 \Log::warning('Delete product failed: Product not found');
                 return response()->json([
@@ -401,7 +364,7 @@ class ProductController extends Controller
             \Log::info('Product stock check', ['product_id' => $product->id, 'stock_count' => $stockCount]);
 
             $this->productService->delete($product->id);
-            
+
             \Log::info('Product deleted successfully', ['product_id' => $product->id]);
 
             return response()->json([

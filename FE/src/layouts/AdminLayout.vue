@@ -11,7 +11,7 @@ const route = useRoute()
 const authStore = useAuthStore()
 
 const isSidebarCollapsed = ref(false)
-const expandedMenus = ref<string[]>(['sales', 'warehouse']) // Default expanded
+const expandedMenus = ref<string[]>([]) // Start with no menu expanded, will be set based on route
 
 interface MenuItem {
     icon: string
@@ -19,20 +19,51 @@ interface MenuItem {
     label: string
     exact?: boolean
     children?: MenuItem[]
+    requiredPermission?: string  // Permission required to see this menu
+}
+
+// Check if user has a specific permission
+const hasPermission = (permission: string): boolean => {
+    if (!authStore.user) return false
+    
+    // Admin role always has all permissions
+    if (authStore.user.roles?.some(r => r.name === 'admin')) return true
+    
+    // Check permissions array from API
+    return authStore.user.permissions?.includes(permission) ?? false
+}
+
+// Check if user can see a menu item
+const canSeeMenuItem = (item: MenuItem): boolean => {
+    // No permission requirement = everyone can see
+    if (!item.requiredPermission) return true
+    
+    // Check if user has the required permission
+    return hasPermission(item.requiredPermission)
+}
+
+// Filter children by permission as well
+const filterChildren = (item: MenuItem): MenuItem => {
+    if (!item.children) return item
+    return {
+        ...item,
+        children: item.children.filter(child => canSeeMenuItem(child))
+    }
 }
 
 const menuItems: MenuItem[] = [
-    { icon: 'dashboard', path: '/admin', label: 'Dashboard', exact: true },
+    { icon: 'dashboard', path: '/admin', label: 'Dashboard', exact: true, requiredPermission: 'view_dashboard' },
 
     // Bán hàng
     {
         icon: 'sales',
         path: '/admin/sales',
         label: 'Bán hàng',
+        requiredPermission: 'view_orders',
         children: [
-            { icon: 'orders', path: '/admin/orders', label: 'Đơn hàng' },
-            { icon: 'returns', path: '/admin/returns', label: 'Trả hàng/RMA' },
-            { icon: 'customers', path: '/admin/customers', label: 'Khách hàng' },
+            { icon: 'orders', path: '/admin/orders', label: 'Đơn hàng', requiredPermission: 'view_orders' },
+            { icon: 'returns', path: '/admin/returns', label: 'Trả hàng/RMA', requiredPermission: 'view_returns' },
+            { icon: 'customers', path: '/admin/customers', label: 'Khách hàng', requiredPermission: 'view_customers' },
         ]
     },
 
@@ -41,16 +72,15 @@ const menuItems: MenuItem[] = [
         icon: 'warehouse',
         path: '/admin/warehouse',
         label: 'Kho',
+        requiredPermission: 'view_warehouse',
         children: [
-            { icon: 'products', path: '/admin/products', label: 'Sản phẩm' },
-            { icon: 'categories', path: '/admin/categories', label: 'Danh mục' },
-            { icon: 'batches', path: '/admin/warehouse/batches', label: 'Lô hàng & HSD' },
-            { icon: 'inbound', path: '/admin/warehouse/inbound-receipts', label: 'Nhập kho' },
-            { icon: 'outbound', path: '/admin/warehouse/outbound-receipts', label: 'Xuất kho' },
-            { icon: 'stocktake', path: '/admin/warehouse/stocktakes', label: 'Kiểm kê' },
-            { icon: 'transfer', path: '/admin/warehouse/transfers', label: 'Chuyển kho' },
-            { icon: 'alerts', path: '/admin/warehouse/alerts', label: 'Cảnh báo tồn kho' },
-            { icon: 'inventory', path: '/admin/warehouse/inventory', label: 'Tồn kho' },
+            { icon: 'products', path: '/admin/products', label: 'Sản phẩm', requiredPermission: 'view_products' },
+            { icon: 'categories', path: '/admin/categories', label: 'Danh mục', requiredPermission: 'view_categories' },
+            { icon: 'batches', path: '/admin/warehouse/inbound-batches', label: 'Lô nhập kho', requiredPermission: 'view_warehouse' },
+            { icon: 'inbound', path: '/admin/warehouse/inbound-receipts', label: 'Phiếu nhập kho', requiredPermission: 'create_inbound' },
+            { icon: 'outbound', path: '/admin/warehouse/outbound-receipts', label: 'Phiếu xuất kho', requiredPermission: 'create_outbound' },
+            { icon: 'stocktake', path: '/admin/warehouse/adjustments', label: 'Điều chỉnh kho', requiredPermission: 'adjust_stock' },
+            { icon: 'inventory', path: '/admin/warehouse/inventory', label: 'Tồn kho', requiredPermission: 'view_warehouse' },
         ]
     },
 
@@ -59,9 +89,9 @@ const menuItems: MenuItem[] = [
         icon: 'purchase',
         path: '/admin/purchase',
         label: 'Mua hàng',
+        requiredPermission: 'view_suppliers',
         children: [
-            { icon: 'supplier', path: '/admin/warehouse/suppliers', label: 'Nhà cung cấp' },
-            { icon: 'po', path: '/admin/purchase/requests', label: 'Phiếu đề nghị nhập' },
+            { icon: 'supplier', path: '/admin/warehouse/suppliers', label: 'Nhà cung cấp', requiredPermission: 'view_suppliers' },
         ]
     },
 
@@ -70,13 +100,18 @@ const menuItems: MenuItem[] = [
         icon: 'finance',
         path: '/admin/finance',
         label: 'Tài chính',
+        requiredPermission: 'view_finance',
         children: [
-            { icon: 'expense', path: '/admin/finance/expenses', label: 'Thu chi' },
-            { icon: 'cod', path: '/admin/finance/cod-reconciliation', label: 'Đối soát COD' },
+            { icon: 'dashboard', path: '/admin/finance/dashboard', label: 'Tổng quan', requiredPermission: 'view_finance' },
+            { icon: 'expense', path: '/admin/finance/expenses', label: 'Thu chi', requiredPermission: 'create_transactions' },
+            { icon: 'categories', path: '/admin/finance/expense-categories', label: 'Danh mục', requiredPermission: 'view_finance' },
+            { icon: 'receivable', path: '/admin/finance/receivables', label: 'Phải thu', requiredPermission: 'view_receivables' },
+            { icon: 'payable', path: '/admin/finance/payables', label: 'Phải trả', requiredPermission: 'view_payables' },
         ]
     },
 
-    // Báo cáo
+    // Báo cáo (Tạm thời ẩn)
+    /*
     {
         icon: 'reports',
         path: '/admin/reports',
@@ -87,18 +122,27 @@ const menuItems: MenuItem[] = [
             { icon: 'finance-report', path: '/admin/reports/pnl', label: 'Báo cáo P&L' },
         ]
     },
+    */
 
     // Marketing
     {
         icon: 'marketing',
         path: '/admin/marketing',
         label: 'Marketing',
+        requiredPermission: 'view_membership',
         children: [
-            { icon: 'membership', path: '/admin/marketing/membership', label: 'Hạng thành viên' },
-            { icon: 'points', path: '/admin/marketing/points', label: 'Điểm thưởng' },
-            { icon: 'promotions', path: '/admin/promotions', label: 'Khuyến mãi' },
-            { icon: 'automation', path: '/admin/marketing/automations', label: 'Automation' },
+            { icon: 'membership', path: '/admin/marketing/membership', label: 'Hạng thành viên', requiredPermission: 'view_membership' },
+            { icon: 'points', path: '/admin/marketing/points', label: 'Điểm thưởng', requiredPermission: 'view_points' },
+            { icon: 'promotions', path: '/admin/promotions', label: 'Khuyến mãi', requiredPermission: 'view_promotions' },
+            { icon: 'automation', path: '/admin/marketing/automations', label: 'Automation', requiredPermission: 'view_promotions' },
         ]
+    },
+    // Nội dung
+    {
+        icon: 'articles',
+        path: '/admin/articles',
+        label: 'Tin tức/Bài viết',
+        requiredPermission: 'view_articles',
     },
 
     // Cấu hình
@@ -106,21 +150,32 @@ const menuItems: MenuItem[] = [
         icon: 'settings',
         path: '/admin/settings',
         label: 'Cấu hình',
+        requiredPermission: 'view_settings',
         children: [
-            { icon: 'users', path: '/admin/users', label: 'Nhân sự' },
-            { icon: 'permissions', path: '/admin/settings/permissions', label: 'Phân quyền' },
-            { icon: 'warehouses', path: '/admin/warehouse/list', label: 'Chi nhánh/Kho' },
-            { icon: 'audit', path: '/admin/settings/audit-logs', label: 'Nhật ký hệ thống' },
+            { icon: 'users', path: '/admin/users', label: 'Nhân sự', requiredPermission: 'view_users' },
+            { icon: 'permissions', path: '/admin/settings/permissions', label: 'Phân quyền', requiredPermission: 'view_permissions' },
+            { icon: 'warehouses', path: '/admin/warehouse/list', label: 'Chi nhánh/Kho', requiredPermission: 'view_warehouses' },
+            { icon: 'audit', path: '/admin/settings/audit-logs', label: 'Nhật ký hệ thống', requiredPermission: 'view_audit_logs' },
         ]
     },
 ]
 
+// Computed: filter menu items based on user role
+const visibleMenuItems = computed(() => {
+    return menuItems
+        .filter(item => canSeeMenuItem(item))
+        .map(item => filterChildren(item))
+        .filter(item => !item.children || item.children.length > 0)  // Remove empty parent menus
+})
+
 const toggleSubmenu = (icon: string) => {
     const index = expandedMenus.value.indexOf(icon)
     if (index === -1) {
-        expandedMenus.value.push(icon)
+        // Close all other menus and open the clicked one (accordion behavior)
+        expandedMenus.value = [icon]
     } else {
-        expandedMenus.value.splice(index, 1)
+        // Close the clicked menu
+        expandedMenus.value = []
     }
 }
 
@@ -166,7 +221,7 @@ const pageTitle = computed(() => {
 
             <!-- Navigation -->
             <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
-                <template v-for="item in menuItems" :key="item.path">
+                <template v-for="item in visibleMenuItems" :key="item.path">
                     <!-- Menu item with children (submenu) -->
                     <div v-if="item.children && item.children.length > 0">
                         <button @click="toggleSubmenu(item.icon)"
@@ -364,7 +419,7 @@ const pageTitle = computed(() => {
             </header>
 
             <!-- Content -->
-            <main class="flex-1 overflow-y-auto">
+            <main class="flex-1 overflow-hidden">
                 <RouterView v-slot="{ Component }">
                     <transition enter-active-class="transition-all duration-200 ease-out"
                         enter-from-class="opacity-0 translate-y-2" enter-to-class="opacity-100 translate-y-0"

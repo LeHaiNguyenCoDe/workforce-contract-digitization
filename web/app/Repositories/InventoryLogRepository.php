@@ -35,3 +35,4 @@ class InventoryLogRepository implements InventoryLogRepositoryInterface
     }
 }
 
+

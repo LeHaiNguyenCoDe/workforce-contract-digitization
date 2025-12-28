@@ -4,13 +4,12 @@
  */
 
 import { ref } from 'vue'
-import { usePromotionStore } from '../store/store'
 import { useSwal } from '@/shared/utils'
 import { adminPromotionService } from '@/plugins/api/services/PromotionService'
 import type { Promotion } from '@/plugins/api/services/PromotionService'
 
 export function usePromotions() {
-  const store = usePromotionStore()
+  const store = useAdminPromotionStore()
   const swal = useSwal()
 
   // Local state

@@ -161,14 +161,14 @@ export interface Warehouse {
  * Handles warehouse and stock operations according to BRD
  */
 class WarehouseService extends BaseApiService<Warehouse> {
-  protected readonly endpoint = '/admin/warehouses'
+  protected readonly endpoint = 'admin/warehouses'
 
   /**
    * Get all stocks for a warehouse (BR-06.1: Chỉ hiển thị Available Inventory)
    */
   async getStocks(warehouseId: number): Promise<Stock[]> {
     const response = await httpClient.get<ApiResponse<Stock[]>>(
-      `${this.endpoint}/${warehouseId}/stocks`
+      `${this.formattedEndpoint}/${warehouseId}/stocks`
     )
     return response.data.data || []
   }
@@ -178,7 +178,7 @@ class WarehouseService extends BaseApiService<Warehouse> {
    */
   async adjustStock(warehouseId: number, data: AdjustStockRequest): Promise<Stock> {
     const response = await httpClient.post<ApiResponse<Stock>>(
-      `${this.endpoint}/${warehouseId}/stocks/adjust`,
+      `${this.formattedEndpoint}/${warehouseId}/stocks/adjust`,
       data
     )
     return response.data.data!
@@ -189,7 +189,7 @@ class WarehouseService extends BaseApiService<Warehouse> {
    */
   async outboundStock(warehouseId: number, data: OutboundStockRequest): Promise<Stock> {
     const response = await httpClient.post<ApiResponse<Stock>>(
-      `${this.endpoint}/${warehouseId}/stocks/outbound`,
+      `${this.formattedEndpoint}/${warehouseId}/stocks/outbound`,
       data
     )
     return response.data.data!
@@ -200,7 +200,7 @@ class WarehouseService extends BaseApiService<Warehouse> {
    */
   async createInboundBatch(data: CreateInboundBatchRequest): Promise<InboundBatch> {
     const response = await httpClient.post<ApiResponse<InboundBatch>>(
-      `${this.endpoint}/inbound-batches`,
+      `${this.formattedEndpoint}/inbound-batches`,
       data
     )
     return response.data.data!
@@ -215,7 +215,7 @@ class WarehouseService extends BaseApiService<Warehouse> {
     if (filters?.warehouse_id) params.set('warehouse_id', String(filters.warehouse_id))
     
     const query = params.toString()
-    const url = `${this.endpoint}/inbound-batches${query ? `?${query}` : ''}`
+    const url = `${this.formattedEndpoint}/inbound-batches${query ? `?${query}` : ''}`
     
     const response = await httpClient.get<ApiResponse<InboundBatch[]>>(url)
     return response.data.data || []
@@ -226,7 +226,7 @@ class WarehouseService extends BaseApiService<Warehouse> {
    */
   async getInboundBatch(id: number): Promise<InboundBatch> {
     const response = await httpClient.get<ApiResponse<InboundBatch>>(
-      `${this.endpoint}/inbound-batches/${id}`
+      `${this.formattedEndpoint}/inbound-batches/${id}`
     )
     return response.data.data!
   }
@@ -236,7 +236,7 @@ class WarehouseService extends BaseApiService<Warehouse> {
    */
   async receiveInboundBatch(batchId: number, data: ReceiveInboundBatchRequest): Promise<InboundBatch> {
     const response = await httpClient.post<ApiResponse<InboundBatch>>(
-      `${this.endpoint}/inbound-batches/${batchId}/receive`,
+      `${this.formattedEndpoint}/inbound-batches/${batchId}/receive`,
       data
     )
     return response.data.data!
@@ -247,7 +247,7 @@ class WarehouseService extends BaseApiService<Warehouse> {
    */
   async createQualityCheck(data: CreateQualityCheckRequest): Promise<QualityCheck> {
     const response = await httpClient.post<ApiResponse<QualityCheck>>(
-      `${this.endpoint}/quality-checks`,
+      `${this.formattedEndpoint}/quality-checks`,
       data
     )
     return response.data.data!
@@ -258,7 +258,7 @@ class WarehouseService extends BaseApiService<Warehouse> {
    */
   async getQualityChecks(): Promise<QualityCheck[]> {
     const response = await httpClient.get<ApiResponse<QualityCheck[]>>(
-      `${this.endpoint}/quality-checks`
+      `${this.formattedEndpoint}/quality-checks`
     )
     return response.data.data || []
   }
@@ -278,7 +278,7 @@ class WarehouseService extends BaseApiService<Warehouse> {
     if (params?.per_page) searchParams.set('per_page', String(params.per_page))
     
     const query = searchParams.toString()
-    const url = `${this.endpoint}/${warehouseId}/inventory-logs${query ? `?${query}` : ''}`
+    const url = `${this.formattedEndpoint}/${warehouseId}/inventory-logs${query ? `?${query}` : ''}`
     
     const response = await httpClient.get<ApiResponse<{
       data: InventoryLog[]
@@ -295,7 +295,7 @@ class WarehouseService extends BaseApiService<Warehouse> {
    */
   async updateStock(warehouseId: number, data: UpdateStockRequest): Promise<Stock> {
     const response = await httpClient.post<ApiResponse<Stock>>(
-      `${this.endpoint}/${warehouseId}/stocks`,
+      `${this.formattedEndpoint}/${warehouseId}/stocks`,
       data
     )
     return response.data.data!

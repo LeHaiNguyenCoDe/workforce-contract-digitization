@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\PurchaseRequestStoreRequest;
+use App\Http\Requests\PurchaseRequestUpdateRequest;
 use App\Services\PurchaseRequestService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -11,7 +13,8 @@ class PurchaseRequestController extends Controller
 {
     public function __construct(
         private PurchaseRequestService $purchaseRequestService
-    ) {}
+    ) {
+    }
 
     /**
      * Get all purchase requests
@@ -65,20 +68,10 @@ class PurchaseRequestController extends Controller
     /**
      * Create purchase request
      */
-    public function store(Request $request): JsonResponse
+    public function store(PurchaseRequestStoreRequest $request): JsonResponse
     {
         try {
-            $validated = $request->validate([
-                'product_id' => 'required|exists:products,id',
-                'warehouse_id' => 'nullable|exists:warehouses,id',
-                'supplier_id' => 'nullable|exists:suppliers,id',
-                'requested_quantity' => 'required|integer|min:1',
-                'current_stock' => 'nullable|integer|min:0',
-                'min_stock' => 'nullable|integer|min:0',
-                'notes' => 'nullable|string',
-            ]);
-
-            $pr = $this->purchaseRequestService->create($validated);
+            $pr = $this->purchaseRequestService->create($request->validated());
 
             return response()->json([
                 'status' => 'success',
@@ -96,16 +89,10 @@ class PurchaseRequestController extends Controller
     /**
      * Update purchase request
      */
-    public function update(Request $request, int $id): JsonResponse
+    public function update(int $id, PurchaseRequestUpdateRequest $request): JsonResponse
     {
         try {
-            $validated = $request->validate([
-                'supplier_id' => 'nullable|exists:suppliers,id',
-                'requested_quantity' => 'nullable|integer|min:1',
-                'notes' => 'nullable|string',
-            ]);
-
-            $pr = $this->purchaseRequestService->update($id, $validated);
+            $pr = $this->purchaseRequestService->update($id, $request->validated());
 
             return response()->json([
                 'status' => 'success',

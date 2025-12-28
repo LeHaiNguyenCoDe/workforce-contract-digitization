@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\InventoryAlertSettingRequest;
 use App\Services\InventoryAlertService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -11,7 +12,8 @@ class InventoryAlertController extends Controller
 {
     public function __construct(
         private InventoryAlertService $alertService
-    ) {}
+    ) {
+    }
 
     /**
      * Get all inventory settings
@@ -45,19 +47,10 @@ class InventoryAlertController extends Controller
     /**
      * Create or update inventory setting
      */
-    public function saveSetting(Request $request): JsonResponse
+    public function saveSetting(InventoryAlertSettingRequest $request): JsonResponse
     {
         try {
-            $validated = $request->validate([
-                'product_id' => 'required|exists:products,id',
-                'warehouse_id' => 'nullable|exists:warehouses,id',
-                'min_quantity' => 'required|integer|min:0',
-                'max_quantity' => 'required|integer|min:0',
-                'reorder_quantity' => 'nullable|integer|min:0',
-                'auto_create_purchase_request' => 'boolean',
-            ]);
-
-            $setting = $this->alertService->saveSetting($validated);
+            $setting = $this->alertService->saveSetting($request->validated());
 
             return response()->json([
                 'status' => 'success',

@@ -14,10 +14,15 @@ export abstract class BaseApiService<
   CreateDTO = Partial<T>,
   UpdateDTO = Partial<T>
 > {
-  /**
-   * API endpoint path (e.g., '/frontend/products', '/admin/products')
-   */
+  protected readonly httpClient = httpClient
   protected abstract readonly endpoint: string
+
+  /**
+   * Get formatted endpoint (ensures no leading slash to use baseURL correctly)
+   */
+  protected get formattedEndpoint(): string {
+    return this.endpoint.startsWith('/') ? this.endpoint.substring(1) : this.endpoint
+  }
 
   /**
    * Get paginated list of entities
@@ -34,7 +39,7 @@ export abstract class BaseApiService<
     }
 
     const queryString = searchParams.toString()
-    const url = queryString ? `${this.endpoint}?${queryString}` : this.endpoint
+    const url = queryString ? `${this.formattedEndpoint}?${queryString}` : this.formattedEndpoint
     
     const response = await httpClient.get<ApiResponse<PaginatedResponse<T>>>(url)
     return response.data.data!
@@ -44,7 +49,7 @@ export abstract class BaseApiService<
    * Get single entity by ID
    */
   async getById(id: number | string): Promise<T> {
-    const response = await httpClient.get<ApiResponse<T>>(`${this.endpoint}/${id}`)
+    const response = await httpClient.get<ApiResponse<T>>(`${this.formattedEndpoint}/${id}`)
     return response.data.data!
   }
 
@@ -52,7 +57,7 @@ export abstract class BaseApiService<
    * Create new entity
    */
   async create(data: CreateDTO): Promise<T> {
-    const response = await httpClient.post<ApiResponse<T>>(this.endpoint, data)
+    const response = await httpClient.post<ApiResponse<T>>(this.formattedEndpoint, data)
     return response.data.data!
   }
 
@@ -60,7 +65,7 @@ export abstract class BaseApiService<
    * Update existing entity
    */
   async update(id: number | string, data: UpdateDTO): Promise<T> {
-    const response = await httpClient.put<ApiResponse<T>>(`${this.endpoint}/${id}`, data)
+    const response = await httpClient.put<ApiResponse<T>>(`${this.formattedEndpoint}/${id}`, data)
     return response.data.data!
   }
 
@@ -68,6 +73,6 @@ export abstract class BaseApiService<
    * Delete entity
    */
   async delete(id: number | string): Promise<void> {
-    await httpClient.delete(`${this.endpoint}/${id}`)
+    await httpClient.delete(`${this.formattedEndpoint}/${id}`)
   }
 }

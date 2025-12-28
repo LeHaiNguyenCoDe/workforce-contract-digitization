@@ -26,11 +26,11 @@ class ExpenseCategory extends Model
     const TYPE_INCOME = 'income';
 
     /**
-     * Get expenses in this category
+     * Get transactions in this category
      */
-    public function expenses(): HasMany
+    public function transactions(): HasMany
     {
-        return $this->hasMany(Expense::class, 'category_id');
+        return $this->hasMany(FinanceTransaction::class, 'category_id');
     }
 
     /**

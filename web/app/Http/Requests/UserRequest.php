@@ -25,14 +25,26 @@ class UserRequest extends FormRequest
      */
     public function rules()
     {
-        return [
-            //
-        ];
+        $user = $this->route('user');
+
+        return match ($this->method()) {
+            'POST' => [
+                'name' => 'required|max:255',
+                'email' => 'required|email|unique:users,email|max:255',
+                'password' => 'required|min:8|max:255|regex:/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/',
+            ],
+            'PUT', 'PATCH' => [
+                'name' => 'required|max:255',
+                'email' => "required|max:255|email|unique:users,email," . ($user ? $user->id : ''),
+                'password' => 'nullable|min:8|max:255|regex:/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/',
+            ],
+            default => [],
+        };
     }
 
     public function messages()
     {
-        return array(
+        return [
             'name.required' => 'The name field is required.',
             'name.max' => 'The name may not be greater than 255 characters.',
             'email.required' => 'The email field is required.',
@@ -43,62 +55,16 @@ class UserRequest extends FormRequest
             'password.min' => 'The password must be at least 8 characters.',
             'password.max' => 'The password may not be greater than 255 characters.',
             'password.regex' => 'The password must contain at least one letter, one number, and one special character (@, $, !, %, *, ?, or &).',
-        );
+        ];
     }
 
-    /**
-     * Get the validation rules that apply to the request for store.
-     *
-     * @return mixed
-     */
-    public function storeValidator()
+    protected function failedValidation(\Illuminate\Contracts\Validation\Validator $validator)
     {
-        $params = array(
-            'name' => $this->name,
-            'email' => $this->email,
-            'password' => $this->password,
-        );
-
-        $rules = array(
-            'name' => 'required|max:255',
-            'email' => 'required|email|unique:users|max:255',
-            'password' => 'required|min:8|max:255|regex:/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/',
-        );
-
-        $messages = $this->messages();
-        $validator = Validator::make($params, $rules, $messages);
-
-        return $validator->errors();
-    }
-
-    /**
-     * Get the validation rules that apply to the request for update.
-     *
-     * @return mixed
-     */
-    public function updateValidator()
-    {
-        $user = $this->route('user');
-
-        $params = array(
-            'name' => $this->name,
-            'email' => $this->email,
-            'password' => $this->password,
-        );
-
-        $rules = array(
-            'name' => 'required|max:255',
-            'email' => "required|max:255|email|unique:users,email,{$user->id}",
-        );
-
-        if ($this->password != '') {
-            $rules['password'] = 'required|min:8|max:255|regex:/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/';
-        }
-
-        $messages = $this->messages();
-        $validator = Validator::make($params, $rules, $messages);
-
-        return $validator->errors();
+        throw new \Illuminate\Validation\ValidationException($validator, response()->json([
+            'status' => 'error',
+            'message' => 'Validation error',
+            'errors' => $validator->errors(),
+        ], 422));
     }
 }
 

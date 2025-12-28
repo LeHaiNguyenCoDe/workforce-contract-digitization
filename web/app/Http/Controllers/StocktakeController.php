@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StocktakeStoreRequest;
+use App\Http\Requests\StocktakeItemUpdateRequest;
 use App\Services\StocktakeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -11,7 +13,8 @@ class StocktakeController extends Controller
 {
     public function __construct(
         private StocktakeService $stocktakeService
-    ) {}
+    ) {
+    }
 
     /**
      * Get all stocktakes
@@ -65,15 +68,10 @@ class StocktakeController extends Controller
     /**
      * Create stocktake
      */
-    public function store(Request $request): JsonResponse
+    public function store(StocktakeStoreRequest $request): JsonResponse
     {
         try {
-            $validated = $request->validate([
-                'warehouse_id' => 'nullable|exists:warehouses,id',
-                'notes' => 'nullable|string',
-            ]);
-
-            $stocktake = $this->stocktakeService->create($validated);
+            $stocktake = $this->stocktakeService->create($request->validated());
 
             return response()->json([
                 'status' => 'success',
@@ -112,17 +110,10 @@ class StocktakeController extends Controller
     /**
      * Update item counts
      */
-    public function updateItems(Request $request, int $id): JsonResponse
+    public function updateItems(int $id, StocktakeItemUpdateRequest $request): JsonResponse
     {
         try {
-            $validated = $request->validate([
-                'items' => 'required|array',
-                'items.*.id' => 'required|exists:stocktake_items,id',
-                'items.*.actual_quantity' => 'required|integer|min:0',
-                'items.*.reason' => 'nullable|string',
-            ]);
-
-            $stocktake = $this->stocktakeService->updateItems($id, $validated['items']);
+            $stocktake = $this->stocktakeService->updateItems($id, $request->validated()['items']);
 
             return response()->json([
                 'status' => 'success',

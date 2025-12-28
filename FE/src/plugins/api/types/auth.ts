@@ -16,6 +16,7 @@ export interface User {
   language: 'vi' | 'en'
   role?: 'admin' | 'manager' | 'customer'  // Simple role string (if API sends it)
   roles?: Role[]  // Array of roles (Laravel typically sends this)
+  permissions?: string[]  // Array of permission names from user's roles
   created_at?: string
   updated_at?: string
 }

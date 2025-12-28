@@ -169,13 +169,13 @@ class OrderService
         }
 
         $promotion = $this->promotionRepository->findByCode($promotionCode);
-        
+
         // Check if promotion is active and valid
         if ($promotion && $promotion->is_active) {
             $now = now();
             $isValid = (!$promotion->starts_at || $promotion->starts_at <= $now) &&
-                      (!$promotion->ends_at || $promotion->ends_at >= $now);
-            
+                (!$promotion->ends_at || $promotion->ends_at >= $now);
+
             if (!$isValid) {
                 $promotion = null;
             }
@@ -303,7 +303,7 @@ class OrderService
                 'product_id' => $item->product_id,
                 'name' => $item->product->name,
                 'requested' => $item->qty,
-                'available' => (int)$stock,
+                'available' => (int) $stock,
                 'is_sufficient' => $stock >= $item->qty
             ];
 
@@ -330,7 +330,7 @@ class OrderService
 
             if ($stock) {
                 $stock->decrement('quantity', $item->qty);
-                
+
                 // Record movement
                 \App\Models\StockMovement::create([
                     'warehouse_id' => $stock->warehouse_id,
@@ -364,5 +364,122 @@ class OrderService
 
         return $shipment;
     }
-}
 
+    /**
+     * Confirm order (BR-SALES-02 + BR-INVENTORY-01)
+     */
+    public function confirmOrder(Order $order): Order
+    {
+        if (!$order->canConfirm()) {
+            throw new BusinessLogicException('Đơn hàng không thể xác nhận!');
+        }
+
+        $availability = $this->checkStockAvailability($order);
+        if (!$availability['is_available']) {
+            throw new BusinessLogicException('Tồn kho không đủ!');
+        }
+
+        return DB::transaction(function () use ($order) {
+            $this->updateStockLevels($order);
+            $costAmount = $this->calculateOrderCost($order);
+
+            $order->update([
+                'status' => Order::STATUS_CONFIRMED,
+                'confirmed_at' => now(),
+                'cost_amount' => $costAmount,
+                'remaining_amount' => $order->total_amount - $order->paid_amount,
+            ]);
+
+            return $order->fresh();
+        });
+    }
+
+    /**
+     * Mark order as delivered (BR-SALES-02)
+     */
+    public function markDelivered(Order $order): Order
+    {
+        $order->update([
+            'status' => Order::STATUS_DELIVERED,
+            'delivered_at' => now(),
+        ]);
+        return $order->fresh();
+    }
+
+    /**
+     * Complete order (BR-SALES-03, BR-DEBT-01)
+     */
+    public function completeOrder(Order $order): Order
+    {
+        return DB::transaction(function () use ($order) {
+            $order->update([
+                'status' => Order::STATUS_COMPLETED,
+                'completed_at' => now(),
+            ]);
+
+            if (!$order->isFullyPaid()) {
+                $debtService = app(DebtService::class);
+                $debtService->createReceivableFromOrder($order);
+            }
+
+            return $order->fresh();
+        });
+    }
+
+    /**
+     * Cancel order (BR-SALES-05)
+     */
+    public function cancelOrder(Order $order, ?string $reason = null): Order
+    {
+        if ($order->status === Order::STATUS_COMPLETED) {
+            throw new BusinessLogicException('Không thể hủy đơn đã hoàn thành!');
+        }
+
+        return DB::transaction(function () use ($order, $reason) {
+            if (in_array($order->status, [Order::STATUS_CONFIRMED, Order::STATUS_DELIVERED, Order::STATUS_PROCESSING])) {
+                $this->returnStockLevels($order);
+            }
+
+            $order->update([
+                'status' => Order::STATUS_CANCELLED,
+                'cancelled_at' => now(),
+            ]);
+
+            return $order->fresh();
+        });
+    }
+
+    private function returnStockLevels(Order $order): void
+    {
+        foreach ($order->items as $item) {
+            $stock = \App\Models\Stock::where('product_id', $item->product_id)
+                ->where('product_variant_id', $item->product_variant_id)
+                ->first();
+
+            if ($stock) {
+                $stock->increment('quantity', $item->qty);
+
+                \App\Models\StockMovement::create([
+                    'warehouse_id' => $stock->warehouse_id,
+                    'product_id' => $item->product_id,
+                    'product_variant_id' => $item->product_variant_id,
+                    'type' => 'in',
+                    'quantity' => $item->qty,
+                    'reference_type' => 'order_cancel',
+                    'reference_id' => $order->id,
+                    'note' => 'Order cancelled: ' . $order->code,
+                ]);
+            }
+        }
+    }
+
+    private function calculateOrderCost(Order $order): float
+    {
+        $totalCost = 0;
+        foreach ($order->items as $item) {
+            $cost = $item->product->cost_price ?? 0;
+            $totalCost += $cost * $item->qty;
+        }
+        return $totalCost;
+    }
+}

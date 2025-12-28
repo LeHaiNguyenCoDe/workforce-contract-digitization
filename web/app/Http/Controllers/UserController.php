@@ -49,24 +49,13 @@ class UserController extends Controller
     public function store(UserRequest $req): JsonResponse
     {
         try {
-            $validator = $req->storeValidator();
-            if ($validator->count()) {
-                throw new ValidationException('Validation error', $validator);
-            }
-
-            $user = $this->userService->create($req->all());
+            $user = $this->userService->create($req->validated());
 
             return response()->json([
                 'status' => 'success',
                 'message' => LanguageHelper::apiMessage('user_created'),
                 'data' => $user,
             ], 201);
-        } catch (ValidationException $ex) {
-            return response()->json([
-                'status' => 'error',
-                'message' => LanguageHelper::apiMessage('validation_error'),
-                'errors' => $ex->getErrors(),
-            ], 422);
         } catch (\Exception $ex) {
             Helper::trackingError('user', $ex->getMessage());
             return response()->json([
@@ -115,24 +104,13 @@ class UserController extends Controller
     public function update(UserRequest $req, User $user): JsonResponse
     {
         try {
-            $validator = $req->updateValidator();
-            if ($validator->count()) {
-                throw new ValidationException('Validation error', $validator);
-            }
-
-            $userData = $this->userService->update($user->id, $req->all());
+            $userData = $this->userService->update($user->id, $req->validated());
 
             return response()->json([
                 'status' => 'success',
                 'message' => LanguageHelper::apiMessage('user_updated'),
                 'data' => $userData,
             ]);
-        } catch (ValidationException $ex) {
-            return response()->json([
-                'status' => 'error',
-                'message' => LanguageHelper::apiMessage('validation_error'),
-                'errors' => $ex->getErrors(),
-            ], 422);
         } catch (NotFoundException $ex) {
             return response()->json([
                 'status' => 'error',

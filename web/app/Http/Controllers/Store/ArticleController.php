@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Store;
 
 use App\Exceptions\NotFoundException;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Store\ArticleStoreRequest;
+use App\Http\Requests\Store\ArticleUpdateRequest;
 use App\Models\Article;
 use App\Services\ArticleService;
 use Illuminate\Http\JsonResponse;
@@ -128,18 +130,10 @@ class ArticleController extends Controller
     /**
      * Create article
      */
-    public function store(Request $request): JsonResponse
+    public function store(ArticleStoreRequest $request): JsonResponse
     {
         try {
-            $request->validate([
-                'title' => 'required|string|max:255',
-                'slug' => 'required|string|max:255|unique:articles,slug',
-                'thumbnail' => 'sometimes|string|url',
-                'content' => 'required|string',
-                'published_at' => 'sometimes|date',
-            ]);
-
-            $article = $this->articleService->create($request->all());
+            $article = $this->articleService->create($request->validated());
 
             return response()->json([
                 'status' => 'success',
@@ -157,7 +151,7 @@ class ArticleController extends Controller
     /**
      * Update article
      */
-    public function update(Article $article, Request $request): JsonResponse
+    public function update(Article $article, ArticleUpdateRequest $request): JsonResponse
     {
         try {
             if (!$article || !$article->id) {
@@ -167,15 +161,7 @@ class ArticleController extends Controller
                 ], 404);
             }
 
-            $request->validate([
-                'title' => 'sometimes|string|max:255',
-                'slug' => 'sometimes|string|max:255|unique:articles,slug,' . $article->id,
-                'thumbnail' => 'sometimes|string|url',
-                'content' => 'sometimes|string',
-                'published_at' => 'sometimes|date|nullable',
-            ]);
-
-            $articleData = $this->articleService->update($article->id, $request->all());
+            $articleData = $this->articleService->update($article->id, $request->validated());
 
             return response()->json([
                 'status' => 'success',

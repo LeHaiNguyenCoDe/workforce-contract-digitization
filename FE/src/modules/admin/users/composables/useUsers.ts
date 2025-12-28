@@ -4,7 +4,6 @@
  */
 
 import { ref, computed } from 'vue'
-import { useUserStore } from '../store/store'
 
 export function useUsers() {
   const store = useUserStore()

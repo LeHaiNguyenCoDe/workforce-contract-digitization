@@ -9,7 +9,7 @@ import httpClient from '@/plugins/api/httpClient'
 import type { Product, ProductFilters } from '../types'
 import type { Category } from '@/shared/types'
 
-export const useProductStore = defineStore('admin-products', () => {
+export const useAdminProductStore = defineStore('admin-products', () => {
   // State
   const products = ref<Product[]>([])
   const categories = ref<Category[]>([])
@@ -45,19 +45,19 @@ export const useProductStore = defineStore('admin-products', () => {
       if (params?.page) {
         currentPage.value = params.page
       }
-      
-      const queryParams: Record<string, unknown> = { 
-        page: params?.page || currentPage.value, 
+
+      const queryParams: Record<string, unknown> = {
+        page: params?.page || currentPage.value,
         per_page: params?.per_page || 10
         // Don't filter by stock - show all products in admin/products
         // only_with_stock is for warehouse products, not admin products
       }
-      
+
       if (params?.search) queryParams.search = params.search
 
       // Add cache busting timestamp to ensure fresh data
       queryParams._t = Date.now()
-      
+
       const response = await httpClient.get<{ data: { data: Product[]; last_page: number; current_page: number } | Product[] }>('/admin/products', { params: queryParams })
       const data = response.data as any
 
@@ -75,7 +75,7 @@ export const useProductStore = defineStore('admin-products', () => {
         totalPages.value = 1
         currentPage.value = 1
       }
-      
+
       console.log('Fetched products:', products.value.length, 'items')
     } catch (error) {
       console.error('Failed to fetch products:', error)
@@ -100,7 +100,7 @@ export const useProductStore = defineStore('admin-products', () => {
   async function createProduct(payload: Record<string, unknown>): Promise<boolean> {
     isSaving.value = true
     try {
-      const newProduct = await adminProductService.create(payload)
+      await adminProductService.create(payload as any)
       // Reset to page 1 to see new product
       currentPage.value = 1
       // Force refresh - clear cache by adding timestamp
@@ -117,7 +117,7 @@ export const useProductStore = defineStore('admin-products', () => {
   async function updateProduct(id: number, payload: Record<string, unknown>): Promise<boolean> {
     isSaving.value = true
     try {
-      await adminProductService.update(id, payload)
+      await adminProductService.update(id, payload as any)
       // Refresh current page to see updated product
       await fetchProducts({ page: currentPage.value })
       return true

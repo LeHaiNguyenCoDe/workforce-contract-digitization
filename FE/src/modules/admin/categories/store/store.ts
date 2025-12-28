@@ -20,7 +20,7 @@ export interface Category {
   is_active?: boolean
 }
 
-export const useCategoryStore = defineStore('admin-categories', () => {
+export const useAdminCategoryStore = defineStore('admin-categories', () => {
   // State
   const categories = ref<Category[]>([])
   const isLoading = ref(false)
@@ -62,7 +62,7 @@ export const useCategoryStore = defineStore('admin-categories', () => {
   async function createCategory(payload: Record<string, unknown>): Promise<boolean> {
     isSaving.value = true
     try {
-      await adminCategoryService.create(payload)
+      await adminCategoryService.create(payload as any)
       await fetchCategories()
       return true
     } catch (error) {
@@ -76,7 +76,7 @@ export const useCategoryStore = defineStore('admin-categories', () => {
   async function updateCategory(id: number, payload: Record<string, unknown>): Promise<boolean> {
     isSaving.value = true
     try {
-      await adminCategoryService.update(id, payload)
+      await adminCategoryService.update(id, payload as any)
       await fetchCategories()
       return true
     } catch (error) {

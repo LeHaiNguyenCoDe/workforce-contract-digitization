@@ -32,6 +32,18 @@ class HttpClient {
     return HttpClient.instance
   }
 
+  /**
+   * Helper to get cookie value by name
+   */
+  private getCookie(name: string): string | null {
+    const value = `; ${document.cookie}`
+    const parts = value.split(`; ${name}=`)
+    if (parts.length === 2) {
+      return parts.pop()?.split(';').shift() || null
+    }
+    return null
+  }
+
   private setupInterceptors(): void {
     // Request interceptor
     this.axiosInstance.interceptors.request.use(
@@ -39,6 +51,19 @@ class HttpClient {
         // Add locale from localStorage
         const locale = localStorage.getItem('locale') || 'vi'
         config.headers['Accept-Language'] = locale
+        
+        // Add Authorization header with Bearer token if available
+        const token = localStorage.getItem('auth_token')
+        if (token) {
+          config.headers['Authorization'] = `Bearer ${token}`
+        }
+        
+        // Add XSRF-TOKEN from cookie for Laravel Sanctum (fallback for session-based auth)
+        const xsrfToken = this.getCookie('XSRF-TOKEN')
+        if (xsrfToken) {
+          config.headers['X-XSRF-TOKEN'] = decodeURIComponent(xsrfToken)
+        }
+        
         return config
       },
       (error) => Promise.reject(error)

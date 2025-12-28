@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CodReconciliationStoreRequest;
+use App\Http\Requests\CodReconciliationItemUpdateRequest;
 use App\Services\CodReconciliationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -11,7 +13,8 @@ class CodReconciliationController extends Controller
 {
     public function __construct(
         private CodReconciliationService $service
-    ) {}
+    ) {
+    }
 
     public function index(Request $request): JsonResponse
     {
@@ -43,17 +46,10 @@ class CodReconciliationController extends Controller
         }
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(CodReconciliationStoreRequest $request): JsonResponse
     {
         try {
-            $validated = $request->validate([
-                'shipping_partner' => 'required|string|max:50',
-                'period_from' => 'required|date',
-                'period_to' => 'required|date|after_or_equal:period_from',
-                'notes' => 'nullable|string',
-            ]);
-
-            $reconciliation = $this->service->create($validated);
+            $reconciliation = $this->service->create($request->validated());
             return response()->json([
                 'status' => 'success',
                 'message' => 'Tạo phiên đối soát thành công',
@@ -64,17 +60,10 @@ class CodReconciliationController extends Controller
         }
     }
 
-    public function updateItems(Request $request, int $id): JsonResponse
+    public function updateItems(int $id, CodReconciliationItemUpdateRequest $request): JsonResponse
     {
         try {
-            $validated = $request->validate([
-                'items' => 'required|array',
-                'items.*.id' => 'required|exists:cod_reconciliation_items,id',
-                'items.*.received_amount' => 'required|numeric|min:0',
-                'items.*.notes' => 'nullable|string',
-            ]);
-
-            $reconciliation = $this->service->updateItems($id, $validated['items']);
+            $reconciliation = $this->service->updateItems($id, $request->validated()['items']);
             return response()->json([
                 'status' => 'success',
                 'message' => 'Cập nhật thành công',

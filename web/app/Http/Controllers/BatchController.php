@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\BatchStoreRequest;
+use App\Http\Requests\BatchUpdateRequest;
 use App\Services\BatchService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -11,7 +13,8 @@ class BatchController extends Controller
 {
     public function __construct(
         private BatchService $batchService
-    ) {}
+    ) {
+    }
 
     /**
      * Get all batches
@@ -65,22 +68,10 @@ class BatchController extends Controller
     /**
      * Create batch
      */
-    public function store(Request $request): JsonResponse
+    public function store(BatchStoreRequest $request): JsonResponse
     {
         try {
-            $validated = $request->validate([
-                'product_id' => 'required|exists:products,id',
-                'warehouse_id' => 'nullable|exists:warehouses,id',
-                'supplier_id' => 'nullable|exists:suppliers,id',
-                'batch_code' => 'nullable|string|max:50|unique:batches,batch_code',
-                'quantity' => 'required|integer|min:1',
-                'unit_cost' => 'required|numeric|min:0',
-                'manufacturing_date' => 'nullable|date',
-                'expiry_date' => 'nullable|date|after:manufacturing_date',
-                'notes' => 'nullable|string',
-            ]);
-
-            $batch = $this->batchService->create($validated);
+            $batch = $this->batchService->create($request->validated());
 
             return response()->json([
                 'status' => 'success',
@@ -98,21 +89,10 @@ class BatchController extends Controller
     /**
      * Update batch
      */
-    public function update(Request $request, int $id): JsonResponse
+    public function update(int $id, BatchUpdateRequest $request): JsonResponse
     {
         try {
-            $validated = $request->validate([
-                'warehouse_id' => 'nullable|exists:warehouses,id',
-                'supplier_id' => 'nullable|exists:suppliers,id',
-                'quantity' => 'nullable|integer|min:0',
-                'unit_cost' => 'nullable|numeric|min:0',
-                'manufacturing_date' => 'nullable|date',
-                'expiry_date' => 'nullable|date',
-                'status' => 'nullable|in:available,reserved,expired,depleted',
-                'notes' => 'nullable|string',
-            ]);
-
-            $batch = $this->batchService->update($id, $validated);
+            $batch = $this->batchService->update($id, $request->validated());
 
             return response()->json([
                 'status' => 'success',

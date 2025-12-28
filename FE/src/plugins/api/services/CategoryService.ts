@@ -19,14 +19,14 @@ interface UpdateCategoryRequest {
  * Frontend Category Service
  */
 class FrontendCategoryService extends BaseApiService<Category, CreateCategoryRequest, UpdateCategoryRequest> {
-  protected readonly endpoint = '/frontend/categories'
+  protected readonly endpoint = 'frontend/categories'
 }
 
 /**
  * Admin Category Service
  */
 class AdminCategoryService extends BaseApiService<Category, CreateCategoryRequest, UpdateCategoryRequest> {
-  protected readonly endpoint = '/admin/categories'
+  protected readonly endpoint = 'admin/categories'
 }
 
 export const categoryService = new FrontendCategoryService()

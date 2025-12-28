@@ -4,13 +4,12 @@
  */
 
 import { ref, computed } from 'vue'
-import { useOrderStore } from '../store/store'
 import { useSwal } from '@/shared/utils'
 import { useAuthStore } from '@/stores'
 import type { Order } from '../store/store'
 
 export function useOrders() {
-  const store = useOrderStore()
+  const store = useAdminOrderStore()
   const authStore = useAuthStore()
   const swal = useSwal()
 
@@ -23,7 +22,7 @@ export function useOrders() {
     if (searchQuery.value) {
       const query = searchQuery.value.toLowerCase()
       result = result.filter(
-        o =>
+        (o: Order) =>
           o.order_number.toLowerCase().includes(query) ||
           o.full_name?.toLowerCase().includes(query) ||
           o.phone?.includes(query) ||
@@ -39,12 +38,15 @@ export function useOrders() {
     return email === 'admin@example.com' || email === 'manager@example.com'
   })
 
-  // Status labels
+  // Status labels - BR-SALES-02
   const statusLabels: Record<string, { text: string; color: string }> = {
+    draft: { text: 'Nháp', color: 'bg-slate-500/10 text-slate-400' },
     pending: { text: 'Chờ xử lý', color: 'bg-warning/10 text-warning' },
+    confirmed: { text: 'Đã xác nhận', color: 'bg-info/10 text-info' },
     processing: { text: 'Đang xử lý', color: 'bg-info/10 text-info' },
     shipped: { text: 'Đang giao', color: 'bg-primary/10 text-primary-light' },
     delivered: { text: 'Đã giao', color: 'bg-success/10 text-success' },
+    completed: { text: 'Hoàn thành', color: 'bg-emerald-500/10 text-emerald-400' },
     cancelled: { text: 'Đã hủy', color: 'bg-error/10 text-error' }
   }
 
@@ -124,7 +126,7 @@ export function useOrders() {
     try {
       const stockCheck = await store.checkStock(order.id)
       // Update order with stock check result
-      const orderIndex = store.orders.findIndex(o => o.id === order.id)
+      const orderIndex = store.orders.findIndex((o: Order) => o.id === order.id)
       if (orderIndex !== -1) {
         store.orders[orderIndex].stock_check = stockCheck
       }
@@ -173,6 +175,39 @@ export function useOrders() {
     }
   }
 
+  // BR-SALES-02: Confirm order
+  async function handleConfirmOrder(order: Order) {
+    try {
+      await store.confirmOrder(order.id)
+      await swal.success('Xác nhận đơn hàng thành công! Đã trừ kho.')
+      await store.fetchOrders()
+    } catch (error: any) {
+      await swal.error(error.response?.data?.message || 'Xác nhận đơn hàng thất bại!')
+    }
+  }
+
+  // BR-SALES-02: Mark delivered
+  async function handleMarkDelivered(order: Order) {
+    try {
+      await store.markDelivered(order.id)
+      await swal.success('Đã giao hàng thành công!')
+      await store.fetchOrders()
+    } catch (error: any) {
+      await swal.error(error.response?.data?.message || 'Cập nhật thất bại!')
+    }
+  }
+
+  // BR-SALES-03: Complete order
+  async function handleCompleteOrder(order: Order) {
+    try {
+      await store.completeOrder(order.id)
+      await swal.success('Hoàn thành đơn hàng! Doanh thu đã được ghi nhận.')
+      await store.fetchOrders()
+    } catch (error: any) {
+      await swal.error(error.response?.data?.message || 'Hoàn thành đơn hàng thất bại!')
+    }
+  }
+
   return {
     // State
     searchQuery,
@@ -192,7 +227,10 @@ export function useOrders() {
     handleCheckStock,
     cancelOrder,
     viewTracking,
-    approveOrder
+    approveOrder,
+    handleConfirmOrder,
+    handleMarkDelivered,
+    handleCompleteOrder
   }
 }
 

@@ -14,111 +14,90 @@ class CategorySeeder extends Seeder
     public function run(): void
     {
         // Tạo categories cha
-        $electronics = Category::updateOrCreate(
-            ['slug' => Str::slug('Electronics')],
-            ['name' => 'Electronics']
+        $decor = Category::updateOrCreate(
+            ['slug' => Str::slug('Gốm Trang Trí')],
+            ['name' => 'Gốm Trang Trí']
         );
 
-        $clothing = Category::updateOrCreate(
-            ['slug' => Str::slug('Clothing')],
-            ['name' => 'Clothing']
+        $household = Category::updateOrCreate(
+            ['slug' => Str::slug('Gốm Gia Dụng')],
+            ['name' => 'Gốm Gia Dụng']
         );
 
-        $books = Category::updateOrCreate(
-            ['slug' => Str::slug('Books')],
-            ['name' => 'Books']
+        $spiritual = Category::updateOrCreate(
+            ['slug' => Str::slug('Gốm Tâm Linh')],
+            ['name' => 'Gốm Tâm Linh']
         );
 
-        $home = Category::updateOrCreate(
-            ['slug' => Str::slug('Home & Garden')],
-            ['name' => 'Home & Garden']
+        $art = Category::updateOrCreate(
+            ['slug' => Str::slug('Gốm Nghệ Thuật')],
+            ['name' => 'Gốm Nghệ Thuật']
         );
 
-        $sports = Category::updateOrCreate(
-            ['slug' => Str::slug('Sports & Outdoors')],
-            ['name' => 'Sports & Outdoors']
-        );
-
-        // Tạo subcategories cho Electronics
+        // Tạo subcategories cho Gốm Trang Trí
         Category::updateOrCreate(
-            ['slug' => Str::slug('Smartphones')],
+            ['slug' => Str::slug('Bình Gốm')],
             [
-                'name' => 'Smartphones',
-                'parent_id' => $electronics->id,
+                'name' => 'Bình Gốm',
+                'parent_id' => $decor->id,
             ]
         );
 
         Category::updateOrCreate(
-            ['slug' => Str::slug('Laptops')],
+            ['slug' => Str::slug('Tranh Gốm')],
             [
-                'name' => 'Laptops',
-                'parent_id' => $electronics->id,
+                'name' => 'Tranh Gốm',
+                'parent_id' => $decor->id,
             ]
         );
 
         Category::updateOrCreate(
-            ['slug' => Str::slug('Tablets')],
+            ['slug' => Str::slug('Tượng Gốm')],
             [
-                'name' => 'Tablets',
-                'parent_id' => $electronics->id,
+                'name' => 'Tượng Gốm',
+                'parent_id' => $decor->id,
+            ]
+        );
+
+        // Tạo subcategories cho Gốm Gia Dụng
+        Category::updateOrCreate(
+            ['slug' => Str::slug('Bộ Ấm Chén')],
+            [
+                'name' => 'Bộ Ấm Chén',
+                'parent_id' => $household->id,
             ]
         );
 
         Category::updateOrCreate(
-            ['slug' => Str::slug('Electronics Accessories')],
+            ['slug' => Str::slug('Bát Đĩa')],
             [
-                'name' => 'Accessories',
-                'parent_id' => $electronics->id,
-            ]
-        );
-
-        // Tạo subcategories cho Clothing
-        Category::updateOrCreate(
-            ['slug' => Str::slug('Mens Clothing')],
-            [
-                'name' => 'Men\'s Clothing',
-                'parent_id' => $clothing->id,
+                'name' => 'Bát Đĩa',
+                'parent_id' => $household->id,
             ]
         );
 
         Category::updateOrCreate(
-            ['slug' => Str::slug('Womens Clothing')],
+            ['slug' => Str::slug('Hũ Gạo - Chum Rượu')],
             [
-                'name' => 'Women\'s Clothing',
-                'parent_id' => $clothing->id,
+                'name' => 'Hũ Gạo - Chum Rượu',
+                'parent_id' => $household->id,
+            ]
+        );
+
+        // Tạo subcategories cho Gốm Tâm Linh
+        Category::updateOrCreate(
+            ['slug' => Str::slug('Đồ Thờ Cúng')],
+            [
+                'name' => 'Đồ Thờ Cúng',
+                'parent_id' => $spiritual->id,
             ]
         );
 
         Category::updateOrCreate(
-            ['slug' => Str::slug('Kids Clothing')],
+            ['slug' => Str::slug('Quà Tặng Tâm Linh')],
             [
-                'name' => 'Kids\' Clothing',
-                'parent_id' => $clothing->id,
-            ]
-        );
-
-        // Tạo subcategories cho Books
-        Category::updateOrCreate(
-            ['slug' => Str::slug('Fiction Books')],
-            [
-                'name' => 'Fiction',
-                'parent_id' => $books->id,
-            ]
-        );
-
-        Category::updateOrCreate(
-            ['slug' => Str::slug('Non-Fiction Books')],
-            [
-                'name' => 'Non-Fiction',
-                'parent_id' => $books->id,
-            ]
-        );
-
-        Category::updateOrCreate(
-            ['slug' => Str::slug('Educational Books')],
-            [
-                'name' => 'Educational',
-                'parent_id' => $books->id,
+                'name' => 'Quà Tặng Tâm Linh',
+                'parent_id' => $spiritual->id,
             ]
         );
     }

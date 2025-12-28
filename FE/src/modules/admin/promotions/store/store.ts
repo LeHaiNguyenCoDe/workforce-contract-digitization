@@ -9,7 +9,7 @@ import { adminPromotionService } from '@/plugins/api/services/PromotionService'
 import httpClient from '@/plugins/api/httpClient'
 import type { Promotion } from '@/plugins/api/services/PromotionService'
 
-export const usePromotionStore = defineStore('admin-promotions', () => {
+export const useAdminPromotionStore = defineStore('admin-promotions', () => {
   // State
   const promotions = ref<Promotion[]>([])
   const isLoading = ref(false)
@@ -37,7 +37,7 @@ export const usePromotionStore = defineStore('admin-promotions', () => {
       // Try using httpClient directly to handle different response formats
       const response = await httpClient.get('/admin/promotions')
       const data = response.data as any
-      
+
       // Handle different response formats
       if (data?.data?.data && Array.isArray(data.data.data)) {
         promotions.value = data.data.data
@@ -59,7 +59,7 @@ export const usePromotionStore = defineStore('admin-promotions', () => {
   async function createPromotion(payload: Record<string, unknown>): Promise<boolean> {
     isSaving.value = true
     try {
-      await adminPromotionService.create(payload)
+      await adminPromotionService.create(payload as any)
       await fetchPromotions()
       return true
     } catch (error) {
@@ -73,7 +73,7 @@ export const usePromotionStore = defineStore('admin-promotions', () => {
   async function updatePromotion(id: number, payload: Record<string, unknown>): Promise<boolean> {
     isSaving.value = true
     try {
-      await adminPromotionService.update(id, payload)
+      await adminPromotionService.update(id, payload as any)
       await fetchPromotions()
       return true
     } catch (error) {

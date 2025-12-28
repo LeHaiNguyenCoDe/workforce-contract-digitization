@@ -7,6 +7,13 @@ use App\Exceptions\BusinessLogicException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Store\WarehouseStoreRequest;
 use App\Http\Requests\Store\WarehouseUpdateRequest;
+use App\Http\Requests\Store\InboundBatchRequest;
+use App\Http\Requests\Store\ReceiveBatchRequest;
+use App\Http\Requests\Store\QualityCheckRequest;
+use App\Http\Requests\Store\StockAdjustmentRequest;
+use App\Http\Requests\Store\StockOutboundRequest;
+use App\Http\Requests\Store\InboundReceiptRequest;
+use App\Http\Requests\Store\OutboundReceiptRequest;
 use App\Models\Warehouse;
 use App\Services\WarehouseService;
 use Illuminate\Http\JsonResponse;
@@ -177,20 +184,10 @@ class WarehouseController extends Controller
     /**
      * BR-02.1: Tạo Inbound Batch
      */
-    public function createInboundBatch(Request $request): JsonResponse
+    public function createInboundBatch(InboundBatchRequest $request): JsonResponse
     {
         try {
-            $request->validate([
-                'warehouse_id' => 'required|exists:warehouses,id',
-                'supplier_id' => 'required|exists:suppliers,id',
-                'items' => 'required|array|min:1',
-                'items.*.product_id' => 'required|exists:products,id',
-                'items.*.product_variant_id' => 'nullable|exists:product_variants,id',
-                'items.*.quantity_received' => 'required|integer|min:1',
-                'notes' => 'nullable|string',
-            ]);
-
-            $batch = $this->warehouseService->createInboundBatch($request->all());
+            $batch = $this->warehouseService->createInboundBatch($request->validated());
 
             return response()->json([
                 'status' => 'success',
@@ -223,19 +220,10 @@ class WarehouseController extends Controller
     /**
      * BR-02.2: Nhận hàng (RECEIVED)
      */
-    public function receiveInboundBatch(int $batchId, Request $request): JsonResponse
+    public function receiveInboundBatch(int $batchId, ReceiveBatchRequest $request): JsonResponse
     {
         try {
-            $request->validate([
-                'received_date' => 'nullable|date',
-                'items' => 'nullable|array',
-                'items.*.product_id' => 'required|exists:products,id',
-                'items.*.product_variant_id' => 'nullable|exists:product_variants,id',
-                'items.*.quantity_received' => 'required|integer|min:0',
-                'notes' => 'nullable|string',
-            ]);
-
-            $batch = $this->warehouseService->receiveInboundBatch($batchId, $request->all());
+            $batch = $this->warehouseService->receiveInboundBatch($batchId, $request->validated());
 
             return response()->json([
                 'status' => 'success',
@@ -307,22 +295,10 @@ class WarehouseController extends Controller
     /**
      * BR-03.1: Tạo Quality Check (chỉ trên Batch)
      */
-    public function createQualityCheck(Request $request): JsonResponse
+    public function createQualityCheck(QualityCheckRequest $request): JsonResponse
     {
         try {
-            $request->validate([
-                'inbound_batch_id' => 'required|exists:inbound_batches,id',
-                'product_id' => 'required|exists:products,id',
-                'check_date' => 'nullable|date',
-                'status' => 'required|in:pass,fail,partial',
-                'score' => 'nullable|integer|min:0|max:100',
-                'quantity_passed' => 'required|integer|min:0',
-                'quantity_failed' => 'required|integer|min:0',
-                'notes' => 'nullable|string',
-                'issues' => 'nullable|array',
-            ]);
-
-            $qc = $this->warehouseService->createQualityCheck($request->all());
+            $qc = $this->warehouseService->createQualityCheck($request->validated());
 
             return response()->json([
                 'status' => 'success',
@@ -375,19 +351,10 @@ class WarehouseController extends Controller
     /**
      * BR-05.1, BR-05.2, BR-05.3: Điều chỉnh tồn kho
      */
-    public function adjustStock(Warehouse $warehouse, Request $request): JsonResponse
+    public function adjustStock(Warehouse $warehouse, StockAdjustmentRequest $request): JsonResponse
     {
         try {
-            $request->validate([
-                'product_id' => 'required|integer|exists:products,id',
-                'product_variant_id' => 'sometimes|integer|exists:product_variants,id',
-                'quantity' => 'required|integer|min:0',
-                'available_quantity' => 'sometimes|integer|min:0',
-                'reason' => 'required|string|min:3', // BR-05.2: Bắt buộc có lý do
-                'note' => 'nullable|string',
-            ]);
-
-            $stock = $this->warehouseService->adjustStock($warehouse->id, $request->all());
+            $stock = $this->warehouseService->adjustStock($warehouse->id, $request->validated());
 
             return response()->json([
                 'status' => 'success',
@@ -425,19 +392,10 @@ class WarehouseController extends Controller
     /**
      * BR-06.1, BR-06.2, BR-06.3: Xuất kho
      */
-    public function outboundStock(Warehouse $warehouse, Request $request): JsonResponse
+    public function outboundStock(Warehouse $warehouse, StockOutboundRequest $request): JsonResponse
     {
         try {
-            $request->validate([
-                'product_id' => 'required|integer|exists:products,id',
-                'product_variant_id' => 'sometimes|integer|exists:product_variants,id',
-                'quantity' => 'required|integer|min:1',
-                'reference_type' => 'nullable|string',
-                'reference_id' => 'nullable|integer',
-                'note' => 'nullable|string',
-            ]);
-
-            $stock = $this->warehouseService->outboundStock($warehouse->id, $request->all());
+            $stock = $this->warehouseService->outboundStock($warehouse->id, $request->validated());
 
             return response()->json([
                 'status' => 'success',
@@ -611,21 +569,10 @@ class WarehouseController extends Controller
     /**
      * Create inbound receipt (Phiếu nhập)
      */
-    public function createInboundReceipt(Request $request): JsonResponse
+    public function createInboundReceipt(InboundReceiptRequest $request): JsonResponse
     {
         try {
-            $request->validate([
-                'warehouse_id' => 'required|exists:warehouses,id',
-                'supplier_id' => 'required|exists:suppliers,id',
-                'expected_date' => 'nullable|date',
-                'notes' => 'nullable|string',
-                'items' => 'required|array|min:1',
-                'items.*.product_id' => 'required|exists:products,id',
-                'items.*.expected_qty' => 'required|integer|min:1',
-                'items.*.unit_price' => 'nullable|numeric|min:0',
-            ]);
-
-            $receipt = $this->warehouseService->createInboundReceipt($request->all());
+            $receipt = $this->warehouseService->createInboundReceipt($request->validated());
 
             return response()->json([
                 'status' => 'success',
@@ -757,20 +704,10 @@ class WarehouseController extends Controller
     /**
      * Create outbound receipt (Phiếu xuất)
      */
-    public function createOutboundReceipt(Request $request): JsonResponse
+    public function createOutboundReceipt(OutboundReceiptRequest $request): JsonResponse
     {
         try {
-            $request->validate([
-                'warehouse_id' => 'required|exists:warehouses,id',
-                'purpose' => 'required|in:sales,transfer,internal,return',
-                'destination_warehouse_id' => 'nullable|exists:warehouses,id',
-                'notes' => 'nullable|string',
-                'items' => 'required|array|min:1',
-                'items.*.stock_id' => 'required|exists:stocks,id',
-                'items.*.quantity' => 'required|integer|min:1',
-            ]);
-
-            $receipt = $this->warehouseService->createOutboundReceipt($request->all());
+            $receipt = $this->warehouseService->createOutboundReceipt($request->validated());
 
             return response()->json([
                 'status' => 'success',

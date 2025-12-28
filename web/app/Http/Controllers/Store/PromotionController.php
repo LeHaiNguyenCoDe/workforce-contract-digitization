@@ -6,6 +6,7 @@ use App\Exceptions\NotFoundException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Store\PromotionStoreRequest;
 use App\Http\Requests\Store\PromotionUpdateRequest;
+use App\Http\Requests\Store\PromotionItemRequest;
 use App\Models\Promotion;
 use App\Services\PromotionService;
 use Illuminate\Http\JsonResponse;
@@ -146,7 +147,7 @@ class PromotionController extends Controller
     /**
      * Add item to promotion
      */
-    public function addItem(Promotion $promotion, Request $request): JsonResponse
+    public function addItem(Promotion $promotion, PromotionItemRequest $request): JsonResponse
     {
         try {
             if (!$promotion || !$promotion->id) {
@@ -156,20 +157,16 @@ class PromotionController extends Controller
                 ], 404);
             }
 
-            $request->validate([
-                'product_id' => 'sometimes|integer|exists:products,id',
-                'category_id' => 'sometimes|integer|exists:categories,id',
-                'min_qty' => 'required|integer|min:1',
-            ]);
+            $validated = $request->validated();
 
-            if (!$request->has('product_id') && !$request->has('category_id')) {
+            if (!isset($validated['product_id']) && !isset($validated['category_id'])) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Either product_id or category_id is required',
                 ], 422);
             }
 
-            $item = $this->promotionService->addItem($promotion->id, $request->only(['product_id', 'category_id', 'min_qty']));
+            $item = $this->promotionService->addItem($promotion->id, $validated);
 
             return response()->json([
                 'status' => 'success',

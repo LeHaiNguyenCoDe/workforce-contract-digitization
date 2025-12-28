@@ -25,3 +25,4 @@ interface InventoryLogRepositoryInterface
     public function getByWarehouse(int $warehouseId, int $perPage = 20): LengthAwarePaginator;
 }
 
+

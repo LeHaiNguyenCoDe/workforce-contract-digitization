@@ -3,14 +3,18 @@
 namespace App\Providers;
 
 use App\Repositories\Contracts\ArticleRepositoryInterface;
+use App\Repositories\Contracts\BatchRepositoryInterface;
 use App\Repositories\Contracts\CartRepositoryInterface;
 use App\Repositories\Contracts\CategoryRepositoryInterface;
+use App\Repositories\Contracts\DebtRepositoryInterface;
+use App\Repositories\Contracts\FinanceRepositoryInterface;
 use App\Repositories\Contracts\LanguageRepositoryInterface;
 use App\Repositories\Contracts\LoyaltyRepositoryInterface;
 use App\Repositories\Contracts\OrderRepositoryInterface;
 use App\Repositories\Contracts\ProductRepositoryInterface;
 use App\Repositories\Contracts\PromotionRepositoryInterface;
 use App\Repositories\Contracts\ReviewRepositoryInterface;
+use App\Repositories\Contracts\SupplierRepositoryInterface;
 use App\Repositories\Contracts\TranslationRepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Repositories\Contracts\WarehouseRepositoryInterface;
@@ -21,14 +25,18 @@ use App\Repositories\Contracts\ProductImageRepositoryInterface;
 use App\Repositories\Contracts\ProductVariantRepositoryInterface;
 use App\Repositories\Contracts\PromotionItemRepositoryInterface;
 use App\Repositories\ArticleRepository;
+use App\Repositories\BatchRepository;
 use App\Repositories\CartRepository;
 use App\Repositories\CategoryRepository;
+use App\Repositories\DebtRepository;
+use App\Repositories\FinanceRepository;
 use App\Repositories\LanguageRepository;
 use App\Repositories\LoyaltyRepository;
 use App\Repositories\OrderRepository;
 use App\Repositories\ProductRepository;
 use App\Repositories\PromotionRepository;
 use App\Repositories\ReviewRepository;
+use App\Repositories\SupplierRepository;
 use App\Repositories\TranslationRepository;
 use App\Repositories\UserRepository;
 use App\Repositories\WarehouseRepository;
@@ -66,6 +74,14 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(ProductImageRepositoryInterface::class, ProductImageRepository::class);
         $this->app->bind(ProductVariantRepositoryInterface::class, ProductVariantRepository::class);
         $this->app->bind(PromotionItemRepositoryInterface::class, PromotionItemRepository::class);
+
+        // Finance & Debt repositories
+        $this->app->bind(FinanceRepositoryInterface::class, FinanceRepository::class);
+        $this->app->bind(DebtRepositoryInterface::class, DebtRepository::class);
+
+        // Supplier & Batch repositories
+        $this->app->bind(SupplierRepositoryInterface::class, SupplierRepository::class);
+        $this->app->bind(BatchRepositoryInterface::class, BatchRepository::class);
     }
 
     /**

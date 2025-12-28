@@ -1,19 +1,60 @@
 import httpClient from '../httpClient'
 import type { ApiResponse, User, LoginRequest, RegisterRequest, LoginResponse } from '../types'
 
+const TOKEN_KEY = 'auth_token'
+
 /**
- * Auth Service - handles authentication
- * Does not extend BaseApiService as auth has different patterns
+ * Auth Service - handles authentication with token-based auth
+ * Token is stored in localStorage and sent via Authorization header
  */
 class AuthService {
   private readonly basePath = '/frontend'
+
+  /**
+   * Get stored token
+   */
+  getToken(): string | null {
+    return localStorage.getItem(TOKEN_KEY)
+  }
+
+  /**
+   * Save token to localStorage
+   */
+  private setToken(token: string): void {
+    localStorage.setItem(TOKEN_KEY, token)
+  }
+
+  /**
+   * Remove token from localStorage
+   */
+  private clearToken(): void {
+    localStorage.removeItem(TOKEN_KEY)
+  }
 
   async login(credentials: LoginRequest): Promise<User> {
     const response = await httpClient.post<ApiResponse<LoginResponse>>(
       `${this.basePath}/login`,
       credentials
     )
-    return response.data.data!.user
+    
+    // Debug: Log the full response to see structure
+    console.log('Login API response:', response.data)
+    
+    const loginData = response.data.data!
+    
+    // Debug: Log login data specifically
+    console.log('Login data:', loginData)
+    console.log('Token in response:', loginData.token)
+    
+    // Save token if provided
+    if (loginData.token) {
+      this.setToken(loginData.token)
+      console.log('Token saved to localStorage')
+    } else {
+      console.warn('No token in login response!')
+    }
+    
+    return loginData.user
   }
 
   async register(data: RegisterRequest): Promise<User> {
@@ -25,7 +66,12 @@ class AuthService {
   }
 
   async logout(): Promise<void> {
-    await httpClient.post(`${this.basePath}/logout`)
+    try {
+      await httpClient.post(`${this.basePath}/logout`)
+    } finally {
+      // Always clear token, even if API call fails
+      this.clearToken()
+    }
   }
 
   async getCurrentUser(): Promise<User> {
@@ -54,3 +100,4 @@ class AuthService {
 
 export const authService = new AuthService()
 export default authService
+

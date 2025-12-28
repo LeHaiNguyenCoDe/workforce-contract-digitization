@@ -13,20 +13,20 @@ import type {
  * Frontend Order Service
  */
 class FrontendOrderService extends BaseApiService<Order, CreateOrderRequest, UpdateOrderRequest> {
-  protected readonly endpoint = '/frontend/orders'
+  protected readonly endpoint = 'frontend/orders'
 }
 
 /**
  * Admin Order Service
  */
 class AdminOrderService extends BaseApiService<Order, CreateOrderRequest, UpdateOrderRequest> {
-  protected readonly endpoint = '/admin/orders'
+  protected readonly endpoint = 'admin/orders'
 
   /**
    * Get orders for a specific user
    */
   async getByUser(userId: number): Promise<Order[]> {
-    const response = await httpClient.get<ApiResponse<Order[]>>(`/admin/users/${userId}/orders`)
+    const response = await httpClient.get<ApiResponse<Order[]>>(`admin/users/${userId}/orders`)
     return response.data.data || []
   }
 }
@@ -35,8 +35,7 @@ class AdminOrderService extends BaseApiService<Order, CreateOrderRequest, Update
  * Cart Service
  */
 class CartService {
-  private readonly basePath = '/frontend/cart'
-
+  private readonly basePath = 'frontend/cart'
   async getCart(): Promise<Cart> {
     const response = await httpClient.get<ApiResponse<Cart>>(this.basePath)
     return response.data.data!

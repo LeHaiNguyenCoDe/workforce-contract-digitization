@@ -36,7 +36,7 @@ interface UpdatePromotionRequest {
  * Admin Promotion Service
  */
 class AdminPromotionService extends BaseApiService<Promotion, CreatePromotionRequest, UpdatePromotionRequest> {
-  protected readonly endpoint = '/admin/promotions'
+  protected readonly endpoint = 'admin/promotions'
 }
 
 export const adminPromotionService = new AdminPromotionService()

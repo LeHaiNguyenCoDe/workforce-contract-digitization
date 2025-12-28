@@ -28,15 +28,15 @@ interface UpdateReviewRequest {
  * Admin Review Service
  */
 class AdminReviewService extends BaseApiService<Review, CreateReviewRequest, UpdateReviewRequest> {
-  protected readonly endpoint = '/admin/reviews'
+  protected readonly endpoint = 'admin/reviews'
 
   async approve(id: number): Promise<Review> {
-    const response = await this.httpClient.put<ApiResponse<Review>>(`${this.endpoint}/${id}/approve`)
+    const response = await this.httpClient.put<ApiResponse<Review>>(`${this.formattedEndpoint}/${id}/approve`)
     return response.data.data!
   }
 
   async reject(id: number): Promise<Review> {
-    const response = await this.httpClient.put<ApiResponse<Review>>(`${this.endpoint}/${id}/reject`)
+    const response = await this.httpClient.put<ApiResponse<Review>>(`${this.formattedEndpoint}/${id}/reject`)
     return response.data.data!
   }
 }

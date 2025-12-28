@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Store;
 
 use App\Http\Controllers\Controller;
-use App\Models\Supplier;
+use App\Http\Requests\Store\SupplierStoreRequest;
+use App\Http\Requests\Store\SupplierUpdateRequest;
 use App\Services\SupplierService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class SupplierController extends Controller
 {
@@ -37,19 +37,10 @@ class SupplierController extends Controller
     /**
      * Create supplier
      */
-    public function store(Request $request): JsonResponse
+    public function store(SupplierStoreRequest $request): JsonResponse
     {
         try {
-            $validated = $request->validate([
-                'name' => 'required|string|max:255',
-                'contact_person' => 'nullable|string|max:255',
-                'email' => 'nullable|email|max:255',
-                'phone' => 'nullable|string|max:20',
-                'address' => 'nullable|string',
-                'status' => 'sometimes|string|in:active,inactive',
-            ]);
-
-            $supplier = $this->supplierService->create($validated);
+            $supplier = $this->supplierService->create($request->validated());
             return response()->json([
                 'status' => 'success',
                 'message' => 'Supplier created',
@@ -91,20 +82,10 @@ class SupplierController extends Controller
     /**
      * Update supplier
      */
-    public function update(int $id, Request $request): JsonResponse
+    public function update(int $id, SupplierUpdateRequest $request): JsonResponse
     {
         try {
-            $validated = $request->validate([
-                'name' => 'sometimes|required|string|max:255',
-                'contact_person' => 'nullable|string|max:255',
-                'email' => 'nullable|email|max:255',
-                'phone' => 'nullable|string|max:20',
-                'address' => 'nullable|string',
-                'status' => 'sometimes|string|in:active,inactive',
-                'rating' => 'sometimes|numeric|min:0|max:5',
-            ]);
-
-            $supplier = $this->supplierService->update($id, $validated);
+            $supplier = $this->supplierService->update($id, $request->validated());
             return response()->json([
                 'status' => 'success',
                 'message' => 'Supplier updated',

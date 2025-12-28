@@ -115,6 +115,21 @@ class AuthService
      */
     private function formatUser($user): array
     {
+        // Load roles with their rights
+        $user->load('roles.rights');
+
+        // Collect all permissions from user's roles
+        $permissions = collect();
+        if ($user->roles) {
+            foreach ($user->roles as $role) {
+                if ($role->rights) {
+                    foreach ($role->rights as $right) {
+                        $permissions->push($right->name);
+                    }
+                }
+            }
+        }
+
         return [
             'id' => $user->id,
             'name' => $user->name,
@@ -127,6 +142,7 @@ class AuthService
                     'name' => $role->name,
                 ];
             })->toArray() : [],
+            'permissions' => $permissions->unique()->values()->toArray(),
             'created_at' => $user->created_at,
             'updated_at' => $user->updated_at,
         ];

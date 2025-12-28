@@ -3,10 +3,16 @@
 namespace App\Services;
 
 use App\Models\Supplier;
+use App\Repositories\Contracts\SupplierRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 
 class SupplierService
 {
+    public function __construct(
+        private SupplierRepositoryInterface $supplierRepository
+    ) {
+    }
+
     /**
      * Get all suppliers
      */

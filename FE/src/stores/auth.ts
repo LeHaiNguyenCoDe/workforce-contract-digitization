@@ -11,20 +11,24 @@ export const useAuthStore = defineStore('auth', () => {
   // Getters
   const isAuthenticated = computed(() => !!user.value)
   
-  // Check admin status - supports both 'role' string and 'roles' array
+  // Check if user can access admin panel - any staff role or has dashboard permission
   const isAdmin = computed(() => {
     if (!user.value) return false
     
+    // Check if user has view_dashboard permission (most flexible check)
+    if (user.value.permissions?.includes('view_dashboard')) {
+      return true
+    }
+    
     // Check simple role string
-    if (user.value.role === 'admin' || user.value.role === 'manager') {
+    const adminRoles = ['admin', 'manager', 'staff', 'warehouse']
+    if (user.value.role && adminRoles.includes(user.value.role)) {
       return true
     }
     
     // Check roles array (Laravel typically returns this)
     if (user.value.roles && Array.isArray(user.value.roles)) {
-      return user.value.roles.some(r => 
-        r.name === 'admin' || r.name === 'manager'
-      )
+      return user.value.roles.some(r => adminRoles.includes(r.name))
     }
     
     return false
@@ -128,3 +132,5 @@ export const useAuthStore = defineStore('auth', () => {
     decrementCartCount
   }
 })
+
+

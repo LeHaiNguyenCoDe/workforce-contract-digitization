@@ -7,6 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @deprecated Use FinanceTransaction model instead.
+ * This model is kept for backwards compatibility with legacy data.
+ * All new transactions should use FinanceTransaction.
+ */
 class Expense extends Model
 {
     use HasFactory, SoftDeletes;

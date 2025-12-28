@@ -74,3 +74,4 @@ class InventoryLog extends Model
     }
 }
 
+

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Batch;
 use App\Models\Product;
+use App\Repositories\Contracts\BatchRepositoryInterface;
 use App\Helpers\Helper;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +14,11 @@ class BatchService
 {
     protected string $module = 'batches';
 
+    public function __construct(
+        private BatchRepositoryInterface $batchRepository
+    ) {
+    }
+
     /**
      * Get all batches with pagination
      */
@@ -20,19 +26,30 @@ class BatchService
     {
         $query = Batch::query()
             ->with(['product:id,name,sku', 'warehouse:id,name', 'supplier:id,name'])
-            ->select(['id', 'batch_code', 'product_id', 'warehouse_id', 'supplier_id', 
-                      'quantity', 'remaining_quantity', 'unit_cost', 
-                      'manufacturing_date', 'expiry_date', 'status', 'created_at']);
+            ->select([
+                'id',
+                'batch_code',
+                'product_id',
+                'warehouse_id',
+                'supplier_id',
+                'quantity',
+                'remaining_quantity',
+                'unit_cost',
+                'manufacturing_date',
+                'expiry_date',
+                'status',
+                'created_at'
+            ]);
 
         // Apply filters
         if (!empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
                 $q->where('batch_code', 'like', "%{$search}%")
-                  ->orWhereHas('product', function ($q2) use ($search) {
-                      $q2->where('name', 'like', "%{$search}%")
-                         ->orWhere('sku', 'like', "%{$search}%");
-                  });
+                    ->orWhereHas('product', function ($q2) use ($search) {
+                        $q2->where('name', 'like', "%{$search}%")
+                            ->orWhere('sku', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -49,7 +66,7 @@ class BatchService
         }
 
         if (!empty($filters['expiring_soon'])) {
-            $query->expiringSoon((int)$filters['expiring_soon']);
+            $query->expiringSoon((int) $filters['expiring_soon']);
         }
 
         // Default ordering: FEFO
@@ -126,7 +143,7 @@ class BatchService
     public function delete(int $id): bool
     {
         $batch = Batch::findOrFail($id);
-        
+
         if ($batch->remaining_quantity < $batch->quantity) {
             throw new \Exception('Không thể xóa lô hàng đã xuất một phần');
         }
@@ -171,7 +188,8 @@ class BatchService
         $remaining = $quantity;
 
         foreach ($batches as $batch) {
-            if ($remaining <= 0) break;
+            if ($remaining <= 0)
+                break;
 
             $allocateFromBatch = min($remaining, $batch->remaining_quantity);
             $allocated[] = [
@@ -218,7 +236,8 @@ class BatchService
     protected function updateProductCost(Batch $batch): void
     {
         $product = Product::find($batch->product_id);
-        if (!$product) return;
+        if (!$product)
+            return;
 
         // Get or create product cost record
         $costRecord = DB::table('product_costs')
