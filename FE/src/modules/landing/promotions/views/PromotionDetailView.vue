@@ -75,7 +75,7 @@ onMounted(fetchPromotion)
                     <!-- Badge -->
                     <div
                         class="inline-block px-6 py-3 text-3xl font-bold text-white bg-gradient-primary rounded-2xl mb-6 shadow-lg shadow-primary/25">
-                        Giảm {{ formatDiscount(promo) }}
+                        {{ t('common.discountAmount') }} {{ formatDiscount(promo) }}
                     </div>
 
                     <h1 class="text-2xl md:text-3xl font-bold text-white mb-4">{{ promo.name }}</h1>
@@ -83,7 +83,7 @@ onMounted(fetchPromotion)
 
                     <!-- Code -->
                     <div v-if="promo.code" class="mb-8">
-                        <p class="text-sm text-slate-400 mb-2">Mã khuyến mãi</p>
+                        <p class="text-sm text-slate-400 mb-2">{{ t('common.promoCode') }}</p>
                         <div
                             class="inline-flex items-center gap-3 px-6 py-3 bg-dark-700 rounded-xl border border-dashed border-primary/50">
                             <span class="text-xl font-mono font-bold text-primary">{{ promo.code }}</span>
@@ -108,7 +108,7 @@ onMounted(fetchPromotion)
                                 <path d="M8 2v4" />
                                 <path d="M3 10h18" />
                             </svg>
-                            <span>Từ {{ formatDate(promo.start_date) }}</span>
+                            <span>{{ t('common.from') }} {{ formatDate(promo.starts_at) }}</span>
                         </div>
                         <div class="flex items-center gap-2">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
@@ -116,7 +116,7 @@ onMounted(fetchPromotion)
                                 <circle cx="12" cy="12" r="10" />
                                 <polyline points="12 6 12 12 16 14" />
                             </svg>
-                            <span>Đến {{ formatDate(promo.end_date) }}</span>
+                            <span>{{ t('common.until') }} {{ formatDate(promo.ends_at) }}</span>
                         </div>
                     </div>
                 </div>
@@ -125,7 +125,7 @@ onMounted(fetchPromotion)
             <!-- CTA -->
             <div class="text-center mt-8">
                 <RouterLink to="/products" class="btn btn-primary btn-lg">
-                    Mua sắm ngay
+                    {{ t('common.shopNow') }}
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2">
                         <path d="M5 12h14" />
@@ -137,8 +137,8 @@ onMounted(fetchPromotion)
 
         <!-- Not Found -->
         <div v-else class="text-center py-16">
-            <h2 class="text-2xl font-bold text-slate-400 mb-4">Không tìm thấy khuyến mãi</h2>
-            <RouterLink to="/promotions" class="btn btn-primary">Quay lại danh sách</RouterLink>
+            <h2 class="text-2xl font-bold text-slate-400 mb-4">{{ t('common.promoNotFound') }}</h2>
+            <RouterLink to="/promotions" class="btn btn-primary">{{ t('common.backToList') }}</RouterLink>
         </div>
     </div>
 </template>

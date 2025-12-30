@@ -75,7 +75,7 @@ const addToCart = async () => {
     if (!product.value) return
 
     if (!authStore.isAuthenticated) {
-        alert('Vui lòng đăng nhập để thêm vào giỏ hàng!')
+        alert(t('common.loginRequired'))
         return
     }
 
@@ -86,10 +86,10 @@ const addToCart = async () => {
             qty: quantity.value
         })
         authStore.incrementCartCount(quantity.value)
-        alert('Đã thêm vào giỏ hàng!')
+        alert(t('cart.addedToCart'))
     } catch (error: any) {
         console.error('Failed to add to cart:', error)
-        const message = error.response?.data?.message || 'Thêm vào giỏ hàng thất bại!'
+        const message = error.response?.data?.message || t('cart.addToCartFailed')
         alert(message)
     } finally {
         isAddingToCart.value = false
@@ -99,7 +99,7 @@ const addToCart = async () => {
 const submitReview = async () => {
     if (!product.value || !reviewComment.value.trim()) return
     if (!authStore.isAuthenticated) {
-        alert('Vui lòng đăng nhập để đánh giá!')
+        alert(t('common.loginToReview'))
         return
     }
 
@@ -109,7 +109,7 @@ const submitReview = async () => {
             rating: reviewRating.value,
             content: reviewComment.value
         })
-        alert('Cảm ơn bạn đã đánh giá!')
+        alert(t('product.thankForReview'))
         reviewComment.value = ''
         reviewRating.value = 5
         showReviewForm.value = false
@@ -119,7 +119,7 @@ const submitReview = async () => {
         if (reviewsData?.data?.data) reviews.value = reviewsData.data.data
         else if (Array.isArray(reviewsData?.data)) reviews.value = reviewsData.data
     } catch (error: any) {
-        alert(error.response?.data?.message || 'Gửi đánh giá thất bại!')
+        alert(error.response?.data?.message || t('product.reviewFailed'))
     } finally {
         isSubmittingReview.value = false
     }
@@ -226,7 +226,7 @@ onMounted(fetchProduct)
                                     -
                                 </button>
                                 <span class="px-6 py-3 font-bold text-white min-w-[3rem] text-center">{{ quantity
-                                }}</span>
+                                    }}</span>
                                 <button @click="quantity++"
                                     class="px-4 py-3 text-slate-400 hover:text-white hover:bg-dark-600 transition-colors">
                                     +
@@ -243,18 +243,18 @@ onMounted(fetchProduct)
                                 </svg>
                                 <span v-else
                                     class="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></span>
-                                {{ isAddingToCart ? 'Đang thêm...' : t('cart.addToCart') }}
+                                {{ isAddingToCart ? t('cart.adding') : t('cart.addToCart') }}
                             </button>
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">
                             <div class="flex items-center gap-3 p-4 bg-dark-700/50 rounded-xl border border-white/5">
                                 <span class="text-2xl">🚚</span>
-                                <span class="text-xs text-slate-300 font-medium">Miễn phí vận chuyển</span>
+                                <span class="text-xs text-slate-300 font-medium">{{ t('cart.freeShipping') }}</span>
                             </div>
                             <div class="flex items-center gap-3 p-4 bg-dark-700/50 rounded-xl border border-white/5">
                                 <span class="text-2xl">🛡️</span>
-                                <span class="text-xs text-slate-300 font-medium">Bảo hành chính hãng</span>
+                                <span class="text-xs text-slate-300 font-medium">{{ t('product.warranty') }}</span>
                             </div>
                         </div>
                     </div>
@@ -263,7 +263,7 @@ onMounted(fetchProduct)
                 <div v-if="product.description" class="mt-12">
                     <h2 class="text-2xl font-bold text-white mb-6 flex items-center gap-2">
                         <span class="w-1.5 h-8 bg-primary rounded-full"></span>
-                        Mô tả sản phẩm
+                        {{ t('product.description') }}
                     </h2>
                     <div class="card bg-dark-800/50 border-white/5 p-8">
                         <div class="prose prose-invert max-w-none text-slate-300 leading-relaxed whitespace-pre-line">
@@ -276,20 +276,21 @@ onMounted(fetchProduct)
                     <div class="flex items-center justify-between mb-8">
                         <h2 class="text-2xl font-bold text-white flex items-center gap-2">
                             <span class="w-1.5 h-8 bg-secondary rounded-full"></span>
-                            Đánh giá sản phẩm
+                            {{ t('product.reviews') }}
                         </h2>
                         <button v-if="authStore.isAuthenticated" @click="showReviewForm = !showReviewForm"
                             class="btn btn-secondary border border-white/10">
-                            {{ showReviewForm ? 'Hủy đánh giá' : 'Viết đánh giá' }}
+                            {{ showReviewForm ? t('product.cancelReview') : t('product.writeReview') }}
                         </button>
                     </div>
 
                     <div v-if="showReviewForm"
                         class="card bg-dark-800 border-primary/20 mb-12 animate-in fade-in slide-in-from-top-4 duration-300">
-                        <h3 class="text-lg font-bold text-white mb-6">Đánh giá của bạn</h3>
+                        <h3 class="text-lg font-bold text-white mb-6">{{ t('product.yourReview') }}</h3>
                         <div class="space-y-6">
                             <div>
-                                <label class="block text-sm font-medium text-slate-400 mb-3">Chất lượng sản phẩm</label>
+                                <label class="block text-sm font-medium text-slate-400 mb-3">{{
+                                    t('product.productQuality') }}</label>
                                 <div class="flex gap-2">
                                     <button v-for="i in 5" :key="i" @click="reviewRating = i"
                                         class="transition-transform active:scale-95">
@@ -304,7 +305,8 @@ onMounted(fetchProduct)
                                 </div>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-slate-400 mb-2">Lời nhắn</label>
+                                <label class="block text-sm font-medium text-slate-400 mb-2">{{ t('product.message')
+                                    }}</label>
                                 <textarea v-model="reviewComment" class="form-input min-h-[120px]"
                                     placeholder="Bạn thấy sản phẩm này thế nào? Chia sẻ trải nghiệm của bạn nhé..."></textarea>
                             </div>
@@ -312,7 +314,7 @@ onMounted(fetchProduct)
                                 class="btn btn-primary px-8">
                                 <span v-if="isSubmittingReview"
                                     class="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin mr-2"></span>
-                                Gửi đánh giá ngay
+                                {{ t('product.submitReview') }}
                             </button>
                         </div>
                     </div>
@@ -354,9 +356,9 @@ onMounted(fetchProduct)
                         <div v-if="!reviews.length"
                             class="text-center py-20 bg-dark-800/10 rounded-2xl border border-dashed border-white/5">
                             <div class="text-5xl mb-4 opacity-20">💬</div>
-                            <p class="text-slate-500 font-medium">Chưa có đánh giá nào cho sản phẩm này.</p>
+                            <p class="text-slate-500 font-medium">{{ t('product.noReviewsYet') }}</p>
                             <p v-if="!authStore.isAuthenticated" class="text-xs text-slate-600 mt-2">
-                                Vui lòng đăng nhập để trở thành người đầu tiên đánh giá!
+                                {{ t('product.loginToReviewFirst') }}
                             </p>
                         </div>
                     </div>
@@ -365,9 +367,9 @@ onMounted(fetchProduct)
 
             <div v-else class="text-center py-32">
                 <div class="text-6xl mb-6">🔍</div>
-                <h2 class="text-2xl font-bold text-white mb-2">Sản phẩm không tồn tại</h2>
-                <p class="text-slate-400 mb-8">Có vẻ như sản phẩm bạn tìm kiếm đã bị gỡ bỏ hoặc không tồn tại.</p>
-                <RouterLink to="/products" class="btn btn-primary px-8">Quay lại cửa hàng</RouterLink>
+                <h2 class="text-2xl font-bold text-white mb-2">{{ t('product.notExist') }}</h2>
+                <p class="text-slate-400 mb-8">{{ t('product.productNotFoundDesc') }}</p>
+                <RouterLink to="/products" class="btn btn-primary px-8">{{ t('product.backToStore') }}</RouterLink>
             </div>
         </div>
     </div>

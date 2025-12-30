@@ -10,5 +10,7 @@
   "profile": "Tài khoản",
   "login": "Đăng nhập",
   "register": "Đăng ký",
-  "logout": "Đăng xuất"
+  "logout": "Đăng xuất",
+  "admin": "Quản trị"
 }
+

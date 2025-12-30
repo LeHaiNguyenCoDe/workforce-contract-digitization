@@ -3,9 +3,11 @@
  */
 
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import httpClient from '@/plugins/api/httpClient'
 
 export function useLandingOrders() {
+  const { t } = useI18n()
   // State
   const orders = ref<any[]>([])
   const currentOrder = ref<any>(null)
@@ -29,15 +31,15 @@ export function useLandingOrders() {
   }
 
   function getStatusLabel(status: string) {
-    const labels: Record<string, string> = {
-      pending: 'Chờ xác nhận',
-      approved: 'Đã xác nhận',
-      processing: 'Đang xử lý',
-      shipped: 'Đang giao',
-      delivered: 'Đã giao',
-      cancelled: 'Đã hủy'
+    const keys: Record<string, string> = {
+      pending: 'common.pendingConfirmation',
+      approved: 'common.confirmed',
+      processing: 'common.processingOrder',
+      shipped: 'common.shipped',
+      delivered: 'common.delivered',
+      cancelled: 'common.cancelled'
     }
-    return labels[status] || status
+    return keys[status] ? t(keys[status]) : status
   }
 
   function getStatusColor(status: string) {

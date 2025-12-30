@@ -44,6 +44,15 @@ Route::prefix('v1')->group(function () {
         ->group(function () {
             require __DIR__ . '/api/admin.php';
         });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Chat, Friends & Notifications Routes (Authenticated Users)
+    |--------------------------------------------------------------------------
+    */
+    Route::middleware([Authenticate::class])->group(function () {
+        require __DIR__ . '/api/chat.php';
+    });
 });
 
 /*

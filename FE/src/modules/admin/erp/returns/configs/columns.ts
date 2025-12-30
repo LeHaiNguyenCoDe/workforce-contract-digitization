@@ -1,50 +1,95 @@
+import { useI18n } from 'vue-i18n'
+
 /**
- * Return Table Columns Config
+ * Return Table Columns Config with Translation Keys
  */
-export const returnColumns = [
-    { key: 'id', label: 'Mã RMA', width: '100px' },
-    { key: 'order_id', label: 'Đơn hàng', width: '100px' },
-    { key: 'customer', label: 'Khách hàng' },
-    { key: 'reason', label: 'Lý do' },
-    { key: 'refund_amount', label: 'Hoàn tiền', width: '120px', align: 'right' as const },
-    { key: 'status', label: 'Trạng thái', width: '120px' },
-    { key: 'created_at', label: 'Ngày tạo', width: '150px' }
+export const returnColumnKeys = [
+    { key: 'id', labelKey: 'admin.rmaCode', width: '100px' },
+    { key: 'order_id', labelKey: 'admin.orderNumber', width: '100px' },
+    { key: 'customer', labelKey: 'admin.customer' },
+    { key: 'reason', labelKey: 'admin.reason' },
+    { key: 'refund_amount', labelKey: 'admin.refundAmount', width: '120px', align: 'right' as const },
+    { key: 'status', labelKey: 'common.status', width: '120px' },
+    { key: 'created_at', labelKey: 'admin.createdDate', width: '150px' }
 ]
 
 /**
- * Return Status Options
+ * Return Status Options with Translation Keys
  */
-export const returnStatusOptions = [
-    { value: '', label: 'Tất cả' },
-    { value: 'pending', label: 'Chờ duyệt' },
-    { value: 'approved', label: 'Đã duyệt' },
-    { value: 'rejected', label: 'Từ chối' },
-    { value: 'receiving', label: 'Đang nhận hàng' },
-    { value: 'completed', label: 'Hoàn thành' },
-    { value: 'cancelled', label: 'Đã hủy' }
+export const returnStatusOptionKeys = [
+    { value: '', labelKey: 'common.all' },
+    { value: 'pending', labelKey: 'admin.statusPending' },
+    { value: 'approved', labelKey: 'admin.statusApproved' },
+    { value: 'rejected', labelKey: 'admin.statusRejected' },
+    { value: 'receiving', labelKey: 'admin.statusReceiving' },
+    { value: 'completed', labelKey: 'admin.statusCompleted' },
+    { value: 'cancelled', labelKey: 'admin.statusCancelled' }
 ]
 
 /**
- * Return Reason Options
+ * Return Reason Options with Translation Keys
  */
-export const returnReasonOptions = [
-    { value: 'Sản phẩm bị lỗi', label: 'Sản phẩm bị lỗi' },
-    { value: 'Không đúng mô tả', label: 'Không đúng mô tả' },
-    { value: 'Đổi size/màu', label: 'Đổi size/màu' },
-    { value: 'Khách đổi ý', label: 'Khách đổi ý' },
-    { value: 'Khác', label: 'Khác' }
+export const returnReasonOptionKeys = [
+    { value: 'Sản phẩm bị lỗi', labelKey: 'admin.reasonDefective' },
+    { value: 'Không đúng mô tả', labelKey: 'admin.reasonWrongDescription' },
+    { value: 'Đổi size/màu', labelKey: 'admin.reasonChangeSize' },
+    { value: 'Khách đổi ý', labelKey: 'admin.reasonChangeMind' },
+    { value: 'Khác', labelKey: 'admin.reasonOther' }
 ]
 
 /**
- * Status Labels & Classes
+ * Helpers to get translated configurations
  */
+export function useReturnConfigs() {
+    const { t } = useI18n()
+
+    const columns = returnColumnKeys.map(col => ({
+        ...col,
+        label: t(col.labelKey)
+    }))
+
+    const statusOptions = returnStatusOptionKeys.map(opt => ({
+        value: opt.value,
+        label: t(opt.labelKey)
+    }))
+
+    const reasonOptions = returnReasonOptionKeys.map(opt => ({
+        value: opt.value,
+        label: t(opt.labelKey)
+    }))
+
+    const statusLabels: Record<string, string> = {
+        pending: t('admin.statusPending'),
+        approved: t('admin.statusApproved'),
+        rejected: t('admin.statusRejected'),
+        receiving: t('admin.statusReceiving'),
+        completed: t('admin.statusCompleted'),
+        cancelled: t('admin.statusCancelled')
+    }
+
+    return {
+        columns,
+        statusOptions,
+        reasonOptions,
+        statusLabels
+    }
+}
+
+/**
+ * Keep original exports for backward compatibility if needed, 
+ * but they won't be reactive to language changes.
+ * Recommended to use useReturnConfigs() in components.
+ */
+export const returnColumns = returnColumnKeys.map(col => ({ key: col.key, label: col.labelKey, width: col.width }))
+export const returnStatusOptions = returnStatusOptionKeys.map(opt => ({ value: opt.value, label: opt.labelKey }))
+export const returnReasonOptions = returnReasonOptionKeys.map(opt => ({ value: opt.value, label: opt.labelKey }))
 export const returnStatusLabels: Record<string, string> = {
-    pending: 'Chờ duyệt',
-    approved: 'Đã duyệt',
-    rejected: 'Từ chối',
-    receiving: 'Đang nhận',
-    completed: 'Hoàn thành',
-    cancelled: 'Đã hủy'
+    pending: 'admin.statusPending',
+    approved: 'admin.statusApproved',
+    rejected: 'admin.statusRejected',
+    receiving: 'admin.statusReceiving',
+    completed: 'admin.statusCompleted',
+    cancelled: 'admin.statusCancelled'
 }
 
 export const returnStatusClasses: Record<string, string> = {
@@ -55,3 +100,4 @@ export const returnStatusClasses: Record<string, string> = {
     completed: 'bg-success/10 text-success',
     cancelled: 'bg-slate-500/10 text-slate-400'
 }
+

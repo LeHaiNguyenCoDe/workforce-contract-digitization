@@ -33,10 +33,10 @@ const formatDate = (date: string) => {
             <div class="relative">
                 <span
                     class="inline-block px-4 py-1 text-sm font-semibold text-secondary bg-secondary/10 rounded-full mb-4">
-                    🎉 Khuyến mãi đặc biệt
+                    🎉 {{ t('common.specialPromotion') }}
                 </span>
                 <h1 class="text-3xl md:text-4xl font-bold text-white mb-4">{{ t('nav.promotions') }}</h1>
-                <p class="text-slate-400">Khám phá các chương trình khuyến mãi hấp dẫn nhất</p>
+                <p class="text-slate-400">{{ t('common.explorePromotions') }}</p>
             </div>
         </div>
 
@@ -56,7 +56,7 @@ const formatDate = (date: string) => {
                         <div class="flex-1">
                             <div
                                 class="inline-block px-3 py-1 text-lg font-bold text-white bg-gradient-primary rounded-full mb-4">
-                                Giảm {{ formatDiscount(promo) }}
+                                {{ t('common.discountAmount') }} {{ formatDiscount(promo) }}
                             </div>
 
                             <h3
@@ -72,7 +72,7 @@ const formatDate = (date: string) => {
                                     <circle cx="12" cy="12" r="10" />
                                     <polyline points="12 6 12 12 16 14" />
                                 </svg>
-                                <span>Đến {{ formatDate(promo.end_date) }}</span>
+                                <span>{{ t('common.until') }} {{ formatDate(promo.ends_at) }}</span>
                             </div>
                         </div>
 
@@ -98,8 +98,8 @@ const formatDate = (date: string) => {
                 <circle cx="15" cy="15" r="2" />
                 <path d="M7.5 16.5 16.5 7.5" />
             </svg>
-            <h3 class="text-xl font-semibold text-slate-400 mb-2">Chưa có khuyến mãi</h3>
-            <p class="text-slate-500">Hãy quay lại sau để xem các chương trình khuyến mãi mới</p>
+            <h3 class="text-xl font-semibold text-slate-400 mb-2">{{ t('common.noPromotions') }}</h3>
+            <p class="text-slate-500">{{ t('common.checkBackLater') }}</p>
         </div>
     </div>
 </template>

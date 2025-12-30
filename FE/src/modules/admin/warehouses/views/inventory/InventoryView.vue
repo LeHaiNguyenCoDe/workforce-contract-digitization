@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 // Store
 const store = useWarehouseStore()
+const { t } = useI18n()
 
 // State
 const searchQuery = ref('')
@@ -65,7 +67,7 @@ const groupedByBatch = computed(() => {
         if (!groups[batchId]) {
             groups[batchId] = {
                 batch: stock.inbound_batch,
-                batchNumber: stock.inbound_batch?.batch_number || 'Không có lô',
+                batchNumber: stock.inbound_batch?.batch_number || t('admin.noBatch'),
                 totalQty: 0,
                 availableQty: 0,
                 stocks: []
@@ -82,7 +84,7 @@ const groupedByLocation = computed(() => {
     const groups: Record<string, any> = {}
     filteredStocks.value.forEach((stock: any) => {
         const warehouseId = stock.warehouse_id
-        const warehouseName = stock.warehouse?.name || 'Không xác định'
+        const warehouseName = stock.warehouse?.name || t('admin.unknown')
         if (!groups[warehouseId]) {
             groups[warehouseId] = {
                 warehouse: stock.warehouse,
@@ -120,11 +122,11 @@ const getStatusClass = (status: string) => {
 
 const getStatusLabel = (status: string) => {
     switch (status) {
-        case 'available': return 'Khả dụng'
-        case 'damaged': return 'Hư hỏng'
-        case 'hold': return 'Tạm giữ'
-        case 'reserved': return 'Đã đặt'
-        default: return 'Khả dụng'
+        case 'available': return t('admin.available')
+        case 'damaged': return t('admin.damaged')
+        case 'hold': return t('admin.hold')
+        case 'reserved': return t('admin.reserved')
+        default: return t('admin.available')
     }
 }
 
@@ -150,8 +152,8 @@ onMounted(async () => {
         <!-- Header -->
         <div class="flex items-center justify-between mb-6 flex-shrink-0">
             <div>
-                <h1 class="text-2xl font-bold text-white">Quản lý tồn kho</h1>
-                <p class="text-slate-400 mt-1">Xem tồn kho theo sản phẩm, lô hoặc vị trí</p>
+                <h1 class="text-2xl font-bold text-white">{{ t('admin.inventoryManagement') }}</h1>
+                <p class="text-slate-400 mt-1">{{ t('admin.inventoryDesc') }}</p>
             </div>
         </div>
 
@@ -162,15 +164,15 @@ onMounted(async () => {
                 <div class="flex bg-dark-700 rounded-lg p-1">
                     <button @click="viewMode = 'product'" :class="['px-4 py-2 rounded-md text-sm font-medium transition-colors',
                         viewMode === 'product' ? 'bg-primary text-white' : 'text-slate-400 hover:text-white']">
-                        Theo sản phẩm
+                        {{ t('admin.byProduct') }}
                     </button>
                     <button @click="viewMode = 'batch'" :class="['px-4 py-2 rounded-md text-sm font-medium transition-colors',
                         viewMode === 'batch' ? 'bg-primary text-white' : 'text-slate-400 hover:text-white']">
-                        Theo lô
+                        {{ t('admin.byBatch') }}
                     </button>
                     <button @click="viewMode = 'location'" :class="['px-4 py-2 rounded-md text-sm font-medium transition-colors',
                         viewMode === 'location' ? 'bg-primary text-white' : 'text-slate-400 hover:text-white']">
-                        Theo vị trí
+                        {{ t('admin.byLocation') }}
                     </button>
                 </div>
 
@@ -182,25 +184,25 @@ onMounted(async () => {
                         <circle cx="11" cy="11" r="8" />
                         <path d="m21 21-4.3-4.3" />
                     </svg>
-                    <input v-model="searchQuery" type="text" placeholder="Tìm kiếm..."
+                    <input v-model="searchQuery" type="text" :placeholder="t('common.searchPlaceholder')"
                         class="w-full pl-10 pr-4 py-2.5 bg-dark-700 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/50" />
                 </div>
 
                 <!-- Warehouse Filter -->
                 <select v-model="warehouseFilter"
                     class="px-4 py-2.5 bg-dark-700 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/50">
-                    <option :value="null">Tất cả kho</option>
+                    <option :value="null">{{ t('admin.allWarehouses') }}</option>
                     <option v-for="wh in warehouses" :key="wh.id" :value="wh.id">{{ wh.name }}</option>
                 </select>
 
                 <!-- Status Filter -->
                 <select v-model="statusFilter"
                     class="px-4 py-2.5 bg-dark-700 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/50">
-                    <option value="">Tất cả trạng thái</option>
-                    <option value="available">Khả dụng</option>
-                    <option value="damaged">Hư hỏng</option>
-                    <option value="hold">Tạm giữ</option>
-                    <option value="reserved">Đã đặt</option>
+                    <option value="">{{ t('common.allStatuses') }}</option>
+                    <option value="available">{{ t('admin.available') }}</option>
+                    <option value="damaged">{{ t('admin.damaged') }}</option>
+                    <option value="hold">{{ t('admin.hold') }}</option>
+                    <option value="reserved">{{ t('admin.reserved') }}</option>
                 </select>
             </div>
         </div>
@@ -250,17 +252,17 @@ onMounted(async () => {
                                                 group.warehouseName }}
                                     </h3>
                                     <p class="text-sm text-slate-400">
-                                        {{ group.stocks?.length || 0 }} dòng tồn kho
+                                        {{ group.stocks?.length || 0 }} {{ t('admin.inventoryLines') }}
                                     </p>
                                 </div>
                             </div>
                             <div class="flex items-center gap-6">
                                 <div class="text-right">
-                                    <p class="text-sm text-slate-400">Tổng tồn</p>
+                                    <p class="text-sm text-slate-400">{{ t('admin.totalStock') }}</p>
                                     <p class="text-xl font-bold text-white">{{ group.totalQty }}</p>
                                 </div>
                                 <div class="text-right">
-                                    <p class="text-sm text-slate-400">Khả dụng</p>
+                                    <p class="text-sm text-slate-400">{{ t('admin.availableStock') }}</p>
                                     <p class="text-xl font-bold text-success">{{ group.availableQty }}</p>
                                 </div>
                             </div>
@@ -272,19 +274,26 @@ onMounted(async () => {
                                 <thead class="bg-dark-800">
                                     <tr class="border-b border-white/5">
                                         <th v-if="viewMode !== 'product'"
-                                            class="px-4 py-3 text-left text-xs font-semibold text-slate-400">Sản phẩm
+                                            class="px-4 py-3 text-left text-xs font-semibold text-slate-400">{{
+                                            t('admin.products') }}
                                         </th>
                                         <th v-if="viewMode !== 'batch'"
-                                            class="px-4 py-3 text-left text-xs font-semibold text-slate-400">Lô</th>
+                                            class="px-4 py-3 text-left text-xs font-semibold text-slate-400">{{
+                                            t('admin.batch') }}</th>
                                         <th v-if="viewMode !== 'location'"
-                                            class="px-4 py-3 text-left text-xs font-semibold text-slate-400">Kho</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400">Số lượng
+                                            class="px-4 py-3 text-left text-xs font-semibold text-slate-400">{{
+                                            t('admin.warehouse') }}</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400">{{
+                                            t('common.quantity') }}
                                         </th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400">Khả dụng
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400">{{
+                                            t('admin.availableStock') }}
                                         </th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400">Hạn dùng
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400">{{
+                                            t('admin.expiryDate') }}
                                         </th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400">Trạng thái
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-400">{{
+                                            t('common.status') }}
                                         </th>
                                     </tr>
                                 </thead>
@@ -324,7 +333,7 @@ onMounted(async () => {
                     </div>
 
                     <div v-if="!currentGroupedData.length" class="py-16 text-center">
-                        <p class="text-slate-400">Không có dữ liệu tồn kho</p>
+                        <p class="text-slate-400">{{ t('admin.noInventoryData') }}</p>
                     </div>
                 </div>
             </div>

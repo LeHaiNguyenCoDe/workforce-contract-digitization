@@ -3,10 +3,10 @@
  * Product List View
  * Uses useProducts composable for logic separation
  */
-import { watch } from 'vue'
+import { watch, computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { sortOptions } from '../configs'
+import { useSortOptions } from '../configs'
 import type { Product } from '../types'
 
 const { t } = useI18n()
@@ -30,6 +30,9 @@ const {
 // Categories from store
 const { categories } = useLandingCategoryStore()
 
+// Translated sort options
+const translatedSortOptions = computed(() => useSortOptions())
+
 // Helpers
 const getProductImage = (product: Product) => {
     if (product.thumbnail) return product.thumbnail
@@ -48,7 +51,7 @@ watch([searchQuery, selectedCategory], () => {
         <!-- Header -->
         <div class="mb-8">
             <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">{{ t('nav.products') }}</h1>
-            <p class="text-slate-400">Khám phá hàng ngàn sản phẩm chất lượng cao</p>
+            <p class="text-slate-400">{{ t('product.exploreThousands') }}</p>
         </div>
 
         <!-- Filters -->
@@ -65,7 +68,8 @@ watch([searchQuery, selectedCategory], () => {
             </select>
 
             <select v-model="sortBy" class="form-input md:w-48" @change="setSortBy(sortBy)">
-                <option v-for="opt in sortOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+                <option v-for="opt in translatedSortOptions" :key="opt.value" :value="opt.value">{{ opt.label }}
+                </option>
             </select>
         </div>
 
@@ -115,19 +119,19 @@ watch([searchQuery, selectedCategory], () => {
                 <circle cx="11" cy="11" r="8" />
                 <path d="m21 21-4.3-4.3" />
             </svg>
-            <h3 class="text-xl font-semibold text-slate-400 mb-2">Không tìm thấy sản phẩm</h3>
-            <p class="text-slate-500">Hãy thử tìm kiếm với từ khóa khác</p>
+            <h3 class="text-xl font-semibold text-slate-400 mb-2">{{ t('product.notFound') }}</h3>
+            <p class="text-slate-500">{{ t('product.tryDifferentSearch') }}</p>
         </div>
 
         <!-- Pagination -->
         <div v-if="totalPages > 1" class="flex items-center justify-center gap-4 mt-12">
             <button @click="changePage(currentPage - 1)" :disabled="currentPage <= 1" class="btn btn-secondary">
-                ← Trước
+                ← {{ t('common.previous') }}
             </button>
             <span class="text-slate-400">{{ currentPage }} / {{ totalPages }}</span>
             <button @click="changePage(currentPage + 1)" :disabled="currentPage >= totalPages"
                 class="btn btn-secondary">
-                Sau →
+                {{ t('common.next') }} →
             </button>
         </div>
     </div>

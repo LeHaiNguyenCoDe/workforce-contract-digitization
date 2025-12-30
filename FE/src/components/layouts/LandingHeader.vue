@@ -133,7 +133,7 @@ const closeUserMenu = () => {
                                                     d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.08a2 2 0 0 1 1 1.72v.5a2 2 0 0 1-1 1.72l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.72v-.5a2 2 0 0 1 1-1.72l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
                                                 <circle cx="12" cy="12" r="3" />
                                             </svg>
-                                            Quản trị
+                                            {{ t('nav.admin') }}
                                         </RouterLink>
                                     </div>
 
@@ -182,7 +182,7 @@ const closeUserMenu = () => {
             <nav v-if="isMobileMenuOpen" class="md:hidden mt-4 pt-4 border-t border-white/10 flex flex-col gap-2">
                 <RouterLink to="/" class="px-3 py-2 text-slate-300 hover:text-white hover:bg-primary/10 rounded-lg">{{
                     t('nav.home')
-                }}</RouterLink>
+                    }}</RouterLink>
                 <RouterLink to="/products"
                     class="px-3 py-2 text-slate-300 hover:text-white hover:bg-primary/10 rounded-lg">{{
                         t('nav.products') }}</RouterLink>

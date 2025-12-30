@@ -1,16 +1,17 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import BaseModal from '@/shared/components/BaseModal.vue'
 
 // Store
 const store = useWarehouseStore()
+const { t } = useI18n()
 
 // Composables
 const {
   searchQuery,
   statusFilter,
   currentPage,
-  perPage,
   selectedProducts,
   isDeleting,
   showStockModal,
@@ -34,13 +35,11 @@ const {
 const { showProductModal, openProductModal, handleProductSave } = useProductModal()
 
 // Computed from store
-const products = computed(() => store.products)
 const isLoading = computed(() => store.isLoading)
 const isSubmitting = computed(() => store.isSubmitting)
 const selectedProduct = computed(() => store.selectedProduct)
 const categories = computed(() => store.categories)
 const suppliers = computed(() => store.suppliers)
-const warehouseId = computed(() => store.selectedWarehouseId)
 
 // Direct access to store forms for v-model (not computed because v-model needs to mutate)
 const stockForm = store.stockForm
@@ -59,8 +58,8 @@ onMounted(async () => {
       <!-- Header -->
       <div class="flex items-center justify-between mb-6 flex-shrink-0">
         <div>
-          <h1 class="text-2xl font-bold text-white">Sản phẩm trong kho</h1>
-          <p class="text-slate-400 mt-1">Quản lý sản phẩm và tồn kho</p>
+          <h1 class="text-2xl font-bold text-white">{{ t('admin.warehouseProducts') }}</h1>
+          <p class="text-slate-400 mt-1">{{ t('admin.manageProductsInventory') }}</p>
         </div>
         <div class="flex gap-3">
           <button v-if="selectedCount > 0" @click="deleteSelectedProducts" class="btn btn-error" :disabled="isDeleting">
@@ -72,7 +71,7 @@ onMounted(async () => {
               <path d="M12 5v14" />
               <path d="M5 12h14" />
             </svg>
-            Thêm sản phẩm
+            {{ t('admin.addProduct') }}
           </button>
         </div>
       </div>
@@ -87,15 +86,15 @@ onMounted(async () => {
               <path d="m21 21-4.3-4.3" />
             </svg>
             <input :value="searchQuery" @input="setSearchQuery(($event.target as HTMLInputElement).value)" type="text"
-              placeholder="Tìm kiếm sản phẩm..."
+              :placeholder="t('admin.searchProductsPlaceholder')"
               class="w-full pl-10 pr-4 py-2.5 bg-dark-700 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" />
           </div>
           <select :value="statusFilter" @change="setStatusFilter(($event.target as HTMLSelectElement).value)"
             class="px-4 py-2.5 bg-dark-700 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
-            <option value="">Tất cả trạng thái</option>
-            <option value="stock">Tồn kho</option>
-            <option value="out_of_stock">Hết hàng</option>
-            <option value="low_stock">Sắp hết</option>
+            <option value="">{{ t('common.allStatuses') }}</option>
+            <option value="stock">{{ t('common.active') }}</option>
+            <option value="out_of_stock">{{ t('admin.outOfStock') }}</option>
+            <option value="low_stock">{{ t('admin.lowStock') }}</option>
           </select>
         </div>
       </div>
@@ -103,7 +102,7 @@ onMounted(async () => {
       <!-- Products Table -->
       <div class="flex-1 min-h-0 bg-dark-800 rounded-xl border border-white/10 overflow-hidden flex flex-col">
         <div v-if="isLoading" class="flex-1 flex items-center justify-center py-16">
-          <p class="text-slate-400">Đang tải...</p>
+          <p class="text-slate-400">{{ t('common.loading') }}</p>
         </div>
 
         <div v-else class="flex-1 overflow-auto">
@@ -115,16 +114,17 @@ onMounted(async () => {
                     @change="toggleSelectAll"
                     class="w-4 h-4 rounded border-white/20 bg-dark-800 text-primary focus:ring-primary" />
                 </th>
-                <th class="px-4 py-4 text-left text-sm font-semibold text-slate-400">Tên sản phẩm</th>
+                <th class="px-4 py-4 text-left text-sm font-semibold text-slate-400">{{ t('admin.productName') }}</th>
                 <th class="px-4 py-4 text-left text-sm font-semibold text-slate-400">SKU</th>
-                <th class="px-4 py-4 text-left text-sm font-semibold text-slate-400">Danh mục</th>
-                <th class="px-4 py-4 text-left text-sm font-semibold text-slate-400">Nhà cung cấp</th>
-                <th class="px-4 py-4 text-left text-sm font-semibold text-slate-400">Tồn kho</th>
-                <th class="px-4 py-4 text-left text-sm font-semibold text-slate-400">Có thể xuất</th>
-                <th class="px-4 py-4 text-left text-sm font-semibold text-slate-400">Tối thiểu</th>
-                <th class="px-4 py-4 text-left text-sm font-semibold text-slate-400">Vị trí</th>
-                <th class="px-4 py-4 text-left text-sm font-semibold text-slate-400">Loại kho</th>
-                <th class="px-4 py-4 text-right text-sm font-semibold text-slate-400">Thao tác</th>
+                <th class="px-4 py-4 text-left text-sm font-semibold text-slate-400">{{ t('admin.categories') }}</th>
+                <th class="px-4 py-4 text-left text-sm font-semibold text-slate-400">{{ t('admin.suppliers') }}</th>
+                <th class="px-4 py-4 text-left text-sm font-semibold text-slate-400">{{ t('admin.inventory') }}</th>
+                <th class="px-4 py-4 text-left text-sm font-semibold text-slate-400">{{ t('admin.availableStock') }}
+                </th>
+                <th class="px-4 py-4 text-left text-sm font-semibold text-slate-400">{{ t('admin.minStock') }}</th>
+                <th class="px-4 py-4 text-left text-sm font-semibold text-slate-400">{{ t('admin.location') }}</th>
+                <th class="px-4 py-4 text-left text-sm font-semibold text-slate-400">{{ t('admin.storageType') }}</th>
+                <th class="px-4 py-4 text-right text-sm font-semibold text-slate-400">{{ t('common.actions') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-white/5">
@@ -142,7 +142,7 @@ onMounted(async () => {
                   <code class="text-xs font-mono text-primary">{{ product.sku }}</code>
                 </td>
                 <td class="px-4 py-4">
-                  <span class="text-sm text-slate-300">{{ product.category || 'Chưa phân loại' }}</span>
+                  <span class="text-sm text-slate-300">{{ product.category || t('admin.uncategorized') }}</span>
                 </td>
                 <td class="px-4 py-4">
                   <span class="text-sm text-white">{{ product.supplier || '-' }}</span>
@@ -173,9 +173,9 @@ onMounted(async () => {
                         product.status === 'low_stock' ? 'bg-warning/10 text-warning' :
                           'bg-slate-500/10 text-slate-400'
                   ]">
-                    {{ product.status === 'stock' ? 'Tồn kho' :
-                      product.status === 'out_of_stock' ? 'Hết hàng' :
-                        product.status === 'low_stock' ? 'Sắp hết' : product.status || 'Tồn kho' }}
+                    {{ product.status === 'stock' ? t('common.active') :
+                      product.status === 'out_of_stock' ? t('admin.outOfStock') :
+                        product.status === 'low_stock' ? t('admin.lowStock') : product.status || t('common.active') }}
                   </span>
                 </td>
                 <td class="px-4 py-4 text-right">
@@ -224,7 +224,7 @@ onMounted(async () => {
           </table>
 
           <div v-if="!paginatedProducts.length && !isLoading" class="py-16 text-center">
-            <p class="text-slate-400">Không có sản phẩm nào</p>
+            <p class="text-slate-400">{{ t('admin.noProductsFound') }}</p>
           </div>
         </div>
 
@@ -233,155 +233,158 @@ onMounted(async () => {
           class="flex items-center justify-center gap-2 p-4 border-t border-white/10 flex-shrink-0">
           <button @click="changePage(currentPage - 1)" :disabled="currentPage <= 1" class="btn btn-secondary btn-sm"
             :class="{ 'opacity-50 cursor-not-allowed': currentPage <= 1 }">
-            Trước
+            {{ t('common.previous') }}
           </button>
           <span class="text-slate-400 text-sm">{{ currentPage }} / {{ totalPages }}</span>
           <button @click="changePage(currentPage + 1)" :disabled="currentPage >= totalPages"
             class="btn btn-secondary btn-sm" :class="{ 'opacity-50 cursor-not-allowed': currentPage >= totalPages }">
-            Sau
+            {{ t('common.next') }}
           </button>
         </div>
       </div>
     </div>
 
     <!-- Stock Modal -->
-    <BaseModal v-model="showStockModal" :title="stockForm.type === 'outbound' ? `Xuất kho: ${selectedProduct?.name}` :
-      stockForm.type === 'adjust' ? `Điều chỉnh tồn kho: ${selectedProduct?.name}` :
-        `Nhập kho: ${selectedProduct?.name}`" size="md">
+    <BaseModal v-model="showStockModal" :title="stockForm.type === 'outbound' ? `${t('admin.outbound')}: ${selectedProduct?.name}` :
+      stockForm.type === 'adjust' ? `${t('admin.stockAdjustment')}: ${selectedProduct?.name}` :
+        `${t('common.importWarehouse')}: ${selectedProduct?.name}`" size="md">
       <div v-if="selectedProduct" class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-slate-300 mb-2">Sản phẩm</label>
+          <label class="block text-sm font-medium text-slate-300 mb-2">{{ t('common.product') }}</label>
           <input :value="selectedProduct.name" type="text" disabled
             class="form-input bg-dark-700 text-slate-400 cursor-not-allowed" />
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="block text-sm font-medium text-slate-300 mb-2">Tồn kho hiện tại</label>
+            <label class="block text-sm font-medium text-slate-300 mb-2">{{ t('admin.currentStock') }}</label>
             <div class="px-4 py-2.5 bg-dark-700 border border-white/10 rounded-lg">
               <span class="text-lg font-semibold text-primary">{{ Number(selectedProduct.quantity) || 0 }}</span>
-              <span class="text-sm text-slate-400 ml-2">sản phẩm</span>
+              <span class="text-sm text-slate-400 ml-2">{{ t('admin.products') }}</span>
             </div>
           </div>
           <div>
-            <label class="block text-sm font-medium text-slate-300 mb-2">Có thể xuất</label>
+            <label class="block text-sm font-medium text-slate-300 mb-2">{{ t('admin.availableStock') }}</label>
             <div class="px-4 py-2.5 bg-dark-700 border border-white/10 rounded-lg">
               <span class="text-lg font-semibold text-success">{{ Number(selectedProduct.available_quantity) || 0
-                }}</span>
-              <span class="text-sm text-slate-400 ml-2">sản phẩm</span>
+              }}</span>
+              <span class="text-sm text-slate-400 ml-2">{{ t('admin.products') }}</span>
             </div>
           </div>
         </div>
         <div v-if="stockForm.type === 'outbound'">
           <div class="bg-warning/10 border border-warning/20 rounded-lg p-3 mb-4">
             <p class="text-sm text-warning">
-              <strong>Lưu ý:</strong> Chỉ có thể xuất từ tồn kho đã qua QC (Available Inventory).
-              Số lượng có thể xuất: <strong>{{ Number(selectedProduct.available_quantity) || 0 }}</strong>
+              <strong>{{ t('common.notice') }}:</strong> Only available after QC (Available Inventory).
+              {{ t('admin.availableStock') }}: <strong>{{ Number(selectedProduct.available_quantity) || 0 }}</strong>
             </p>
           </div>
           <div>
-            <label class="block text-sm font-medium text-slate-300 mb-2">Số lượng xuất *</label>
+            <label class="block text-sm font-medium text-slate-300 mb-2">{{ t('admin.quantityOutbound') }} *</label>
             <input v-model.number="stockForm.quantity" type="number" min="1"
               :max="Number(selectedProduct.available_quantity) || 0" class="form-input" />
             <p class="text-xs text-slate-400 mt-1">
-              Sau khi xuất: {{ Math.max(0, (Number(selectedProduct.available_quantity) || 0) -
-                (Number(stockForm.quantity) || 0)) }} sản phẩm có thể xuất
+              {{ t('admin.afterOutbound') }}: {{ Math.max(0, (Number(selectedProduct.available_quantity) || 0) -
+                (Number(stockForm.quantity) || 0)) }} {{ t('admin.availableForOutbound') }}
             </p>
           </div>
         </div>
         <div v-else-if="stockForm.type === 'adjust'">
           <div class="bg-info/10 border border-info/20 rounded-lg p-3 mb-4">
             <p class="text-sm text-info">
-              <strong>Lưu ý:</strong> Điều chỉnh tồn kho là nghiệp vụ đặc biệt, chỉ dành cho quản lý.
+              <strong>{{ t('common.notice') }}:</strong> {{ t('admin.stockAdjustmentDesc') }}
             </p>
           </div>
           <div>
-            <label class="block text-sm font-medium text-slate-300 mb-2">Số lượng mới *</label>
+            <label class="block text-sm font-medium text-slate-300 mb-2">{{ t('admin.newQuantity') }} *</label>
             <input v-model.number="stockForm.quantity" type="number" min="0" class="form-input" />
             <p class="text-xs text-slate-400 mt-1">
-              Số lượng hiện tại: {{ Number(selectedProduct.quantity) || 0 }} → Số lượng mới: {{
+              {{ t('admin.currentQuantity') }}: {{ Number(selectedProduct.quantity) || 0 }} → {{ t('admin.newQuantity')
+              }}: {{
                 Number(stockForm.quantity) || 0 }}
             </p>
           </div>
           <div>
             <label class="block text-sm font-medium text-slate-300 mb-2">
-              Lý do điều chỉnh * <span class="text-error">(Bắt buộc)</span>
+              {{ t('admin.adjustmentReason') }} * <span class="text-error">({{ t('admin.required') }})</span>
             </label>
             <textarea v-model="stockForm.reason" rows="2" class="form-input"
-              placeholder="Nhập lý do điều chỉnh tồn kho (bắt buộc)" required></textarea>
+              :placeholder="t('admin.adjustmentReasonPlaceholder')" required></textarea>
           </div>
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-300 mb-2">Ghi chú</label>
+          <label class="block text-sm font-medium text-slate-300 mb-2">{{ t('admin.note') }}</label>
           <textarea v-model="stockForm.note" rows="3" class="form-input"
-            placeholder="Nhập ghi chú (tùy chọn)"></textarea>
+            :placeholder="t('admin.notePlaceholder')"></textarea>
         </div>
         <div class="flex gap-3 pt-4">
-          <button @click="showStockModal = false" class="btn btn-secondary flex-1">Hủy</button>
+          <button @click="showStockModal = false" class="btn btn-secondary flex-1">{{ t('common.cancel') }}</button>
           <button @click="handleStockUpdate"
             :disabled="isSubmitting || (stockForm.type === 'adjust' && !stockForm.reason)"
             class="btn btn-primary flex-1">
-            {{ isSubmitting ? 'Đang xử lý...' : 'Xác nhận' }}
+            {{ isSubmitting ? t('common.processing') : t('common.confirm') }}
           </button>
         </div>
       </div>
     </BaseModal>
 
     <!-- Product Modal -->
-    <BaseModal v-model="showProductModal" :title="selectedProduct ? 'Sửa sản phẩm' : 'Thêm sản phẩm'" size="lg">
+    <BaseModal v-model="showProductModal" :title="selectedProduct ? t('admin.editProduct') : t('admin.addProduct')"
+      size="lg">
       <div class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-slate-300 mb-2">Tên sản phẩm *</label>
-          <input v-model="productForm.name" type="text" class="form-input" placeholder="Nhập tên sản phẩm" />
+          <label class="block text-sm font-medium text-slate-300 mb-2">{{ t('admin.productName') }} *</label>
+          <input v-model="productForm.name" type="text" class="form-input" :placeholder="t('admin.enterProductName')" />
         </div>
         <div>
           <label class="block text-sm font-medium text-slate-300 mb-2">SKU</label>
-          <input v-model="productForm.sku" type="text" class="form-input" placeholder="Mã SKU (tự động nếu để trống)" />
+          <input v-model="productForm.sku" type="text" class="form-input"
+            :placeholder="t('admin.skuAutoPlaceholder')" />
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="block text-sm font-medium text-slate-300 mb-2">Danh mục *</label>
+            <label class="block text-sm font-medium text-slate-300 mb-2">{{ t('admin.categories') }} *</label>
             <select v-model="productForm.category_id" class="form-input">
-              <option :value="null">Chọn danh mục</option>
+              <option :value="null">{{ t('common.selectCategory') }}</option>
               <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
             </select>
           </div>
           <div>
-            <label class="block text-sm font-medium text-slate-300 mb-2">Nhà cung cấp</label>
+            <label class="block text-sm font-medium text-slate-300 mb-2">{{ t('admin.suppliers') }}</label>
             <select v-model="productForm.supplier_id" class="form-input">
-              <option :value="null">Chọn nhà cung cấp</option>
+              <option :value="null">{{ t('common.selectEmployee') }}</option>
               <option v-for="sup in suppliers" :key="sup.id" :value="sup.id">{{ sup.name }}</option>
             </select>
           </div>
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="block text-sm font-medium text-slate-300 mb-2">Số lượng tồn kho</label>
+            <label class="block text-sm font-medium text-slate-300 mb-2">{{ t('admin.inventory') }}</label>
             <input v-model.number="productForm.stock_qty" type="number" min="0" class="form-input" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-slate-300 mb-2">Mức tồn kho tối thiểu</label>
+            <label class="block text-sm font-medium text-slate-300 mb-2">{{ t('admin.minStockLevel') }}</label>
             <input v-model.number="productForm.min_stock_level" type="number" min="0" class="form-input" />
           </div>
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="block text-sm font-medium text-slate-300 mb-2">Vị trí lưu trữ</label>
+            <label class="block text-sm font-medium text-slate-300 mb-2">{{ t('admin.storageLocation') }}</label>
             <input v-model="productForm.storage_location" type="text" class="form-input"
-              placeholder="Vị trí trong kho" />
+              :placeholder="t('admin.storageLocationPlaceholder')" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-slate-300 mb-2">Loại kho</label>
+            <label class="block text-sm font-medium text-slate-300 mb-2">{{ t('admin.storageType') }}</label>
             <select v-model="productForm.warehouse_type" class="form-input">
-              <option value="stock">Tồn kho</option>
-              <option value="out_of_stock">Hết hàng</option>
-              <option value="low_stock">Sắp hết</option>
+              <option value="stock">{{ t('common.active') }}</option>
+              <option value="out_of_stock">{{ t('admin.outOfStock') }}</option>
+              <option value="low_stock">{{ t('admin.lowStock') }}</option>
             </select>
           </div>
         </div>
         <div class="flex gap-3 pt-4">
-          <button @click="showProductModal = false" class="btn btn-secondary flex-1">Hủy</button>
+          <button @click="showProductModal = false" class="btn btn-secondary flex-1">{{ t('common.cancel') }}</button>
           <button @click="handleProductSave" :disabled="isSubmitting" class="btn btn-primary flex-1">
-            {{ isSubmitting ? 'Đang lưu...' : 'Lưu' }}
+            {{ isSubmitting ? t('common.saving') : t('common.save') }}
           </button>
         </div>
       </div>

@@ -2,7 +2,7 @@
  * Promotions Composable
  */
 
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import httpClient from '@/plugins/api/httpClient'
 
 export function useLandingPromotions() {
@@ -12,10 +12,10 @@ export function useLandingPromotions() {
 
   // Methods
   function formatDiscount(promotion: any) {
-    if (promotion.discount_type === 'percent') {
-      return `${promotion.discount_value}%`
+    if (promotion.type === 'percent') {
+      return `${promotion.value || 0}%`
     }
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(promotion.discount_value)
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(promotion.value || 0)
   }
 
   async function fetchPromotions() {
@@ -24,7 +24,9 @@ export function useLandingPromotions() {
       const response = await httpClient.get('/frontend/promotions', { params: { per_page: 12 } })
       const data = response.data as any
 
-      if (data?.data?.data && Array.isArray(data.data.data)) {
+      if (data?.data?.items && Array.isArray(data.data.items)) {
+        promotions.value = data.data.items
+      } else if (data?.data?.data && Array.isArray(data.data.data)) {
         promotions.value = data.data.data
       } else if (Array.isArray(data?.data)) {
         promotions.value = data.data

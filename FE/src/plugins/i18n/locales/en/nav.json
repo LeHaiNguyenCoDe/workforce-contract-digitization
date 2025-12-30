@@ -10,5 +10,7 @@
   "profile": "Account",
   "login": "Login",
   "register": "Register",
-  "logout": "Logout"
+  "logout": "Logout",
+  "admin": "Admin"
 }
+

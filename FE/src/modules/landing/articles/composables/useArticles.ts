@@ -42,7 +42,9 @@ export function useArticles() {
       const response = await httpClient.get('/frontend/articles', { params: { per_page: 12 } })
       const data = response.data as any
       
-      if (data?.data?.data && Array.isArray(data.data.data)) {
+      if (data?.data?.items && Array.isArray(data.data.items)) {
+        articles.value = data.data.items
+      } else if (data?.data?.data && Array.isArray(data.data.data)) {
         articles.value = data.data.data
       } else if (Array.isArray(data?.data)) {
         articles.value = data.data

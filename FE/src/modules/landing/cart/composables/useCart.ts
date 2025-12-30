@@ -4,6 +4,7 @@
  */
 
 import { ref, computed, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import httpClient from '@/plugins/api/httpClient'
 import { useAuthStore } from '@/stores'
 
@@ -41,6 +42,7 @@ export interface Cart {
 }
 
 export function useCart() {
+  const { t } = useI18n()
   // State
   const cart = ref<Cart | null>(null)
   const isLoading = ref(true)
@@ -113,10 +115,10 @@ export function useCart() {
     try {
       await httpClient.put(`/frontend/cart/items/${itemId}`, { qty })
       await fetchCart()
-      showNotification('success', 'Đã cập nhật số lượng')
+      showNotification('success', t('cart.quantityUpdated'))
     } catch (error) {
       console.error('Failed to update cart item:', error)
-      showNotification('error', 'Không thể cập nhật số lượng')
+      showNotification('error', t('cart.quantityUpdateFailed'))
       await fetchCart() // Revert on error
     } finally {
       updatingItems.value.delete(itemId)
@@ -152,10 +154,10 @@ export function useCart() {
     try {
       await httpClient.delete(`/frontend/cart/items/${itemId}`)
       authStore.decrementCartCount()
-      showNotification('success', 'Đã xóa sản phẩm khỏi giỏ hàng')
+      showNotification('success', t('cart.removedFromCart'))
     } catch (error) {
       console.error('Failed to remove cart item:', error)
-      showNotification('error', 'Không thể xóa sản phẩm')
+      showNotification('error', t('cart.removeFailed'))
       await fetchCart() // Revert on error
     }
   }
@@ -167,16 +169,16 @@ export function useCart() {
       await httpClient.delete('/frontend/cart')
       authStore.setCartCount(0)
       cart.value = null
-      showNotification('success', 'Đã xóa tất cả sản phẩm trong giỏ hàng')
+      showNotification('success', t('cart.cartCleared'))
     } catch (error) {
       console.error('Failed to clear cart:', error)
-      showNotification('error', 'Không thể xóa giỏ hàng')
+      showNotification('error', t('cart.clearFailed'))
     }
   }
 
   async function applyPromoCode(code: string) {
     if (!code.trim()) {
-      promoError.value = 'Vui lòng nhập mã khuyến mãi'
+      promoError.value = t('cart.enterPromoRequired')
       return false
     }
     
@@ -187,11 +189,11 @@ export function useCart() {
     try {
       await httpClient.post('/frontend/cart/promo', { code: code.trim() })
       await fetchCart()
-      promoSuccess.value = 'Áp dụng mã khuyến mãi thành công!'
+      promoSuccess.value = t('cart.promoApplied')
       promoCode.value = code.trim()
       return true
     } catch (error: any) {
-      promoError.value = error.response?.data?.message || 'Mã khuyến mãi không hợp lệ'
+      promoError.value = error.response?.data?.message || t('cart.promoInvalid')
       return false
     } finally {
       isApplyingPromo.value = false
@@ -204,7 +206,7 @@ export function useCart() {
       await fetchCart()
       promoCode.value = ''
       promoSuccess.value = null
-      showNotification('success', 'Đã xóa mã khuyến mãi')
+      showNotification('success', t('cart.promoRemoved'))
     } catch (error) {
       console.error('Failed to remove promo:', error)
     }

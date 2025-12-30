@@ -138,6 +138,7 @@ export const useAuthStore = defineStore('auth', () => {
     // State
     user,
     isLoading,
+    isInitialized,
     cartCount,
     // Getters
     isAuthenticated,

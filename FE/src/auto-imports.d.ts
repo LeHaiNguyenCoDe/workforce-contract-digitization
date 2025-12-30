@@ -37,6 +37,7 @@ declare global {
   const getCurrentInstance: typeof import('vue').getCurrentInstance
   const getCurrentScope: typeof import('vue').getCurrentScope
   const getCurrentWatcher: typeof import('vue').getCurrentWatcher
+  const getEcho: typeof import('./modules/admin/chat/composables/useRealtime').getEcho
   const getOrderStatusClass: typeof import('./shared/helpers/statusHelpers').getOrderStatusClass
   const getOrderStatusLabel: typeof import('./shared/helpers/statusHelpers').getOrderStatusLabel
   const getReturnStatusClass: typeof import('./shared/helpers/statusHelpers').getReturnStatusClass
@@ -118,6 +119,7 @@ declare global {
   const useAuditLogs: typeof import('./modules/admin/erp/audit-logs/composables/useAuditLogs').useAuditLogs
   const useAuth: typeof import('./modules/landing/auth/composables/useAuth').useAuth
   const useAuthStore: typeof import('@/stores').useAuthStore
+  const useAutoConnect: typeof import('./modules/admin/chat/composables/useRealtime').useAutoConnect
   const useAutomations: typeof import('./modules/admin/erp/automations/composables/useAutomations').useAutomations
   const useCart: typeof import('./modules/landing/cart/composables/useCart').useCart
   const useCartStore: typeof import('./modules/landing/cart/store/store').useCartStore
@@ -155,6 +157,7 @@ declare global {
   const useProducts: typeof import('./modules/landing/products/composables/useLandingProducts').useProducts
   const useProfile: typeof import('./modules/landing/profile/composables/useProfile').useProfile
   const usePromotions: typeof import('./modules/landing/promotions/composables/useLandingPromotions').usePromotions
+  const useRealtime: typeof import('./modules/admin/chat/composables/useRealtime').useRealtime
   const useReturnStatusLabel: typeof import('./shared/helpers/statusHelpers').useReturnStatusLabel
   const useReturns: typeof import('./modules/admin/erp/returns/composables/useReturns').useReturns
   const useReviewStore: typeof import('./modules/admin/reviews/store/store').useReviewStore
@@ -240,6 +243,7 @@ declare module 'vue' {
     readonly getCurrentInstance: UnwrapRef<typeof import('vue')['getCurrentInstance']>
     readonly getCurrentScope: UnwrapRef<typeof import('vue')['getCurrentScope']>
     readonly getCurrentWatcher: UnwrapRef<typeof import('vue')['getCurrentWatcher']>
+    readonly getEcho: UnwrapRef<typeof import('./modules/admin/chat/composables/useRealtime')['getEcho']>
     readonly getOrderStatusClass: UnwrapRef<typeof import('./shared/helpers/statusHelpers')['getOrderStatusClass']>
     readonly getOrderStatusLabel: UnwrapRef<typeof import('./shared/helpers/statusHelpers')['getOrderStatusLabel']>
     readonly getReturnStatusClass: UnwrapRef<typeof import('./shared/helpers/statusHelpers')['getReturnStatusClass']>
@@ -321,6 +325,7 @@ declare module 'vue' {
     readonly useAuditLogs: UnwrapRef<typeof import('./modules/admin/erp/audit-logs/composables/useAuditLogs')['useAuditLogs']>
     readonly useAuth: UnwrapRef<typeof import('./modules/landing/auth/composables/useAuth')['useAuth']>
     readonly useAuthStore: UnwrapRef<typeof import('@/stores')['useAuthStore']>
+    readonly useAutoConnect: UnwrapRef<typeof import('./modules/admin/chat/composables/useRealtime')['useAutoConnect']>
     readonly useAutomations: UnwrapRef<typeof import('./modules/admin/erp/automations/composables/useAutomations')['useAutomations']>
     readonly useCart: UnwrapRef<typeof import('./modules/landing/cart/composables/useCart')['useCart']>
     readonly useCartStore: UnwrapRef<typeof import('./modules/landing/cart/store/store')['useCartStore']>
@@ -354,6 +359,7 @@ declare module 'vue' {
     readonly usePoints: UnwrapRef<typeof import('./modules/admin/erp/points/composables/usePoints')['usePoints']>
     readonly useProductModal: UnwrapRef<typeof import('./modules/admin/warehouses/composables/useProductModal')['useProductModal']>
     readonly useProfile: UnwrapRef<typeof import('./modules/landing/profile/composables/useProfile')['useProfile']>
+    readonly useRealtime: UnwrapRef<typeof import('./modules/admin/chat/composables/useRealtime')['useRealtime']>
     readonly useReturnStatusLabel: UnwrapRef<typeof import('./shared/helpers/statusHelpers')['useReturnStatusLabel']>
     readonly useReturns: UnwrapRef<typeof import('./modules/admin/erp/returns/composables/useReturns')['useReturns']>
     readonly useReviewStore: UnwrapRef<typeof import('./modules/admin/reviews/store/store')['useReviewStore']>

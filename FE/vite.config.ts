@@ -89,6 +89,18 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           secure: false,
         },
+        // Laravel Broadcasting Auth
+        "/broadcasting": {
+          target: env.VITE_API_BASE_URL || "http://127.0.0.1:8000",
+          changeOrigin: true,
+          secure: false,
+        },
+        // Laravel Public Storage
+        "/storage": {
+          target: env.VITE_API_BASE_URL || "http://127.0.0.1:8000",
+          changeOrigin: true,
+          secure: false,
+        },
       },
     },
   };

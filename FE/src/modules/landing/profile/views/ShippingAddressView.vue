@@ -4,7 +4,10 @@
  * Uses useProfile composable for address management
  */
 import { ref, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useProfile } from '../composables/useProfile'
+
+const { t } = useI18n()
 
 const {
     user,
@@ -43,24 +46,24 @@ const handleUpdateAddress = async () => {
 
 <template>
     <div class="shipping-address">
-        <h2 class="text-xl font-bold text-white mb-8 border-b border-white/5 pb-4">Địa chỉ nhận hàng</h2>
+        <h2 class="text-xl font-bold text-white mb-8 border-b border-white/5 pb-4">{{ t('common.shippingAddress') }}</h2>
 
         <form @submit.prevent="handleUpdateAddress" class="max-w-2xl mx-auto space-y-8">
             <div class="grid md:grid-cols-2 gap-6">
                 <div class="form-group">
-                    <label class="form-label">Tỉnh / Thành phố</label>
+                    <label class="form-label">{{ t('common.province') }}</label>
                     <input v-model="addressForm.province" type="text" class="form-input" placeholder="Tỉnh / Thành phố" />
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Quận / Huyện</label>
+                    <label class="form-label">{{ t('common.district') }}</label>
                     <input v-model="addressForm.district" type="text" class="form-input" placeholder="Quận / Huyện" />
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Phường / Xã</label>
+                    <label class="form-label">{{ t('common.ward') }}</label>
                     <input v-model="addressForm.ward" type="text" class="form-input" placeholder="Phường / Xã" />
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Địa chỉ chi tiết (số nhà, tên đường...)</label>
+                    <label class="form-label">{{ t('common.addressDetail') }}</label>
                     <input v-model="addressForm.address_detail" type="text" class="form-input"
                         placeholder="Số nhà 21, Đường ABC..." />
                 </div>
@@ -74,7 +77,7 @@ const handleUpdateAddress = async () => {
             <div class="flex justify-center pt-4">
                 <button type="submit" class="btn btn-primary px-12 py-3 font-bold" :disabled="isUpdating">
                     <span v-if="isUpdating" class="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin mr-2"></span>
-                    {{ isUpdating ? 'Đang cập nhật...' : 'Lưu địa chỉ' }}
+                    {{ isUpdating ? t('common.updating') : t('common.saveAddress') }}
                 </button>
             </div>
         </form>
@@ -85,7 +88,7 @@ const handleUpdateAddress = async () => {
                 <span class="text-6xl">📮</span>
             </div>
             <div class="relative z-10">
-                <span class="text-xs font-bold text-primary uppercase tracking-widest mb-2 block">Địa chỉ hiện tại</span>
+                <span class="text-xs font-bold text-primary uppercase tracking-widest mb-2 block">{{ t('common.currentAddress') }}</span>
                 <p class="text-white text-lg font-medium leading-relaxed">
                     {{ addressForm.address_detail }}{{ addressForm.address_detail ? ', ' : '' }}
                     {{ addressForm.ward }}{{ addressForm.ward ? ', ' : '' }}
@@ -96,7 +99,7 @@ const handleUpdateAddress = async () => {
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
                     </svg>
-                    <span>Mặc định cho mọi đơn hàng</span>
+                    <span>{{ t('common.defaultForOrders') }}</span>
                 </div>
             </div>
         </div>

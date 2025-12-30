@@ -3,7 +3,7 @@
  * Provides reusable logic for home page data
  */
 
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import httpClient from '@/plugins/api/httpClient'
 
 export function useHome() {
@@ -20,7 +20,9 @@ export function useHome() {
       const response = await httpClient.get('/frontend/products', { params: { per_page: 8 } })
       const data = response.data as any
       
-      if (data?.data?.data && Array.isArray(data.data.data)) {
+      if (data?.data?.items && Array.isArray(data.data.items)) {
+        featuredProducts.value = data.data.items
+      } else if (data?.data?.data && Array.isArray(data.data.data)) {
         featuredProducts.value = data.data.data
       } else if (Array.isArray(data?.data)) {
         featuredProducts.value = data.data

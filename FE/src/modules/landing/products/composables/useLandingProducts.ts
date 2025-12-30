@@ -66,7 +66,11 @@ export function useLandingProducts() {
       const response = await httpClient.get('/frontend/products', { params: queryParams })
       const data = response.data as any
 
-      if (data?.data?.data && Array.isArray(data.data.data)) {
+      if (data?.data?.items && Array.isArray(data.data.items)) {
+        products.value = data.data.items
+        totalPages.value = data.data.meta?.last_page || 1
+        currentPage.value = data.data.meta?.current_page || 1
+      } else if (data?.data?.data && Array.isArray(data.data.data)) {
         products.value = data.data.data
         totalPages.value = data.data.last_page || 1
         currentPage.value = data.data.current_page || 1

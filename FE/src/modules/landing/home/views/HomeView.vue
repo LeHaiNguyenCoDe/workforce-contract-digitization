@@ -57,11 +57,11 @@ const handleRetry = async () => {
             <div class="container relative z-10">
                 <div class="max-w-3xl mx-auto text-center">
                     <h1 class="text-4xl md:text-6xl font-bold mb-6 animate-fade-in">
-                        <span class="text-white">Khám phá </span>
-                        <span class="gradient-text">Sản phẩm tuyệt vời</span>
+                        <span class="text-white">{{ t('home.explore') }} </span>
+                        <span class="gradient-text">{{ t('home.amazingProducts') }}</span>
                     </h1>
                     <p class="text-lg md:text-xl text-slate-400 mb-8 animate-slide-up">
-                        Mua sắm thông minh với hàng ngàn sản phẩm chất lượng cao và giá cả hợp lý
+                        {{ t('home.heroDescription') }}
                     </p>
                     <div class="flex flex-col sm:flex-row gap-4 justify-center animate-slide-up">
                         <RouterLink to="/products" class="btn btn-primary btn-lg">
@@ -83,7 +83,7 @@ const handleRetry = async () => {
         <!-- Error Message -->
         <div v-if="error" class="container py-8">
             <div class="bg-error/10 border border-error text-error p-4 rounded-xl text-center">
-                {{ error }} - <button @click="handleRetry" class="underline">Thử lại</button>
+                {{ error }} - <button @click="handleRetry" class="underline">{{ t('common.retry') }}</button>
             </div>
         </div>
 
@@ -92,7 +92,7 @@ const handleRetry = async () => {
             <div class="container">
                 <div class="text-center mb-12">
                     <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">{{ t('common.categories') }}</h2>
-                    <p class="text-slate-400">Khám phá các danh mục sản phẩm đa dạng</p>
+                    <p class="text-slate-400">{{ t('home.exploreCategoriesDesc') }}</p>
                 </div>
 
                 <div v-if="isLoading" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -113,7 +113,7 @@ const handleRetry = async () => {
                 </div>
 
                 <div v-else class="text-center text-slate-500">
-                    Chưa có danh mục nào
+                    {{ t('common.noCategories') }}
                 </div>
             </div>
         </section>
@@ -125,7 +125,7 @@ const handleRetry = async () => {
                     <div>
                         <h2 class="text-3xl md:text-4xl font-bold text-white mb-2">{{ t('common.featuredProducts') }}
                         </h2>
-                        <p class="text-slate-400">Sản phẩm được yêu thích nhất</p>
+                        <p class="text-slate-400">{{ t('home.topFavorites') }}</p>
                     </div>
                     <RouterLink to="/products" class="btn btn-outline">
                         {{ t('common.viewAll') }}
@@ -180,7 +180,7 @@ const handleRetry = async () => {
                 </div>
 
                 <div v-else class="text-center text-slate-500 py-8">
-                    Chưa có sản phẩm nào
+                    {{ t('common.noProducts') }}
                 </div>
             </div>
         </section>
@@ -195,11 +195,11 @@ const handleRetry = async () => {
                     </div>
 
                     <div class="relative z-10 max-w-2xl">
-                        <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Đăng ký nhận thông báo</h2>
-                        <p class="text-slate-400 mb-6">Nhận thông tin khuyến mãi và sản phẩm mới nhất</p>
+                        <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">{{ t('home.subscribeTitle') }}</h2>
+                        <p class="text-slate-400 mb-6">{{ t('home.subscribeDesc') }}</p>
                         <div class="flex flex-col sm:flex-row gap-3">
-                            <input type="email" placeholder="Email của bạn" class="form-input flex-1" />
-                            <button class="btn btn-primary whitespace-nowrap">Đăng ký</button>
+                            <input type="email" :placeholder="t('home.yourEmail')" class="form-input flex-1" />
+                            <button class="btn btn-primary whitespace-nowrap">{{ t('common.subscribe') }}</button>
                         </div>
                     </div>
                 </div>

@@ -75,19 +75,19 @@ onMounted(async () => {
 <template>
   <div class="h-full flex flex-col p-6">
     <!-- Header -->
-    <AdminPageHeader :title="t('admin.orders')" description="Quản lý và xử lý đơn đặt hàng từ khách hàng">
+    <AdminPageHeader :title="t('admin.orders')" :description="t('common.manageOrders')">
       <template #actions>
         <div v-if="canApproveOrders"
           class="flex items-center gap-2 px-3 py-1.5 bg-success/10 border border-success/20 rounded-lg text-xs font-medium text-success">
           <img src="@/assets/admin/icons/check.svg" class="w-3.5 h-3.5" alt="Check" />
-          Có quyền duyệt đơn
+          {{ t('common.hasApprovalPermission') }}
         </div>
       </template>
     </AdminPageHeader>
 
     <!-- Filters -->
     <AdminSearch :modelValue="searchQuery" @update:modelValue="setSearchQuery" @search="store.fetchOrders()"
-      placeholder="Tìm kiếm theo mã đơn, khách hàng...">
+      :placeholder="t('common.searchOrdersPlaceholder')">
       <template #filters>
         <select :value="statusFilter" @change="setStatusFilter(($event.target as HTMLSelectElement).value)"
           class="form-input w-48 bg-dark-700 border-white/10 text-white">

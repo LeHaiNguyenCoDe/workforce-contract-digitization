@@ -22,5 +22,19 @@
   "securePayment": "Secure Payment",
   "fastDelivery": "Fast Delivery",
   "return30Days": "30-day Returns",
-  "items": "items"
+  "items": "items",
+  "quantityUpdated": "Quantity updated",
+  "quantityUpdateFailed": "Failed to update quantity",
+  "removedFromCart": "Removed from cart",
+  "removeFailed": "Failed to remove item",
+  "cartCleared": "Cart cleared",
+  "clearFailed": "Failed to clear cart",
+  "enterPromoRequired": "Please enter a promo code",
+  "promoApplied": "Promo code applied successfully!",
+  "promoInvalid": "Invalid promo code",
+  "promoRemoved": "Promo code removed",
+  "addedToCart": "Added to cart!",
+  "addToCartFailed": "Failed to add to cart!",
+  "adding": "Adding..."
 }
+

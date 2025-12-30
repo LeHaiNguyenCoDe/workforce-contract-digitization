@@ -145,6 +145,13 @@ const menuItems: MenuItem[] = [
         requiredPermission: 'view_articles',
     },
 
+    // Chat
+    {
+        icon: 'chat',
+        path: '/admin/chat',
+        label: 'chat.title',
+    },
+
     // Cấu hình
     {
         icon: 'settings',
@@ -359,6 +366,11 @@ const pageTitle = computed(() => {
                                 <path d="M14 2v4a2 2 0 0 0 2 2h4" />
                                 <path d="M2 15h10" />
                                 <path d="M2 19h10" />
+                            </svg>
+                            <!-- Chat -->
+                            <svg v-else-if="item.icon === 'chat'" xmlns="http://www.w3.org/2000/svg" width="20"
+                                height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                             </svg>
                             <!-- Reviews -->
                             <svg v-else-if="item.icon === 'reviews'" xmlns="http://www.w3.org/2000/svg" width="20"
