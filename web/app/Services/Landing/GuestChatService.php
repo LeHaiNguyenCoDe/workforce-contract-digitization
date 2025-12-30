@@ -20,7 +20,9 @@ class GuestChatService
      */
     public function startSession(string $name, string $contact, string $contactType): GuestChatSession
     {
-        return DB::transaction(function () use ($name, $contact, $contactType) {
+        $conversation = null;
+        
+        $session = DB::transaction(function () use ($name, $contact, $contactType, &$conversation) {
             // Find available support staff
             $staffId = $this->findAvailableStaff();
 
@@ -57,11 +59,21 @@ class GuestChatService
             // Send system message
             $this->sendSystemMessage($conversation->id, "Khách hàng {$name} đã bắt đầu cuộc trò chuyện.");
 
-            // Broadcast new guest chat for admins
-            event(new GuestChatStarted($conversation));
-
             return $session;
         });
+
+        // Broadcast new guest chat for admins OUTSIDE transaction
+        // This prevents broadcast failures from rolling back the session
+        if ($conversation) {
+            try {
+                event(new GuestChatStarted($conversation));
+            } catch (\Exception $e) {
+                // Log broadcast error but don't fail the session creation
+                \Log::warning('Failed to broadcast GuestChatStarted: ' . $e->getMessage());
+            }
+        }
+
+        return $session;
     }
 
     /**
