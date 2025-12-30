@@ -1,0 +1,29 @@
+<?php
+
+namespace App\Http\Requests\Modules\Admin;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class AssignShipperRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    public function rules(): array
+    {
+        return [
+            'shipper_id' => ['required', 'integer', 'exists:users,id'],
+        ];
+    }
+
+    protected function failedValidation(\Illuminate\Contracts\Validation\Validator $validator)
+    {
+        throw new \Illuminate\Validation\ValidationException($validator, response()->json([
+            'status' => 'error',
+            'message' => 'Validation error',
+            'errors' => $validator->errors(),
+        ], 422));
+    }
+}

@@ -1,4 +1,5 @@
 # Hướng dẫn Sử dụng Admin Panel
+
 ## Hệ thống Quản lý Gốm sứ (Ceramic ERP)
 
 **Version:** 1.0  
@@ -29,21 +30,21 @@
 
 ### Tài khoản mặc định
 
-| Email | Mật khẩu | Vai trò |
-|-------|----------|---------|
-| admin@example.com | password123 | Quản trị viên |
-| manager@example.com | password123 | Quản lý |
-| staff@example.com | password123 | Nhân viên |
-| warehouse@example.com | password123 | NV Kho |
+| Email                 | Mật khẩu    | Vai trò       |
+| --------------------- | ----------- | ------------- |
+| admin@example.com     | password123 | Quản trị viên |
+| manager@example.com   | password123 | Quản lý       |
+| staff@example.com     | password123 | Nhân viên     |
+| warehouse@example.com | password123 | NV Kho        |
 
 ## 1.2 Phân quyền theo vai trò
 
-| Vai trò | Mô tả | Menu hiển thị |
-|---------|-------|---------------|
-| **Admin** | Toàn quyền | Tất cả |
-| **Manager** | Quản lý vận hành | Tất cả trừ Cài đặt |
-| **Staff** | Chỉ xem | Dashboard, Đơn hàng, Sản phẩm |
-| **Warehouse** | Quản lý kho | Kho hàng |
+| Vai trò       | Mô tả            | Menu hiển thị                 |
+| ------------- | ---------------- | ----------------------------- |
+| **Admin**     | Toàn quyền       | Tất cả                        |
+| **Manager**   | Quản lý vận hành | Tất cả trừ Cài đặt            |
+| **Staff**     | Chỉ xem          | Dashboard, Đơn hàng, Sản phẩm |
+| **Warehouse** | Quản lý kho      | Kho hàng                      |
 
 > **Lưu ý:** Các nút tạo/sửa/xóa sẽ tự động ẩn nếu bạn không có quyền tương ứng.
 
@@ -55,12 +56,12 @@
 
 ## 2.1 Các widget hiển thị
 
-| Widget | Mô tả |
-|--------|-------|
+| Widget                 | Mô tả                                  |
+| ---------------------- | -------------------------------------- |
 | **Thống kê tổng quan** | Doanh thu, Số đơn hàng, Khách hàng mới |
-| **Biểu đồ doanh thu** | Theo ngày/tuần/tháng |
-| **Đơn hàng gần đây** | 10 đơn mới nhất |
-| **Sản phẩm sắp hết** | Cảnh báo tồn kho thấp |
+| **Biểu đồ doanh thu**  | Theo ngày/tuần/tháng                   |
+| **Đơn hàng gần đây**   | 10 đơn mới nhất                        |
+| **Sản phẩm sắp hết**   | Cảnh báo tồn kho thấp                  |
 
 ---
 
@@ -71,28 +72,29 @@
 **Đường dẫn:** `Admin → Bán hàng → Đơn hàng`
 
 ### Danh sách đơn hàng
+
 - Xem tất cả đơn hàng với bộ lọc theo trạng thái
 - Tìm kiếm theo mã đơn, tên khách hàng
 
 ### Trạng thái đơn hàng
 
-| Trạng thái | Màu | Mô tả |
-|------------|-----|-------|
-| Chờ xử lý | 🟡 Vàng | Đơn mới tạo |
+| Trạng thái  | Màu           | Mô tả                 |
+| ----------- | ------------- | --------------------- |
+| Chờ xử lý   | 🟡 Vàng       | Đơn mới tạo           |
 | Đã xác nhận | 🔵 Xanh dương | Đã xác nhận với khách |
-| Đang xử lý | 🟣 Tím | Đang chuẩn bị hàng |
-| Đang giao | 🟠 Cam | Đã giao cho ĐVVC |
-| Hoàn thành | 🟢 Xanh lá | Đã giao thành công |
-| Đã hủy | 🔴 Đỏ | Đơn bị hủy |
+| Đang xử lý  | 🟣 Tím        | Đang chuẩn bị hàng    |
+| Đang giao   | 🟠 Cam        | Đã giao cho ĐVVC      |
+| Hoàn thành  | 🟢 Xanh lá    | Đã giao thành công    |
+| Đã hủy      | 🔴 Đỏ         | Đơn bị hủy            |
 
 ### Thao tác
 
-| Thao tác | Điều kiện | Permission |
-|----------|-----------|------------|
-| Xem chi tiết | Tất cả | view_orders |
-| Xác nhận đơn | Chờ xử lý | edit_orders |
-| Hủy đơn | Chờ xử lý/Đã xác nhận | edit_orders |
-| Xóa đơn | Đơn đã hủy | delete_orders |
+| Thao tác     | Điều kiện             | Permission    |
+| ------------ | --------------------- | ------------- |
+| Xem chi tiết | Tất cả                | view_orders   |
+| Xác nhận đơn | Chờ xử lý             | edit_orders   |
+| Hủy đơn      | Chờ xử lý/Đã xác nhận | edit_orders   |
+| Xóa đơn      | Đơn đã hủy            | delete_orders |
 
 ## 3.2 Quản lý Khách hàng
 
@@ -112,11 +114,11 @@
 
 ### Thao tác
 
-| Thao tác | Mô tả | Permission |
-|----------|-------|------------|
-| Thêm sản phẩm | Tạo sản phẩm mới | create_products |
-| Sửa sản phẩm | Cập nhật thông tin | edit_products |
-| Xóa sản phẩm | Xóa (không có tồn kho) | delete_products |
+| Thao tác      | Mô tả                  | Permission      |
+| ------------- | ---------------------- | --------------- |
+| Thêm sản phẩm | Tạo sản phẩm mới       | create_products |
+| Sửa sản phẩm  | Cập nhật thông tin     | edit_products   |
+| Xóa sản phẩm  | Xóa (không có tồn kho) | delete_products |
 
 ### Thông tin sản phẩm
 
@@ -166,12 +168,12 @@ Gốm Tâm Linh
 
 ### Thao tác
 
-| Bước | Thao tác | Mô tả |
-|------|----------|-------|
-| 1 | Tạo phiếu | Chọn NCC, kho, danh sách SP |
-| 2 | Nhận hàng | Ghi nhận SL thực nhận |
-| 3 | Kiểm định | Đánh giá PASS/FAIL/PARTIAL |
-| 4 | Duyệt | Tự động cộng tồn kho |
+| Bước | Thao tác  | Mô tả                       |
+| ---- | --------- | --------------------------- |
+| 1    | Tạo phiếu | Chọn NCC, kho, danh sách SP |
+| 2    | Nhận hàng | Ghi nhận SL thực nhận       |
+| 3    | Kiểm định | Đánh giá PASS/FAIL/PARTIAL  |
+| 4    | Duyệt     | Tự động cộng tồn kho        |
 
 ## 4.4 Phiếu xuất kho (Outbound)
 
@@ -179,12 +181,12 @@ Gốm Tâm Linh
 
 ### Mục đích xuất
 
-| Loại | Mô tả |
-|------|-------|
-| sales | Xuất bán hàng |
-| transfer | Chuyển kho |
-| return | Trả NCC |
-| damage | Hư hỏng |
+| Loại     | Mô tả         |
+| -------- | ------------- |
+| sales    | Xuất bán hàng |
+| transfer | Chuyển kho    |
+| return   | Trả NCC       |
+| damage   | Hư hỏng       |
 
 ## 4.5 Điều chỉnh tồn kho ⚠️
 
@@ -202,16 +204,16 @@ Gốm Tâm Linh
 
 ### Thông tin hiển thị
 
-| Cột | Mô tả |
-|-----|-------|
-| Thời gian | Ngày giờ điều chỉnh |
-| Kho | Kho thực hiện |
-| Sản phẩm | SP điều chỉnh |
-| Trước | Số lượng trước |
-| Sau | Số lượng sau |
-| Chênh lệch | + tăng / - giảm |
-| Lý do | Lý do điều chỉnh |
-| Người thực hiện | User thực hiện |
+| Cột             | Mô tả               |
+| --------------- | ------------------- |
+| Thời gian       | Ngày giờ điều chỉnh |
+| Kho             | Kho thực hiện       |
+| Sản phẩm        | SP điều chỉnh       |
+| Trước           | Số lượng trước      |
+| Sau             | Số lượng sau        |
+| Chênh lệch      | + tăng / - giảm     |
+| Lý do           | Lý do điều chỉnh    |
+| Người thực hiện | User thực hiện      |
 
 ---
 
@@ -223,12 +225,12 @@ Gốm Tâm Linh
 
 ### Thông tin hiển thị
 
-| Widget | Mô tả |
-|--------|-------|
-| **Tổng quỹ** | Tổng tiền các quỹ |
-| **Thu trong kỳ** | Tổng thu |
-| **Chi trong kỳ** | Tổng chi |
-| **Công nợ** | Phải thu + Phải trả |
+| Widget           | Mô tả               |
+| ---------------- | ------------------- |
+| **Tổng quỹ**     | Tổng tiền các quỹ   |
+| **Thu trong kỳ** | Tổng thu            |
+| **Chi trong kỳ** | Tổng chi            |
+| **Công nợ**      | Phải thu + Phải trả |
 
 ## 5.2 Quản lý Quỹ
 
@@ -236,10 +238,10 @@ Gốm Tâm Linh
 
 ### Quỹ mặc định
 
-| Quỹ | Mô tả |
-|-----|-------|
-| Tiền mặt | Tiền mặt tại cửa hàng |
-| Ngân hàng VCB | Tài khoản ngân hàng |
+| Quỹ           | Mô tả                 |
+| ------------- | --------------------- |
+| Tiền mặt      | Tiền mặt tại cửa hàng |
+| Ngân hàng VCB | Tài khoản ngân hàng   |
 
 ## 5.3 Thu chi
 
@@ -247,14 +249,14 @@ Gốm Tâm Linh
 
 ### Danh mục chi phí
 
-| Mã | Loại | Mô tả |
-|----|------|-------|
-| RENT | Chi | Thuê mặt bằng |
-| ELECTRIC | Chi | Tiền điện |
-| SALARY | Chi | Lương nhân viên |
-| SHIPPING | Chi | Phí vận chuyển |
-| SALES | Thu | Doanh thu bán hàng |
-| COD_INCOME | Thu | Thu COD |
+| Mã         | Loại | Mô tả              |
+| ---------- | ---- | ------------------ |
+| RENT       | Chi  | Thuê mặt bằng      |
+| ELECTRIC   | Chi  | Tiền điện          |
+| SALARY     | Chi  | Lương nhân viên    |
+| SHIPPING   | Chi  | Phí vận chuyển     |
+| SALES      | Thu  | Doanh thu bán hàng |
+| COD_INCOME | Thu  | Thu COD            |
 
 ## 5.4 Công nợ phải thu
 
@@ -262,18 +264,18 @@ Gốm Tâm Linh
 
 ### Thao tác
 
-| Nút | Mô tả | Permission |
-|-----|-------|------------|
-| Thu tiền | Ghi nhận thanh toán | manage_receivables |
-| Chi tiết | Xem chi tiết công nợ | view_finance |
+| Nút      | Mô tả                | Permission         |
+| -------- | -------------------- | ------------------ |
+| Thu tiền | Ghi nhận thanh toán  | manage_receivables |
+| Chi tiết | Xem chi tiết công nợ | view_finance       |
 
 ### Trạng thái
 
-| Status | Mô tả |
-|--------|-------|
-| pending | Chưa thu |
+| Status  | Mô tả        |
+| ------- | ------------ |
+| pending | Chưa thu     |
 | partial | Thu một phần |
-| paid | Đã thu đủ |
+| paid    | Đã thu đủ    |
 
 ## 5.5 Công nợ phải trả
 
@@ -281,10 +283,10 @@ Gốm Tâm Linh
 
 ### Thao tác
 
-| Nút | Mô tả | Permission |
-|-----|-------|------------|
+| Nút        | Mô tả                   | Permission      |
+| ---------- | ----------------------- | --------------- |
 | Thanh toán | Ghi nhận thanh toán NCC | manage_payables |
-| Chi tiết | Xem chi tiết công nợ | view_finance |
+| Chi tiết   | Xem chi tiết công nợ    | view_finance    |
 
 ---
 
@@ -296,12 +298,12 @@ Gốm Tâm Linh
 
 ### Cấu hình hạng
 
-| Hạng | Ngưỡng chi tiêu | Ưu đãi |
-|------|-----------------|--------|
-| Bronze | 0đ | 0% |
-| Silver | 5.000.000đ | 3% |
-| Gold | 15.000.000đ | 5% |
-| Platinum | 50.000.000đ | 10% |
+| Hạng     | Ngưỡng chi tiêu | Ưu đãi |
+| -------- | --------------- | ------ |
+| Bronze   | 0đ              | 0%     |
+| Silver   | 5.000.000đ      | 3%     |
+| Gold     | 15.000.000đ     | 5%     |
+| Platinum | 50.000.000đ     | 10%    |
 
 ## 6.2 Điểm thưởng
 
@@ -328,11 +330,11 @@ Gốm Tâm Linh
 
 ### Thao tác
 
-| Nút | Mô tả | Permission |
-|-----|-------|------------|
-| Thêm bài | Tạo bài viết mới | create_articles |
-| Sửa | Chỉnh sửa nội dung | edit_articles |
-| Xóa | Xóa bài viết | delete_articles |
+| Nút      | Mô tả              | Permission      |
+| -------- | ------------------ | --------------- |
+| Thêm bài | Tạo bài viết mới   | create_articles |
+| Sửa      | Chỉnh sửa nội dung | edit_articles   |
+| Xóa      | Xóa bài viết       | delete_articles |
 
 ### Thông tin bài viết
 
@@ -372,10 +374,10 @@ Gốm Tâm Linh
 
 ## Phím tắt
 
-| Phím | Chức năng |
-|------|-----------|
-| `/` | Focus vào ô tìm kiếm |
-| `Esc` | Đóng modal |
+| Phím  | Chức năng            |
+| ----- | -------------------- |
+| `/`   | Focus vào ô tìm kiếm |
+| `Esc` | Đóng modal           |
 
 ## Pagination
 
