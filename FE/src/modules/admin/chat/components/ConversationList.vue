@@ -11,7 +11,7 @@
                 stroke="currentColor" stroke-width="1.5">
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
             </svg>
-            <p class="text-gray-400 text-sm">{{ t('chat.no_conversations') }}</p>
+            <p class="text-gray-400 text-sm">{{ t('common.chat.no_conversations') }}</p>
         </div>
 
         <!-- Conversations -->
@@ -21,8 +21,8 @@
                 :class="[selectedId === conversation.id ? 'bg-teal-50' : 'hover:bg-gray-50']">
                 <!-- Avatar -->
                 <div class="relative flex-shrink-0">
-                    <img v-if="getAvatar(conversation)" :src="getAvatar(conversation)" :alt="getName(conversation)"
-                        class="w-10 h-10 rounded-full object-cover" />
+                    <img v-if="getAvatar(conversation)" :src="getAvatar(conversation) ?? undefined"
+                        :alt="getName(conversation)" class="w-10 h-10 rounded-full object-cover" />
                     <div v-else
                         :class="['w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-medium', getAvatarColor(conversation.id)]">
                         {{ getInitials(getName(conversation)) }}
@@ -57,7 +57,7 @@
                             <!-- Delete button (visible on hover) -->
                             <button @click.stop="$emit('delete', conversation.id)"
                                 class="opacity-0 group-hover:opacity-100 p-1 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all"
-                                :title="t('chat.delete_chat')">
+                                :title="t('common.chat.delete_chat')">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
                                     fill="none" stroke="currentColor" stroke-width="2">
                                     <polyline points="3 6 5 6 21 6" />
@@ -135,17 +135,17 @@ function isOnline(conversation: IConversation): boolean {
 
 function getPreview(conversation: IConversation): string {
     const msg = conversation.latest_message
-    if (!msg) return t('chat.no_messages')
+    if (!msg) return t('common.chat.no_messages')
 
     // Local check for is_mine, though backend should provide it
     const storedUserId = Number(localStorage.getItem('userId'))
     const isMine = msg.user_id == storedUserId
-    const prefix = isMine ? `${t('chat.you')}: ` : ''
+    const prefix = isMine ? `${t('common.chat.you')}: ` : ''
 
     if (msg.attachments && msg.attachments.length > 0) {
         const isImg = msg.attachments[0].file_type?.startsWith('image') ||
             /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(msg.attachments[0].file_path || '')
-        return prefix + (isImg ? t('chat.sent_image') : t('chat.sent_file'))
+        return prefix + (isImg ? t('common.chat.sent_image') : t('common.chat.sent_file'))
     }
 
     return prefix + (msg.content || '')

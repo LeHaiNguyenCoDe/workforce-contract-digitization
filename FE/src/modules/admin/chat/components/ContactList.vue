@@ -14,7 +14,7 @@
                 <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
                 <path d="M16 3.13a4 4 0 0 1 0 7.75" />
             </svg>
-            <p class="text-gray-400 text-sm">{{ t('chat.no_users_found') }}</p>
+            <p class="text-gray-400 text-sm">{{ t('common.chat.no_users_found') }}</p>
         </div>
 
         <!-- Users grouped alphabetically -->
@@ -49,7 +49,7 @@
                         <!-- Start Chat -->
                         <button @click.stop="$emit('start-chat', user.id)"
                             class="p-2 rounded-lg text-gray-400 hover:text-teal-500 hover:bg-teal-50 transition-all"
-                            :title="t('chat.start_chat')">
+                            :title="t('common.chat.start_chat')">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
                                 fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
@@ -59,7 +59,7 @@
                         <!-- Add Friend (if not already friend) -->
                         <button v-if="!isFriend(user.id)" @click.stop="$emit('add-friend', user.id)"
                             class="p-2 rounded-lg text-gray-400 hover:text-blue-500 hover:bg-blue-50 transition-all"
-                            :title="t('friend.add_friend')">
+                            :title="t('common.friend.add_friend')">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
                                 fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -70,7 +70,7 @@
                         </button>
 
                         <!-- Already Friend indicator -->
-                        <div v-else class="p-2 text-green-500" :title="t('friend.already_friends')">
+                        <div v-else class="p-2 text-green-500" :title="t('common.messages.friend.already_friends')">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
                                 fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />

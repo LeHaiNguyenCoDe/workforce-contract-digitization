@@ -14,9 +14,9 @@
         <Transition name="dropdown">
             <div v-if="isOpen" class="dropdown">
                 <header class="dropdown-header">
-                    <h3>{{ t('notifications.title') }}</h3>
+                    <h3>{{ t('common.notifications.title') }}</h3>
                     <button v-if="unreadCount > 0" class="btn-mark-all" @click="handleMarkAllRead">
-                        {{ t('notifications.mark_all_read') }}
+                        {{ t('common.notifications.mark_all_read') }}
                     </button>
                 </header>
 
@@ -31,7 +31,7 @@
                             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
                             <path d="M13.73 21a2 2 0 0 1-3.46 0" />
                         </svg>
-                        <p>{{ t('notifications.empty') }}</p>
+                        <p>{{ t('common.notifications.empty') }}</p>
                     </div>
 
                     <template v-else>
@@ -54,7 +54,7 @@
 
                 <footer v-if="notifications.length > 0" class="dropdown-footer">
                     <router-link to="/admin/notifications" @click="isOpen = false">
-                        {{ t('notifications.view_all') }}
+                        {{ t('common.notifications.view_all') }}
                     </router-link>
                 </footer>
             </div>
@@ -168,18 +168,18 @@ function formatNotification(notification: INotification): string {
 
     switch (notification.type) {
         case 'friend_request':
-            return t('notifications.friend_request', { name: `<strong>${data.from_user_name}</strong>` })
+            return t('common.notifications.friend_request', { name: `<strong>${data.from_user_name}</strong>` })
         case 'friend_accepted':
-            return t('notifications.friend_accepted', { name: `<strong>${data.user_name}</strong>` })
+            return t('common.notifications.friend_accepted', { name: `<strong>${data.user_name}</strong>` })
         case 'new_message':
-            return t('notifications.new_message', { name: `<strong>${data.sender_name}</strong>` })
+            return t('common.notifications.new_message', { name: `<strong>${data.sender_name}</strong>` })
         case 'group_invite':
-            return t('notifications.group_invite', {
+            return t('common.notifications.group_invite', {
                 name: `<strong>${data.inviter_name}</strong>`,
                 group: `<strong>${data.group_name}</strong>`
             })
         default:
-            return data.message || t('notifications.generic')
+            return data.message || t('common.notifications.generic')
     }
 }
 
@@ -189,14 +189,14 @@ function formatTime(dateStr: string): string {
     const diff = now.getTime() - date.getTime()
     const minutes = Math.floor(diff / 60000)
 
-    if (minutes < 1) return t('time.just_now')
-    if (minutes < 60) return t('time.minutes_ago', { n: minutes })
+    if (minutes < 1) return t('common.time.just_now')
+    if (minutes < 60) return t('common.time.minutes_ago', { n: minutes })
 
     const hours = Math.floor(minutes / 60)
-    if (hours < 24) return t('time.hours_ago', { n: hours })
+    if (hours < 24) return t('common.time.hours_ago', { n: hours })
 
     const days = Math.floor(hours / 24)
-    if (days < 7) return t('time.days_ago', { n: days })
+    if (days < 7) return t('common.time.days_ago', { n: days })
 
     return date.toLocaleDateString()
 }

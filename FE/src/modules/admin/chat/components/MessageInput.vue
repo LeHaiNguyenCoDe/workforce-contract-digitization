@@ -4,7 +4,8 @@
         <div v-if="replyTo"
             class="mb-3 p-3 bg-gray-50 rounded-lg border-l-2 border-teal-500 flex items-start justify-between gap-2">
             <div class="min-w-0">
-                <p class="text-xs font-medium text-teal-600 mb-0.5">{{ t('chat.replying_to') }} {{ replyTo.user?.name }}
+                <p class="text-xs font-medium text-teal-600 mb-0.5">{{ t('common.chat.replying_to') }} {{
+                    replyTo.user?.name }}
                 </p>
                 <p class="text-sm text-gray-500 truncate">{{ replyTo.content }}</p>
             </div>
@@ -59,7 +60,7 @@
             <!-- Text Input -->
             <div class="flex-1 relative">
                 <input ref="inputRef" v-model="message" @keydown.enter.exact.prevent="handleSend" @input="handleTyping"
-                    type="text" :placeholder="t('chat.type_message')"
+                    type="text" :placeholder="t('common.chat.type_message')"
                     class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-full text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-100 transition-all" />
             </div>
 

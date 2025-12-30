@@ -47,7 +47,7 @@
                                         <polyline points="7 10 12 15 17 10" />
                                         <line x1="12" y1="15" x2="12" y2="3" />
                                     </svg>
-                                    Download
+                                    {{ t('common.download') }}
                                 </button>
                                 <button @click.stop="$emit('reply', message); activeImageMenuId = null"
                                     class="w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-gray-50 transition-colors">
@@ -56,7 +56,7 @@
                                         <polyline points="9 17 4 12 9 7" />
                                         <path d="M20 18v-2a4 4 0 0 0-4-4H4" />
                                     </svg>
-                                    Reply
+                                    {{ t('common.reply') }}
                                 </button>
                                 <div class="h-px bg-gray-100 my-1"></div>
                                 <button @click.stop="$emit('delete', message.id); activeImageMenuId = null"
@@ -67,7 +67,7 @@
                                         <path
                                             d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                                     </svg>
-                                    Delete
+                                    {{ t('common.delete') }}
                                 </button>
                             </div>
                         </div>
@@ -123,7 +123,7 @@
                 <!-- Delete Action (Hover - Message level) -->
                 <button @click="$emit('delete', message.id)"
                     class="absolute -left-3 -top-3 w-6 h-6 bg-white text-red-500 rounded-full shadow-lg border border-red-100 opacity-0 group-hover:opacity-100 hover:bg-red-50 flex items-center justify-center transition-all z-10"
-                    title="Xóa tin nhắn">
+                    :title="t('common.delete')">
                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="3">
                         <line x1="18" y1="6" x2="6" y2="18" />
@@ -166,7 +166,7 @@
                                         <polyline points="7 10 12 15 17 10" />
                                         <line x1="12" y1="15" x2="12" y2="3" />
                                     </svg>
-                                    Download
+                                    {{ t('common.download') }}
                                 </button>
                                 <button @click.stop="$emit('reply', message); activeImageMenuId = null"
                                     class="w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-gray-50 transition-colors">
@@ -175,7 +175,7 @@
                                         <polyline points="9 17 4 12 9 7" />
                                         <path d="M20 18v-2a4 4 0 0 0-4-4H4" />
                                     </svg>
-                                    Reply
+                                    {{ t('common.reply') }}
                                 </button>
                                 <div class="h-px bg-gray-100 my-1"></div>
                                 <button @click.stop="$emit('delete', message.id); activeImageMenuId = null"
@@ -186,7 +186,7 @@
                                         <path
                                             d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                                     </svg>
-                                    Delete
+                                    {{ t('common.delete') }}
                                 </button>
                             </div>
                         </div>
@@ -239,6 +239,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { IMessage } from '../models/Chat'
 
 const props = defineProps<{
@@ -253,6 +254,8 @@ defineEmits<{
     (e: 'delete', messageId: number): void
     (e: 'preview-image', url: string): void
 }>()
+
+const { t } = useI18n()
 
 const avatarColors = ['bg-teal-500', 'bg-blue-500', 'bg-purple-500', 'bg-pink-500', 'bg-orange-500']
 

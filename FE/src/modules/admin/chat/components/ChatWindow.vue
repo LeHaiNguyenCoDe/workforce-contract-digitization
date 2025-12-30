@@ -28,8 +28,8 @@
                         {{ getTypingText() }}
                     </p>
                     <p v-else class="text-xs text-gray-400">
-                        {{ isUserOnline ? t('chat.online') : (conversation.type === 'group' ?
-                            `${conversation.users.length} ${t('chat.members')}` : t('chat.offline')) }}
+                        {{ isUserOnline ? t('common.chat.online') : (conversation.type === 'group' ?
+                            `${conversation.users.length} ${t('common.chat.members')}` : t('common.chat.offline')) }}
                     </p>
                 </div>
             </div>
@@ -66,7 +66,7 @@
                                 <polyline points="16 17 21 12 16 7" />
                                 <line x1="21" y1="12" x2="9" y2="12" />
                             </svg>
-                            {{ t('chat.leave_group') }}
+                            {{ t('common.chat.leave_group') }}
                         </button>
                         <button @click="handleDeleteConversation"
                             class="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
@@ -76,7 +76,8 @@
                                 <path
                                     d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                             </svg>
-                            {{ conversation.type === 'group' ? t('chat.delete_group') : t('chat.delete_chat') }}
+                            {{ conversation.type === 'group' ? t('common.chat.delete_group') :
+                                t('common.chat.delete_chat') }}
                         </button>
                     </div>
                 </div>
@@ -89,7 +90,7 @@
             <div v-if="hasMore" class="flex justify-center mb-4">
                 <button @click="$emit('load-more')" :disabled="loading"
                     class="px-4 py-1.5 text-xs text-gray-400 hover:text-gray-600 bg-white hover:bg-gray-50 rounded-full shadow-sm border border-gray-100 transition-all disabled:opacity-50">
-                    {{ loading ? '...' : t('chat.load_more') }}
+                    {{ loading ? '...' : t('common.chat.load_more') }}
                 </button>
             </div>
 
@@ -190,9 +191,9 @@ function getInitials(name: string): string {
 }
 
 function getTypingText(): string {
-    if (props.typingUsers.length === 1) return `${props.typingUsers[0]} ${t('chat.is_typing')}`
-    if (props.typingUsers.length === 2) return `${props.typingUsers.join(' & ')} ${t('chat.are_typing')}`
-    return t('chat.several_typing')
+    if (props.typingUsers.length === 1) return `${props.typingUsers[0]} ${t('common.chat.is_typing')}`
+    if (props.typingUsers.length === 2) return `${props.typingUsers.join(' & ')} ${t('common.chat.are_typing')}`
+    return t('common.chat.several_typing')
 }
 
 function shouldShowDate(index: number): boolean {
@@ -215,8 +216,8 @@ function formatDate(dateStr: string): string {
     const yesterday = new Date(today)
     yesterday.setDate(yesterday.getDate() - 1)
 
-    if (date.toDateString() === today.toDateString()) return t('chat.today')
-    if (date.toDateString() === yesterday.toDateString()) return t('chat.yesterday')
+    if (date.toDateString() === today.toDateString()) return t('common.chat.today')
+    if (date.toDateString() === yesterday.toDateString()) return t('common.chat.yesterday')
     return date.toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' })
 }
 
@@ -225,15 +226,15 @@ function handleReply(message: IMessage) {
 }
 
 function handleDeleteMessage(messageId: number) {
-    if (confirm(t('chat.confirm_delete_message'))) {
+    if (confirm(t('common.chat.confirm_delete_message'))) {
         emit('delete-message', messageId)
     }
 }
 
 function handleDeleteConversation() {
     const message = props.conversation.type === 'group'
-        ? t('chat.confirm_delete_group')
-        : t('chat.confirm_delete_chat')
+        ? t('common.chat.confirm_delete_group')
+        : t('common.chat.confirm_delete_chat')
 
     if (confirm(message)) {
         emit('delete-conversation', props.conversation.id)
@@ -241,7 +242,7 @@ function handleDeleteConversation() {
 }
 
 function handleLeaveGroup() {
-    if (confirm(t('chat.confirm_leave_group'))) {
+    if (confirm(t('common.chat.confirm_leave_group'))) {
         emit('leave-group', props.conversation.id)
     }
 }

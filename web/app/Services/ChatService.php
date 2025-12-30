@@ -126,7 +126,7 @@ class ChatService
         ?int $replyToId = null,
         array $attachments = []
     ): Message {
-        return DB::transaction(function () use ($conversationId, $userId, $content, $type, $replyToId, $attachments) {
+        $message = DB::transaction(function () use ($conversationId, $userId, $content, $type, $replyToId, $attachments) {
             // Create message
             $message = Message::create([
                 'conversation_id' => $conversationId,
@@ -151,16 +151,18 @@ class ChatService
                 'last_read_at' => now(),
             ]);
 
-            // Load relationships for broadcast
-            $message->load(['user:id,name,avatar', 'attachments', 'replyTo:id,content,user_id']);
-
-            // Dispatch event (will broadcast automatically)
-            \Log::info('ChatService: Dispatching MessageSent event', ['message_id' => $message->id, 'conversation_id' => $message->conversation_id]);
-            event(new MessageSent($message));
-            \Log::info('ChatService: MessageSent event dispatched');
-
             return $message;
         });
+
+        // Load relationships for broadcast outside transaction to be safe
+        $message->load(['user:id,name,avatar', 'attachments', 'replyTo:id,content,user_id']);
+
+        // Dispatch event (will broadcast automatically)
+        \Log::info('ChatService: Dispatching MessageSent event', ['message_id' => $message->id, 'conversation_id' => $message->conversation_id]);
+        event(new MessageSent($message));
+        \Log::info('ChatService: MessageSent event dispatched');
+
+        return $message;
     }
 
     /**

@@ -1,4 +1,5 @@
 import Echo from 'laravel-echo'
+import axios from 'axios'
 import Pusher from 'pusher-js'
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useChatStore } from '../stores/chatStore'
@@ -28,15 +29,45 @@ export function getEcho(): Echo<any> {
     echoInstance = new Echo({
       broadcaster: 'reverb',
       key: import.meta.env.VITE_REVERB_APP_KEY || 'workforce-chat-key',
-      wsHost: import.meta.env.VITE_REVERB_HOST || 'localhost',
+      wsHost: import.meta.env.VITE_REVERB_HOST || window.location.hostname,
       wsPort: import.meta.env.VITE_REVERB_PORT || 8080,
       wssPort: import.meta.env.VITE_REVERB_PORT || 8080,
       forceTLS: (import.meta.env.VITE_REVERB_SCHEME || 'http') === 'https',
       enabledTransports: ['ws', 'wss'],
-      authEndpoint: '/broadcasting/auth',
-      auth: {
-        headers: {
-          'X-XSRF-TOKEN': getCsrfToken()
+      authEndpoint: '/api/v1/broadcasting/auth',
+      // Ensure cookies are sent for authorization
+      withCredentials: true,
+      authorizer: (channel: any) => {
+        return {
+          authorize: (socketId: string, callback: Function) => {
+            console.log(`Realtime: Authorizing channel ${channel.name} with socket ${socketId}`)
+            // Use axios to see the RAW response body
+            axios.post('/api/v1/broadcasting/auth', {
+              socket_id: socketId,
+              channel_name: channel.name
+            }, {
+              withCredentials: true,
+              headers: {
+                'X-XSRF-TOKEN': getCsrfToken(),
+                'Accept': 'application/json'
+              }
+            })
+            .then((response: any) => {
+              console.log('Realtime: Auth Response:', {
+                status: response.status,
+                headers: response.headers,
+                data: response.data
+              })
+              if (!response.data || typeof response.data !== 'object') {
+                console.error('Realtime: Invalid JSON response from auth endpoint:', response.data)
+              }
+              callback(false, response.data)
+            })
+            .catch((error: any) => {
+              console.error(`Realtime: Failed authorizing ${channel.name}`, error.response?.status, error.response?.data)
+              callback(true, error)
+            })
+          }
         }
       }
     })
@@ -67,7 +98,6 @@ function getCsrfToken(): string {
 export function useRealtime() {
   const chatStore = useChatStore()
   const notificationStore = useNotificationStore()
-  const authStore = useAuthStore()
   
   const isConnected = ref(false)
   const currentUserId = ref<number | null>(null)

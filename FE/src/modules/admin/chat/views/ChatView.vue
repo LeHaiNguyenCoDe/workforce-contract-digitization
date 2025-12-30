@@ -9,11 +9,11 @@
                        md:translate-x-0" :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'">
                 <!-- Header -->
                 <div class="flex justify-between items-center p-4 border-b border-gray-100">
-                    <h2 class="text-lg font-semibold text-gray-800">{{ t('chat.title') }}</h2>
+                    <h2 class="text-lg font-semibold text-gray-800">{{ t('common.chat.title') }}</h2>
                     <div class="flex items-center gap-2">
                         <button @click="showNewChat = true"
                             class="w-8 h-8 rounded-lg bg-teal-500 hover:bg-teal-600 text-white flex items-center justify-center transition-all shadow-sm"
-                            :title="t('chat.new_chat')">
+                            :title="t('common.chat.new_chat')">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
                                 fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M12 5v14M5 12h14" />
@@ -39,7 +39,7 @@
                             <circle cx="11" cy="11" r="8" />
                             <path d="m21 21-4.35-4.35" />
                         </svg>
-                        <input v-model="searchQuery" type="text" :placeholder="t('chat.search_placeholder')"
+                        <input v-model="searchQuery" type="text" :placeholder="t('common.chat.search_placeholder')"
                             class="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-100 transition-all" />
                     </div>
                 </div>
@@ -122,9 +122,9 @@
                                 fill="none" stroke="currentColor" stroke-width="1.5">
                                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                             </svg>
-                            <h3 class="text-lg md:text-xl font-semibold text-gray-500 mb-2">{{
-                                t('chat.select_conversation') }}</h3>
-                            <p class="text-sm text-gray-400">{{ t('chat.select_hint') }}</p>
+                            <h3 class="text-xl font-medium text-gray-400 mb-2">{{ t('common.chat.select_conversation')
+                                }}</h3>
+                            <p class="text-gray-400 max-w-xs mx-auto">{{ t('common.chat.select_hint') }}</p>
                         </div>
                     </div>
                 </template>

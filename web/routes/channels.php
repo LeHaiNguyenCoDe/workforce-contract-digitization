@@ -9,7 +9,9 @@ use Illuminate\Support\Facades\Broadcast;
 |--------------------------------------------------------------------------
 */
 Broadcast::channel('user.{id}', function ($user, $id) {
-    return (int) $user->id === (int) $id;
+    $result = (int) $user->id === (int) $id;
+    \Log::info('Channel Auth: user.{id}', ['user_id' => $user->id, 'target_id' => $id, 'result' => $result]);
+    return $result;
 });
 
 /*
@@ -20,9 +22,12 @@ Broadcast::channel('user.{id}', function ($user, $id) {
 Broadcast::channel('conversation.{conversationId}', function ($user, $conversationId) {
     $conversation = Conversation::find($conversationId);
     if (!$conversation) {
+        \Log::warning('Channel Auth: conversation.{id} NOT FOUND', ['conversation_id' => $conversationId]);
         return false;
     }
-    return $conversation->users()->where('user_id', $user->id)->exists();
+    $result = $conversation->users()->where('user_id', $user->id)->exists();
+    \Log::info('Channel Auth: conversation.{id}', ['user_id' => $user->id, 'conversation_id' => $conversationId, 'result' => $result]);
+    return $result;
 });
 
 /*

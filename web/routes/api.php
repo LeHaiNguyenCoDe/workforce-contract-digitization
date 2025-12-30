@@ -3,6 +3,7 @@
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\Authenticate;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Broadcast;
 
 /*
 |--------------------------------------------------------------------------
@@ -52,6 +53,73 @@ Route::prefix('v1')->group(function () {
     */
     Route::middleware([Authenticate::class])->group(function () {
         require __DIR__ . '/api/chat.php';
+        
+        // Custom broadcasting auth route to use API guard
+        Route::post('broadcasting/auth', function (\Illuminate\Http\Request $request) {
+            $user = $request->user();
+            $channelName = $request->channel_name;
+            
+            \Log::info('Broadcasting Auth (Manual)', [
+                'user_id' => $user?->id,
+                'channel' => $channelName
+            ]);
+
+            if (!$user) {
+                return response()->json(['message' => 'Unauthenticated'], 401);
+            }
+
+            // Normalize channel name (strip 'private-' or 'presence-')
+            $normalizedName = $channelName;
+            $isPresence = false;
+            if (str_starts_with($channelName, 'private-')) {
+                $normalizedName = substr($channelName, 8);
+            } elseif (str_starts_with($channelName, 'presence-')) {
+                $normalizedName = substr($channelName, 9);
+                $isPresence = true;
+            }
+
+            $authorized = false;
+            $presenceData = null;
+
+            // user.{id}
+            if (preg_match('/^user\.(\d+)$/', $normalizedName, $matches)) {
+                if ((int)$user->id === (int)$matches[1]) {
+                    $authorized = true;
+                }
+            }
+            // conversation.{id}
+            elseif (preg_match('/^conversation\.(\d+)$/', $normalizedName, $matches)) {
+                $conversationId = (int)$matches[1];
+                $authorized = \DB::table('conversation_user')
+                    ->where('conversation_id', $conversationId)
+                    ->where('user_id', $user->id)
+                    ->exists();
+            }
+            // presence.conversation.{id}
+            elseif (preg_match('/^presence\.conversation\.(\d+)$/', $normalizedName, $matches)) {
+                $conversationId = (int)$matches[1];
+                $authorized = \DB::table('conversation_user')
+                    ->where('conversation_id', $conversationId)
+                    ->where('user_id', $user->id)
+                    ->exists();
+                if ($authorized) {
+                    $presenceData = [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'avatar' => $user->avatar
+                    ];
+                }
+            }
+
+            if ($authorized) {
+                return Broadcast::validAuthenticationResponse(
+                    $request, 
+                    $isPresence ? $presenceData : true
+                );
+            }
+
+            return response()->json(['message' => 'Forbidden'], 403);
+        });
     });
 });
 
