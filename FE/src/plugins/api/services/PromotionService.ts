@@ -1,5 +1,4 @@
 import { BaseApiService } from './BaseApiService'
-import type { ApiResponse } from '../types'
 
 export interface Promotion {
   id: number
@@ -33,11 +32,19 @@ interface UpdatePromotionRequest {
 }
 
 /**
+ * Frontend Promotion Service
+ */
+class FrontendPromotionService extends BaseApiService<Promotion, CreatePromotionRequest, UpdatePromotionRequest> {
+  protected readonly endpoint = 'frontend/promotions'
+}
+
+/**
  * Admin Promotion Service
  */
 class AdminPromotionService extends BaseApiService<Promotion, CreatePromotionRequest, UpdatePromotionRequest> {
   protected readonly endpoint = 'admin/promotions'
 }
 
+export const promotionService = new FrontendPromotionService()
 export const adminPromotionService = new AdminPromotionService()
 

@@ -4,9 +4,6 @@
  * Uses useOrders composable for order management logic
  */
 import { RouterLink } from 'vue-router'
-import { useOrders } from '../composables/useOrders'
-
-
 // Use composable
 const {
     orders,
@@ -15,7 +12,7 @@ const {
     formatDate,
     getStatusLabel,
     getStatusColor
-} = useOrders()
+} = useLandingOrders()
 
 // Status config with icons
 const statusConfig: Record<string, { icon: string; bg: string }> = {
@@ -56,10 +53,10 @@ const getStepStatus = (orderStatus: string, stepKey: string) => {
         'completed': 3,
         'cancelled': -1
     }
-    
+
     const currentLevel = statusMap[orderStatus] ?? 0
     const stepLevel = statusMap[stepKey] ?? 0
-    
+
     if (currentLevel === -1) return 'cancelled'
     if (currentLevel >= stepLevel) return 'completed'
     if (currentLevel === stepLevel - 1) return 'active'
@@ -70,7 +67,8 @@ const getStepStatus = (orderStatus: string, stepKey: string) => {
 <template>
     <div class="container py-8">
         <!-- Header -->
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 p-6 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-2xl border border-white/5">
+        <div
+            class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 p-6 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-2xl border border-white/5">
             <div>
                 <h1 class="text-2xl md:text-3xl font-bold gradient-text mb-1">📦 Đơn hàng của tôi</h1>
                 <p class="text-slate-400 text-sm">Theo dõi và quản lý đơn hàng của bạn</p>
@@ -89,7 +87,8 @@ const getStepStatus = (orderStatus: string, stepKey: string) => {
         <div v-else-if="!orders.length" class="text-center py-16 bg-dark-800 rounded-2xl border border-white/5">
             <div class="text-6xl mb-4">📭</div>
             <h2 class="text-xl font-semibold text-white mb-2">Chưa có đơn hàng nào</h2>
-            <p class="text-slate-400 mb-6 max-w-md mx-auto">Bạn chưa đặt đơn hàng nào. Hãy khám phá sản phẩm và đặt hàng ngay!</p>
+            <p class="text-slate-400 mb-6 max-w-md mx-auto">Bạn chưa đặt đơn hàng nào. Hãy khám phá sản phẩm và đặt hàng
+                ngay!</p>
             <RouterLink to="/products" class="btn btn-primary btn-lg">
                 🛍️ Khám phá sản phẩm
             </RouterLink>
@@ -97,17 +96,20 @@ const getStepStatus = (orderStatus: string, stepKey: string) => {
 
         <!-- Orders Grid -->
         <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <RouterLink v-for="order in orders" :key="order.id" :to="`/orders/${order.id}`" 
+            <RouterLink v-for="order in orders" :key="order.id" :to="`/orders/${order.id}`"
                 class="group bg-dark-800 rounded-2xl border border-white/5 overflow-hidden hover:-translate-y-1 hover:shadow-2xl hover:border-primary/30 transition-all duration-300">
                 <!-- Card Header -->
                 <div class="flex justify-between items-center p-4 bg-dark-900/50 border-b border-white/5">
                     <div>
                         <span class="block text-xs text-slate-500">Mã đơn hàng</span>
-                        <span class="font-mono font-bold text-white">#{{ order.code || order.order_number || order.id }}</span>
+                        <span class="font-mono font-bold text-white">#{{ order.code || order.order_number || order.id
+                        }}</span>
                     </div>
-                    <div class="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium" :class="getStatusBg(order.status)">
+                    <div class="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium"
+                        :class="getStatusBg(order.status)">
                         <span>{{ getStatusIcon(order.status) }}</span>
-                        <span :class="'text-' + getStatusColor(order.status) + '-400'">{{ getStatusLabel(order.status) }}</span>
+                        <span :class="'text-' + getStatusColor(order.status) + '-400'">{{ getStatusLabel(order.status)
+                        }}</span>
                     </div>
                 </div>
 
@@ -127,24 +129,24 @@ const getStepStatus = (orderStatus: string, stepKey: string) => {
                         <div class="flex items-center justify-between relative">
                             <!-- Progress Bar Background -->
                             <div class="absolute top-4 left-0 w-full h-0.5 bg-white/5 -z-0"></div>
-                            
+
                             <!-- Steps -->
-                            <div v-for="step in timelineSteps" :key="step.key" class="flex flex-col items-center gap-1.5 relative z-10">
+                            <div v-for="step in timelineSteps" :key="step.key"
+                                class="flex flex-col items-center gap-1.5 relative z-10">
                                 <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs transition-colors duration-300"
                                     :class="[
                                         getStepStatus(order.status, step.key) === 'completed' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' :
-                                        getStepStatus(order.status, step.key) === 'active' ? 'bg-primary text-white animate-pulse' :
-                                        order.status === 'cancelled' ? 'bg-red-500/20 text-red-400' : 'bg-dark-900 border border-white/10 text-slate-500'
+                                            getStepStatus(order.status, step.key) === 'active' ? 'bg-primary text-white animate-pulse' :
+                                                order.status === 'cancelled' ? 'bg-red-500/20 text-red-400' : 'bg-dark-900 border border-white/10 text-slate-500'
                                     ]">
                                     <template v-if="getStepStatus(order.status, step.key) === 'completed'">✓</template>
                                     <template v-else>{{ step.icon }}</template>
                                 </div>
-                                <span class="text-[10px] whitespace-nowrap" 
-                                    :class="[
-                                        getStepStatus(order.status, step.key) === 'completed' ? 'text-emerald-400' :
+                                <span class="text-[10px] whitespace-nowrap" :class="[
+                                    getStepStatus(order.status, step.key) === 'completed' ? 'text-emerald-400' :
                                         getStepStatus(order.status, step.key) === 'active' ? 'text-primary font-bold' :
-                                        'text-slate-500'
-                                    ]">
+                                            'text-slate-500'
+                                ]">
                                     {{ getStepLabel(order, step) }}
                                 </span>
                             </div>
@@ -158,7 +160,8 @@ const getStepStatus = (orderStatus: string, stepKey: string) => {
                 </div>
 
                 <!-- Card Footer -->
-                <div class="flex justify-between items-center p-4 bg-gradient-to-r from-primary/5 to-secondary/5 border-t border-white/5">
+                <div
+                    class="flex justify-between items-center p-4 bg-gradient-to-r from-primary/5 to-secondary/5 border-t border-white/5">
                     <div>
                         <span class="block text-xs text-slate-500">Tổng tiền</span>
                         <span class="text-lg font-bold gradient-text">{{ formatPrice(getOrderTotal(order)) }}</span>

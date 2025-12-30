@@ -1,0 +1,9 @@
+{
+  "required": "Questo campo è obbligatorio",
+  "email": "Indirizzo email non valido",
+  "minLength": "Minimo {min} caratteri",
+  "maxLength": "Massimo {max} caratteri",
+  "passwordMismatch": "Le password non corrispondono",
+  "passwordWeak": "La password deve includere lettere, numeri e caratteri speciali",
+  "loginFailed": "Accesso fallito"
+}

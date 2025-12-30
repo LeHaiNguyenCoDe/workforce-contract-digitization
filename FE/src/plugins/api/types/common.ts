@@ -27,6 +27,19 @@ export interface PaginatedResponse<T> {
   total: number
 }
 
+// Standardized Paginated Data (Custom structure for the project)
+export interface PaginatedData<T> {
+  items: T[]
+  meta: {
+    current_page: number
+    last_page: number
+    total: number
+    per_page?: number
+    from?: number
+    to?: number
+  }
+}
+
 export interface PaginationLink {
   url: string | null
   label: string

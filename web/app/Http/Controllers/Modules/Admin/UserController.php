@@ -31,7 +31,7 @@ class UserController extends Controller
 
             $users = $this->userService->getAll($perPage, $search);
 
-            return $this->successResponse($users);
+            return $this->paginatedResponse($users);
         } catch (\Exception $ex) {
             Helper::trackingError('user', $ex->getMessage());
             return $this->serverErrorResponse('error', $ex);
@@ -107,7 +107,7 @@ class UserController extends Controller
             $orderService = app(\App\Services\Admin\OrderService::class);
             $orders = $orderService->getByUserId($user->id, $perPage);
 
-            return $this->successResponse($orders);
+            return $this->paginatedResponse($orders);
         } catch (\Exception $ex) {
             Helper::trackingError('user', $ex->getMessage());
             return $this->serverErrorResponse('error', $ex);

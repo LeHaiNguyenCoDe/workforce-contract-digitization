@@ -34,6 +34,7 @@ class LanguageService
         // Save to user preference if authenticated
         if ($userId) {
             $this->saveUserLanguage($userId, $locale);
+            $this->detectionService->clearUserLocaleCache($userId);
         }
 
         return true;

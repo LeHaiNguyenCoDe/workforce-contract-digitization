@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 interface Props {
   modelValue?: string
@@ -7,9 +8,11 @@ interface Props {
   debounce?: number
 }
 
+const { t } = useI18n()
+
 const props = withDefaults(defineProps<Props>(), {
   modelValue: '',
-  placeholder: 'Tìm kiếm...',
+  placeholder: '',
   debounce: 300
 })
 
@@ -20,6 +23,9 @@ const emit = defineEmits<{
 
 const localValue = ref(props.modelValue)
 let debounceTimer: ReturnType<typeof setTimeout> | null = null
+
+// Use translation if no placeholder provided
+const computedPlaceholder = props.placeholder || t('common.searchPlaceholder')
 
 watch(() => props.modelValue, (newVal) => {
   localValue.value = newVal
@@ -63,7 +69,7 @@ const handleKeydown = (e: KeyboardEvent) => {
           @keydown="handleKeydown"
           type="text"
           class="form-input pl-10"
-          :placeholder="placeholder"
+          :placeholder="computedPlaceholder"
         />
       </div>
       
@@ -71,7 +77,7 @@ const handleKeydown = (e: KeyboardEvent) => {
       <slot name="filters"></slot>
       
       <button @click="handleSearch" class="btn btn-secondary">
-        Tìm kiếm
+        {{ t('common.search') }}
       </button>
     </div>
   </div>

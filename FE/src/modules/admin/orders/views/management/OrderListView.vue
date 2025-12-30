@@ -2,7 +2,6 @@
 import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { orderColumns } from '../../configs/columns'
-import { useOrders } from '../../composables/useOrders'
 import OrderDetailModal from '../../components/OrderDetailModal.vue'
 
 const { t } = useI18n()
@@ -25,12 +24,11 @@ const {
   setSearchQuery,
   confirmAssignShipper,
   viewOrderDetail,
-  closeOrderDetail,
   cancelOrder,
   handleConfirmOrder,
   handleMarkDelivered,
   handleCompleteOrder
-} = useOrders()
+} = useAdminOrders()
 
 // Computed from store
 const isLoading = computed(() => store.isLoading)
@@ -79,7 +77,8 @@ onMounted(async () => {
     <!-- Header -->
     <AdminPageHeader :title="t('admin.orders')" description="Quản lý và xử lý đơn đặt hàng từ khách hàng">
       <template #actions>
-        <div v-if="canApproveOrders" class="flex items-center gap-2 px-3 py-1.5 bg-success/10 border border-success/20 rounded-lg text-xs font-medium text-success">
+        <div v-if="canApproveOrders"
+          class="flex items-center gap-2 px-3 py-1.5 bg-success/10 border border-success/20 rounded-lg text-xs font-medium text-success">
           <img src="@/assets/admin/icons/check.svg" class="w-3.5 h-3.5" alt="Check" />
           Có quyền duyệt đơn
         </div>
@@ -87,9 +86,11 @@ onMounted(async () => {
     </AdminPageHeader>
 
     <!-- Filters -->
-    <AdminSearch :modelValue="searchQuery" @update:modelValue="setSearchQuery" @search="store.fetchOrders()" placeholder="Tìm kiếm theo mã đơn, khách hàng...">
+    <AdminSearch :modelValue="searchQuery" @update:modelValue="setSearchQuery" @search="store.fetchOrders()"
+      placeholder="Tìm kiếm theo mã đơn, khách hàng...">
       <template #filters>
-        <select :value="statusFilter" @change="setStatusFilter(($event.target as HTMLSelectElement).value)" class="form-input w-48 bg-dark-700 border-white/10 text-white">
+        <select :value="statusFilter" @change="setStatusFilter(($event.target as HTMLSelectElement).value)"
+          class="form-input w-48 bg-dark-700 border-white/10 text-white">
           <option value="">Tất cả trạng thái</option>
           <option value="draft">Nháp</option>
           <option value="pending">Chờ xử lý</option>
@@ -126,7 +127,8 @@ onMounted(async () => {
       </template>
 
       <template #cell-status="{ value }">
-        <span :class="['px-2.5 py-1 rounded-full text-[10px] uppercase tracking-wider font-bold', getStatusInfo(value).color]">
+        <span
+          :class="['px-2.5 py-1 rounded-full text-[10px] uppercase tracking-wider font-bold', getStatusInfo(value).color]">
           {{ getStatusInfo(value).text }}
         </span>
       </template>
@@ -139,24 +141,21 @@ onMounted(async () => {
         <div class="flex items-center justify-end gap-1">
           <template v-if="canApproveOrders">
             <!-- Confirm: pending -> confirmed -->
-            <DAction v-if="item.status === 'pending' || item.status === 'draft'" 
-              icon="approve" title="Xác nhận đơn" variant="success" 
-              @click.stop="handleConfirmOrder(item)" :loading="isUpdating === item.id" />
-            
+            <DAction v-if="item.status === 'pending' || item.status === 'draft'" icon="approve" title="Xác nhận đơn"
+              variant="success" @click.stop="handleConfirmOrder(item)" :loading="isUpdating === item.id" />
+
             <!-- Deliver: confirmed/processing -> delivered -->
-            <DAction v-if="item.status === 'confirmed' || item.status === 'processing'" 
-              icon="edit" title="Đánh dấu đã giao" variant="primary" 
-              @click.stop="handleMarkDelivered(item)" :loading="isUpdating === item.id" />
-            
+            <DAction v-if="item.status === 'confirmed' || item.status === 'processing'" icon="edit"
+              title="Đánh dấu đã giao" variant="primary" @click.stop="handleMarkDelivered(item)"
+              :loading="isUpdating === item.id" />
+
             <!-- Complete: delivered -> completed -->
-            <DAction v-if="item.status === 'delivered'" 
-              icon="complete" title="Hoàn thành đơn" variant="success" 
+            <DAction v-if="item.status === 'delivered'" icon="complete" title="Hoàn thành đơn" variant="success"
               @click.stop="handleCompleteOrder(item)" :loading="isUpdating === item.id" />
-            
+
             <!-- Cancel: any status except completed/cancelled -->
-            <DAction v-if="!['completed', 'cancelled'].includes(item.status)" 
-              icon="delete" title="Hủy đơn" variant="danger" 
-              @click.stop="cancelOrder(item.id)" :loading="isUpdating === item.id" />
+            <DAction v-if="!['completed', 'cancelled'].includes(item.status)" icon="delete" title="Hủy đơn"
+              variant="danger" @click.stop="cancelOrder(item.id)" :loading="isUpdating === item.id" />
           </template>
           <DAction icon="view" title="Chi tiết" variant="info" @click.stop="viewOrderDetail(item)" />
         </div>
@@ -187,20 +186,15 @@ onMounted(async () => {
       <template #footer>
         <div class="flex gap-3">
           <DButton variant="secondary" class="flex-1" @click="showShipperModal = false">Hủy</DButton>
-          <DButton variant="primary" class="flex-1" :disabled="!selectedShipperId" @click="confirmAssignShipper">Xác nhận phân công</DButton>
+          <DButton variant="primary" class="flex-1" :disabled="!selectedShipperId" @click="confirmAssignShipper">Xác
+            nhận phân công</DButton>
         </div>
       </template>
     </DModal>
 
     <!-- Order Detail Modal -->
-    <OrderDetailModal
-      v-model="showOrderDetail"
-      :order="selectedOrder"
-      :isUpdating="isUpdating"
-      @confirm="handleConfirmOrder"
-      @deliver="handleMarkDelivered"
-      @complete="handleCompleteOrder"
-      @cancel="(order) => cancelOrder(order.id)"
-    />
+    <OrderDetailModal v-model="showOrderDetail" :order="selectedOrder" :isUpdating="isUpdating"
+      @confirm="handleConfirmOrder" @deliver="handleMarkDelivered" @complete="handleCompleteOrder"
+      @cancel="(order) => cancelOrder(order.id)" />
   </div>
 </template>

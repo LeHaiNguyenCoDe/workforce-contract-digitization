@@ -38,7 +38,7 @@ class LanguageHelper
      */
     public static function isSupported(string $locale): bool
     {
-        $detectionService = app(\App\Services\LanguageDetectionService::class);
+        $detectionService = app(\App\Services\Core\LanguageDetectionService::class);
         return $detectionService->isSupported($locale);
     }
 
@@ -49,7 +49,7 @@ class LanguageHelper
      */
     public static function getSupportedLocales(): array
     {
-        $detectionService = app(\App\Services\LanguageDetectionService::class);
+        $detectionService = app(\App\Services\Core\LanguageDetectionService::class);
         return $detectionService->getSupportedLocales();
     }
 

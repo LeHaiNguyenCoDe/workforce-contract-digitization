@@ -90,7 +90,7 @@ function getItemSubtotal(item: any): number {
                     🛒 {{ t('cart.title') }}
                 </h1>
                 <p v-if="!isEmpty" class="text-slate-400">
-                    {{ itemCount }} sản phẩm trong giỏ hàng
+                    {{ itemCount }} {{ t('cart.itemsCount') }}
                 </p>
             </div>
             <button v-if="!isEmpty && !isLoading" 
@@ -99,7 +99,7 @@ function getItemSubtotal(item: any): number {
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
                 </svg>
-                Xóa tất cả
+                {{ t('cart.clearCart') }}
             </button>
         </div>
 
@@ -128,7 +128,7 @@ function getItemSubtotal(item: any): number {
             </div>
             <h2 class="text-2xl font-bold text-white mb-3">{{ t('cart.empty') }}</h2>
             <p class="text-slate-400 mb-8 max-w-md mx-auto">
-                Giỏ hàng của bạn đang trống. Hãy khám phá các sản phẩm tuyệt vời của chúng tôi!
+                {{ t('cart.emptyDescription') }}
             </p>
             <RouterLink to="/products" class="btn btn-primary btn-lg inline-flex items-center gap-2">
                 {{ t('common.shopNow') }}
@@ -222,7 +222,7 @@ function getItemSubtotal(item: any): number {
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>
                         </svg>
-                        Tiếp tục mua sắm
+                        {{ t('cart.continueShopping') }}
                     </RouterLink>
                 </div>
             </div>
@@ -236,11 +236,11 @@ function getItemSubtotal(item: any): number {
 
                     <!-- Promo Code Input -->
                     <div class="space-y-3">
-                        <label class="text-sm font-medium text-slate-400">Mã khuyến mãi</label>
+                        <label class="text-sm font-medium text-slate-400">{{ t('cart.promoCode') }}</label>
                         <div class="flex gap-2">
                             <input v-model="promoInput" 
                                 type="text" 
-                                placeholder="Nhập mã..."
+                                :placeholder="t('cart.enterPromoCode')"
                                 class="form-input flex-1 py-2.5 text-sm"
                                 :disabled="isApplyingPromo || !!promoCode"
                                 @keyup.enter="handleApplyPromo" />
@@ -249,12 +249,12 @@ function getItemSubtotal(item: any): number {
                                 :disabled="isApplyingPromo || !promoInput.trim()"
                                 class="btn btn-secondary px-4 py-2.5 text-sm">
                                 <span v-if="isApplyingPromo" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                                <span v-else>Áp dụng</span>
+                                <span v-else>{{ t('cart.apply') }}</span>
                             </button>
                             <button v-else
                                 @click="removePromoCode"
                                 class="btn bg-error/20 text-error hover:bg-error/30 px-4 py-2.5 text-sm">
-                                Xóa
+                                {{ t('common.delete') }}
                             </button>
                         </div>
                         <p v-if="promoError" class="text-xs text-error flex items-center gap-1">
@@ -268,17 +268,17 @@ function getItemSubtotal(item: any): number {
                     <!-- Price Breakdown -->
                     <div class="space-y-3 pt-2">
                         <div class="flex justify-between text-slate-400">
-                            <span>{{ t('cart.subtotal') }} ({{ itemCount }} sản phẩm)</span>
+                            <span>{{ t('cart.subtotal') }} ({{ itemCount }} {{ t('cart.items') }})</span>
                             <span class="text-white">{{ formatPrice(subtotal) }}</span>
                         </div>
                         
                         <div v-if="savings > 0" class="flex justify-between text-slate-400">
-                            <span>Tiết kiệm</span>
+                            <span>{{ t('cart.savings') }}</span>
                             <span class="text-success font-medium">-{{ formatPrice(savings) }}</span>
                         </div>
                         
                         <div v-if="discount > 0" class="flex justify-between text-slate-400">
-                            <span>Giảm giá ({{ promoCode }})</span>
+                            <span>{{ t('cart.discount') }} ({{ promoCode }})</span>
                             <span class="text-success font-medium">-{{ formatPrice(discount) }}</span>
                         </div>
                         
@@ -309,15 +309,15 @@ function getItemSubtotal(item: any): number {
                     <div class="grid grid-cols-3 gap-3 pt-4 border-t border-white/5">
                         <div class="text-center">
                             <div class="text-lg mb-1">🔒</div>
-                            <p class="text-[10px] text-slate-500">Thanh toán an toàn</p>
+                            <p class="text-[10px] text-slate-500">{{ t('cart.securePayment') }}</p>
                         </div>
                         <div class="text-center">
                             <div class="text-lg mb-1">🚚</div>
-                            <p class="text-[10px] text-slate-500">Giao hàng nhanh</p>
+                            <p class="text-[10px] text-slate-500">{{ t('cart.fastDelivery') }}</p>
                         </div>
                         <div class="text-center">
                             <div class="text-lg mb-1">↩️</div>
-                            <p class="text-[10px] text-slate-500">Đổi trả 30 ngày</p>
+                            <p class="text-[10px] text-slate-500">{{ t('cart.return30Days') }}</p>
                         </div>
                     </div>
                 </div>
@@ -330,11 +330,11 @@ function getItemSubtotal(item: any): number {
                 <div v-if="showClearConfirm" class="fixed inset-0 z-50 flex items-center justify-center p-4">
                     <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="showClearConfirm = false"></div>
                     <div class="relative bg-dark-800 rounded-2xl p-6 max-w-sm w-full border border-white/10 shadow-2xl animate-slide-up">
-                        <h3 class="text-xl font-bold text-white mb-3">Xóa giỏ hàng?</h3>
-                        <p class="text-slate-400 mb-6">Bạn có chắc muốn xóa tất cả sản phẩm trong giỏ hàng? Thao tác này không thể hoàn tác.</p>
+                        <h3 class="text-xl font-bold text-white mb-3">{{ t('cart.deleteCart') }}</h3>
+                        <p class="text-slate-400 mb-6">{{ t('cart.deleteCartConfirmation') }}</p>
                         <div class="flex gap-3">
-                            <button @click="showClearConfirm = false" class="btn btn-secondary flex-1">Hủy</button>
-                            <button @click="handleClearCart" class="btn bg-error hover:bg-error/80 text-white flex-1">Xóa tất cả</button>
+                            <button @click="showClearConfirm = false" class="btn btn-secondary flex-1">{{ t('common.cancel') }}</button>
+                            <button @click="handleClearCart" class="btn bg-error hover:bg-error/80 text-white flex-1">{{ t('cart.clearCart') }}</button>
                         </div>
                     </div>
                 </div>

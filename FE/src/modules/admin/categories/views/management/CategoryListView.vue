@@ -21,7 +21,7 @@ const {
   openEditModal,
   saveCategory,
   deleteCategory
-} = useCategories()
+} = useAdminCategories()
 
 // Lifecycle
 onMounted(async () => {
@@ -32,7 +32,7 @@ onMounted(async () => {
 <template>
   <div class="h-full flex flex-col p-6">
     <!-- Header -->
-    <AdminPageHeader :title="t('admin.categories')" description="Quản lý danh mục sản phẩm của cửa hàng">
+    <AdminPageHeader :title="t('admin.categories')" :description="t('admin.manageCategories')">
       <template #actions>
         <DButton variant="primary" @click="openCreateModal">
           <img src="@/assets/admin/icons/plus.svg" class="w-5 h-5 mr-2 brightness-0 invert" alt="Add" />
@@ -42,7 +42,8 @@ onMounted(async () => {
     </AdminPageHeader>
 
     <!-- Table -->
-    <AdminTable :columns="categoryColumns" :data="categories" :loading="isLoading" empty-text="Chưa có danh mục nào">
+    <AdminTable :columns="categoryColumns" :data="categories" :loading="isLoading"
+      :empty-text="t('admin.noCategories')">
       <template #cell-name="{ item }">
         <div>
           <p class="font-medium text-white">{{ item.name }}</p>
@@ -55,8 +56,9 @@ onMounted(async () => {
       </template>
 
       <template #cell-is_active="{ item }">
-        <span :class="['px-2 py-0.5 rounded-full text-xs font-medium', item.is_active !== false ? 'bg-success/10 text-success' : 'bg-slate-500/10 text-slate-400']">
-          {{ item.is_active !== false ? 'Hoạt động' : 'Tạm ẩn' }}
+        <span
+          :class="['px-2 py-0.5 rounded-full text-xs font-medium', item.is_active !== false ? 'bg-success/10 text-success' : 'bg-slate-500/10 text-slate-400']">
+          {{ item.is_active !== false ? t('common.active') : t('common.hidden') }}
         </span>
       </template>
 
@@ -73,25 +75,29 @@ onMounted(async () => {
     </AdminTable>
 
     <!-- Modal -->
-    <DModal v-model="showModal" :title="editingCategory ? 'Chỉnh sửa danh mục' : 'Tạo danh mục mới'" size="md">
+    <DModal v-model="showModal" :title="editingCategory ? t('admin.editCategory') : t('admin.createCategory')"
+      size="md">
       <div class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-slate-300 mb-2">Tên danh mục *</label>
-          <input v-model="categoryForm.name" @input="handleNameChange" type="text" class="form-input" placeholder="Nhập tên danh mục" />
+          <label class="block text-sm font-medium text-slate-300 mb-2">{{ t('admin.categoryName') }} *</label>
+          <input v-model="categoryForm.name" @input="handleNameChange" type="text" class="form-input"
+            :placeholder="t('admin.categoryName')" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-300 mb-2">Slug *</label>
+          <label class="block text-sm font-medium text-slate-300 mb-2">{{ t('admin.slug') }} *</label>
           <input v-model="categoryForm.slug" type="text" class="form-input" placeholder="tu-dong-tao-tu-ten" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-300 mb-2">Mô tả</label>
-          <textarea v-model="categoryForm.description" class="form-input" rows="3" placeholder="Mô tả danh mục..."></textarea>
+          <label class="block text-sm font-medium text-slate-300 mb-2">{{ t('admin.description') }}</label>
+          <textarea v-model="categoryForm.description" class="form-input" rows="3"
+            :placeholder="t('admin.categoryDescription')"></textarea>
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-300 mb-2">Danh mục cha</label>
+          <label class="block text-sm font-medium text-slate-300 mb-2">{{ t('admin.parentCategory') }}</label>
           <select v-model="categoryForm.parent_id" class="form-input">
-            <option value="">Không có (Danh mục gốc)</option>
-            <option v-for="cat in categories.filter(c => c.id !== editingCategory?.id)" :key="cat.id" :value="cat.id.toString()">
+            <option value="">{{ t('common.noCategory') }}</option>
+            <option v-for="cat in categories.filter(c => c.id !== editingCategory?.id)" :key="cat.id"
+              :value="cat.id.toString()">
               {{ cat.name }}
             </option>
           </select>
@@ -99,8 +105,9 @@ onMounted(async () => {
       </div>
       <template #footer>
         <div class="flex gap-3">
-          <DButton variant="secondary" class="flex-1" @click="showModal = false">Hủy</DButton>
-          <DButton variant="primary" class="flex-1" :loading="isSaving" @click="saveCategory">Lưu lại</DButton>
+          <DButton variant="secondary" class="flex-1" @click="showModal = false">{{ t('common.cancel') }}</DButton>
+          <DButton variant="primary" class="flex-1" :loading="isSaving" @click="saveCategory">{{ t('common.save') }}
+          </DButton>
         </div>
       </template>
     </DModal>

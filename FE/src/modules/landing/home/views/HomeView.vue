@@ -3,7 +3,7 @@
  * Home View
  * Uses useHome composable for logic separation
  */
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useHome } from '../composables/useHome'
@@ -30,7 +30,7 @@ const formatPrice = (price: number) => {
 // Get product image helper
 const getProductImage = (product: Product) => {
     if (product.thumbnail) return product.thumbnail
-    if (product.images?.[0]?.image_url) return product.images[0].image_url
+    if (product.images?.[0]?.url) return product.images[0].url
     return null
 }
 
@@ -96,14 +96,19 @@ const handleRetry = async () => {
                 </div>
 
                 <div v-if="isLoading" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                    <div v-for="i in homeConfig.featuredCategoriesCount" :key="i" class="h-32 bg-dark-700 rounded-2xl animate-pulse"></div>
+                    <div v-for="i in homeConfig.featuredCategoriesCount" :key="i"
+                        class="h-32 bg-dark-700 rounded-2xl animate-pulse"></div>
                 </div>
 
                 <div v-else-if="featuredCategories.length" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                    <RouterLink v-for="category in featuredCategories" :key="category.id" :to="`/categories/${category.id}`"
+                    <RouterLink v-for="category in featuredCategories" :key="category.id"
+                        :to="`/categories/${category.id}`"
                         class="group relative h-32 bg-dark-800 rounded-2xl border border-white/10 hover:border-primary/50 transition-all duration-300 overflow-hidden flex items-center justify-center">
-                        <div class="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-10 transition-opacity"></div>
-                        <span class="font-semibold text-slate-200 group-hover:text-white transition-colors">{{ category.name }}</span>
+                        <div
+                            class="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-10 transition-opacity">
+                        </div>
+                        <span class="font-semibold text-slate-200 group-hover:text-white transition-colors">{{
+                            category.name }}</span>
                     </RouterLink>
                 </div>
 
@@ -118,7 +123,8 @@ const handleRetry = async () => {
             <div class="container">
                 <div class="flex items-center justify-between mb-12">
                     <div>
-                        <h2 class="text-3xl md:text-4xl font-bold text-white mb-2">{{ t('common.featuredProducts') }}</h2>
+                        <h2 class="text-3xl md:text-4xl font-bold text-white mb-2">{{ t('common.featuredProducts') }}
+                        </h2>
                         <p class="text-slate-400">Sản phẩm được yêu thích nhất</p>
                     </div>
                     <RouterLink to="/products" class="btn btn-outline">
@@ -157,12 +163,14 @@ const handleRetry = async () => {
                         </div>
 
                         <!-- Product Info -->
-                        <h3 class="font-semibold text-white mb-2 line-clamp-2 group-hover:text-primary-light transition-colors">
+                        <h3
+                            class="font-semibold text-white mb-2 line-clamp-2 group-hover:text-primary-light transition-colors">
                             {{ product.name }}
                         </h3>
 
                         <div class="flex items-center gap-2">
-                            <span class="text-lg font-bold gradient-text">{{ formatPrice(product.sale_price || product.price) }}</span>
+                            <span class="text-lg font-bold gradient-text">{{ formatPrice(product.sale_price ||
+                                product.price) }}</span>
                             <span v-if="product.sale_price && product.sale_price < product.price"
                                 class="text-sm text-slate-500 line-through">
                                 {{ formatPrice(product.price) }}
@@ -182,7 +190,9 @@ const handleRetry = async () => {
             <div class="container">
                 <div class="relative bg-dark-800 rounded-3xl p-8 md:p-12 overflow-hidden border border-white/10">
                     <div class="absolute inset-0 bg-gradient-primary opacity-10"></div>
-                    <div class="absolute top-0 right-0 w-96 h-96 bg-primary/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                    <div
+                        class="absolute top-0 right-0 w-96 h-96 bg-primary/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2">
+                    </div>
 
                     <div class="relative z-10 max-w-2xl">
                         <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Đăng ký nhận thông báo</h2>

@@ -1,6 +1,9 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+
 interface Props {
   status: string
+  text?: string
   type?: 'return' | 'order' | 'user' | 'custom'
   customLabels?: Record<string, string>
   customClasses?: Record<string, string>
@@ -10,27 +13,29 @@ const props = withDefaults(defineProps<Props>(), {
   type: 'custom'
 })
 
-// Preset labels
-const presetLabels: Record<string, Record<string, string>> = {
+const { t } = useI18n()
+
+// Preset label keys mapped to i18n translation keys
+const presetLabelKeys: Record<string, Record<string, string>> = {
   return: {
-    pending: 'Chờ duyệt',
-    approved: 'Đã duyệt',
-    rejected: 'Từ chối',
-    receiving: 'Đang nhận',
-    completed: 'Hoàn thành',
-    cancelled: 'Đã hủy'
+    pending: 'common.pendingApproval',
+    approved: 'common.approved',
+    rejected: 'common.rejected',
+    receiving: 'common.receiving',
+    completed: 'common.completed',
+    cancelled: 'common.cancelled'
   },
   order: {
-    pending: 'Chờ xử lý',
-    processing: 'Đang xử lý',
-    shipped: 'Đang giao',
-    delivered: 'Đã giao',
-    cancelled: 'Đã hủy'
+    pending: 'common.pending',
+    processing: 'common.processingOrder',
+    shipped: 'common.shipped',
+    delivered: 'common.delivered',
+    cancelled: 'common.cancelled'
   },
   user: {
-    active: 'Hoạt động',
-    inactive: 'Không HĐ',
-    banned: 'Bị khóa'
+    active: 'common.active',
+    inactive: 'common.inactive',
+    banned: 'common.banned'
   }
 }
 
@@ -59,11 +64,15 @@ const presetClasses: Record<string, Record<string, string>> = {
 }
 
 const getLabel = (): string => {
+  // If custom text prop provided, use it directly
+  if (props.text) {
+    return props.text
+  }
   if (props.customLabels?.[props.status]) {
     return props.customLabels[props.status]
   }
-  if (props.type !== 'custom' && presetLabels[props.type]?.[props.status]) {
-    return presetLabels[props.type][props.status]
+  if (props.type !== 'custom' && presetLabelKeys[props.type]?.[props.status]) {
+    return t(presetLabelKeys[props.type][props.status])
   }
   return props.status
 }

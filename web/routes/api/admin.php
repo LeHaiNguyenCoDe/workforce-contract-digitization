@@ -257,3 +257,12 @@ Route::prefix('reviews')->group(function () {
     Route::put('{review}/reject', [ReviewController::class, 'reject']);
     Route::delete('{review}', [ReviewController::class, 'destroy']);
 });
+
+// Translation Management
+Route::prefix('translate')->group(function () {
+    Route::post('/', [\App\Http\Controllers\Modules\Admin\TranslationController::class, 'translate']);
+    Route::get('/', [\App\Http\Controllers\Modules\Admin\TranslationController::class, 'getTranslation']);
+    Route::post('/batch', [\App\Http\Controllers\Modules\Admin\TranslationController::class, 'translateBatch']);
+    Route::post('/all', [\App\Http\Controllers\Modules\Admin\TranslationController::class, 'translateAll']);
+});
+

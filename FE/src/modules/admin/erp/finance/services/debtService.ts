@@ -40,8 +40,8 @@ export const debtService = {
     // Account Receivables
     async getReceivables(params?: Record<string, any>): Promise<{ data: AccountReceivable[], meta?: any }> {
         const response = await httpClient.get('/admin/debts/receivables', { params })
-        const result = response.data as any
-        return { data: result.data || [], meta: result.meta }
+        const result = (response.data as any).data
+        return { data: result?.items || [], meta: result?.meta }
     },
 
     async getReceivableSummary(): Promise<DebtSummary> {
@@ -52,8 +52,8 @@ export const debtService = {
     // Account Payables
     async getPayables(params?: Record<string, any>): Promise<{ data: AccountPayable[], meta?: any }> {
         const response = await httpClient.get('/admin/debts/payables', { params })
-        const result = response.data as any
-        return { data: result.data || [], meta: result.meta }
+        const result = (response.data as any).data
+        return { data: result?.items || [], meta: result?.meta }
     },
 
     async getPayableSummary(): Promise<DebtSummary> {

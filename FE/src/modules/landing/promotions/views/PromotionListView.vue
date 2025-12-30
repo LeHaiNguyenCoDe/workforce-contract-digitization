@@ -5,8 +5,6 @@
  */
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { usePromotions } from '../composables/usePromotions'
-
 const { t } = useI18n()
 
 // Use composable for all promotion logic
@@ -14,7 +12,7 @@ const {
     promotions,
     isLoading,
     formatDiscount
-} = usePromotions()
+} = useLandingPromotions()
 
 // Format date helper
 const formatDate = (date: string) => {

@@ -6,7 +6,6 @@
 import { watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { useProducts } from '../composables/useProducts'
 import { sortOptions } from '../configs'
 import type { Product } from '../types'
 
@@ -26,7 +25,7 @@ const {
     setCategory,
     setSortBy,
     changePage
-} = useProducts()
+} = useLandingProducts()
 
 // Categories from store
 const { categories } = useLandingCategoryStore()
@@ -34,7 +33,7 @@ const { categories } = useLandingCategoryStore()
 // Helpers
 const getProductImage = (product: Product) => {
     if (product.thumbnail) return product.thumbnail
-    if (product.images?.[0]?.image_url) return product.images[0].image_url
+    if (product.images?.[0]?.url) return product.images[0].url
     return null
 }
 
@@ -100,7 +99,7 @@ watch([searchQuery, selectedCategory], () => {
 
                 <div class="flex items-center gap-2">
                     <span class="text-lg font-bold gradient-text">{{ formatPrice(product.sale_price || product.price)
-                        }}</span>
+                    }}</span>
                     <span v-if="product.sale_price && product.sale_price < product.price"
                         class="text-sm text-slate-500 line-through">
                         {{ formatPrice(product.price) }}
@@ -126,7 +125,8 @@ watch([searchQuery, selectedCategory], () => {
                 ← Trước
             </button>
             <span class="text-slate-400">{{ currentPage }} / {{ totalPages }}</span>
-            <button @click="changePage(currentPage + 1)" :disabled="currentPage >= totalPages" class="btn btn-secondary">
+            <button @click="changePage(currentPage + 1)" :disabled="currentPage >= totalPages"
+                class="btn btn-secondary">
                 Sau →
             </button>
         </div>

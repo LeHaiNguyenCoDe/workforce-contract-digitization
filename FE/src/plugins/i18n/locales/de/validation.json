@@ -1,0 +1,9 @@
+{
+  "required": "Dieses Feld ist erforderlich",
+  "email": "Ungültige E-Mail-Adresse",
+  "minLength": "Mindestens {min} Zeichen",
+  "maxLength": "Maximal {max} Zeichen",
+  "passwordMismatch": "Passwörter stimmen nicht überein",
+  "passwordWeak": "Passwort muss Buchstaben, Zahlen und Sonderzeichen enthalten",
+  "loginFailed": "Anmeldung fehlgeschlagen"
+}

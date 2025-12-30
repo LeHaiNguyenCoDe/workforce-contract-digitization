@@ -1,0 +1,14 @@
+{
+  "title": "Товары",
+  "detail": "Детали товара",
+  "price": "Цена",
+  "quantity": "Количество",
+  "addToCart": "В корзину",
+  "addToWishlist": "В избранное",
+  "outOfStock": "Нет в наличии",
+  "inStock": "В наличии",
+  "reviews": "Отзывы",
+  "noReviews": "Отзывов пока нет",
+  "variants": "Варианты",
+  "category": "Категория"
+}

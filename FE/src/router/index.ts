@@ -47,11 +47,9 @@ const router = createRouter({
 router.beforeEach(async (to, _from, next) => {
   const { useAuthStore } = await import('@/stores')
   const authStore = useAuthStore()
-
-  // Fetch user if not loaded
-  if (!authStore.user && !authStore.isLoading) {
-    await authStore.fetchUser()
-  }
+  
+  // Ensure auth is initialized before any routing decisions
+  await authStore.fetchUser()
 
   // Check auth requirements
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {

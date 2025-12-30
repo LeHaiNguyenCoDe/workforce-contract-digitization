@@ -79,7 +79,7 @@ class AuthService
             $this->logActivity('logout', $user->id);
         }
 
-        Auth::logout();
+        Auth::guard('web')->logout();
 
         if ($request->hasSession()) {
             $request->session()->invalidate();

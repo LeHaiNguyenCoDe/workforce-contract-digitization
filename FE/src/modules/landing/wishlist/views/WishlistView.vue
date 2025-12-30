@@ -5,8 +5,11 @@
  */
 import { ref, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useWishlist } from '../composables/useWishlist'
 import httpClient from '@/plugins/api/httpClient'
+
+const { t } = useI18n()
 
 // Use composable
 const {
@@ -63,7 +66,7 @@ onMounted(fetchWishlist)
 
 <template>
     <div class="container py-8">
-        <h1 class="text-3xl md:text-4xl font-bold text-white mb-8">Danh sách yêu thích</h1>
+        <h1 class="text-3xl md:text-4xl font-bold text-white mb-8">{{ t('product.wishlist') }}</h1>
 
         <!-- Loading -->
         <div v-if="isLoading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -107,9 +110,9 @@ onMounted(fetchWishlist)
                 stroke="currentColor" stroke-width="1">
                 <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
             </svg>
-            <h3 class="text-xl font-semibold text-slate-400 mb-2">Chưa có sản phẩm yêu thích</h3>
-            <p class="text-slate-500 mb-6">Thêm sản phẩm vào danh sách yêu thích để theo dõi</p>
-            <RouterLink to="/products" class="btn btn-primary">Khám phá sản phẩm</RouterLink>
+            <h3 class="text-xl font-semibold text-slate-400 mb-2">{{ t('product.noWishlistItems') }}</h3>
+            <p class="text-slate-500 mb-6">{{ t('product.addToWishlistHint') }}</p>
+            <RouterLink to="/products" class="btn btn-primary">{{ t('product.exploreProducts') }}</RouterLink>
         </div>
     </div>
 </template>

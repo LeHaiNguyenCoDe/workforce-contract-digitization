@@ -9,7 +9,8 @@ const BASE_URL = '/admin/returns'
 export const erpReturnService = {
     async getAll(params?: Record<string, any>) {
         const response = await httpClient.get(BASE_URL, { params })
-        return response.data as { data: Return[]; current_page: number; last_page: number; total: number }
+        // The backend returns { status: 'success', data: { items: [], meta: { ... } } }
+        return (response.data as any).data as { items: Return[]; meta: { current_page: number; last_page: number; total: number } }
     },
 
     async getById(id: number) {

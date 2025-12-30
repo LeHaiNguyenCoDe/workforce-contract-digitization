@@ -12,6 +12,7 @@ export interface Product {
   category_id?: number
   stock_quantity?: number
   is_active?: boolean
+  discount_percentage?: number
   short_description?: string
   description?: string
   created_at?: string

@@ -98,8 +98,8 @@ export function useReturns() {
             if (searchQuery.value) params.search = searchQuery.value
 
             const response = await erpReturnService.getAll(params)
-            returns.value = response.data
-            totalPages.value = response.last_page
+            returns.value = response?.items || []
+            totalPages.value = response?.meta?.last_page || 1
         } catch (error) {
             console.error('Failed to fetch returns:', error)
             returns.value = getMockReturns()

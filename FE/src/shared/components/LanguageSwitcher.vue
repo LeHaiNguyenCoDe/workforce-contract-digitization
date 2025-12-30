@@ -2,23 +2,45 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { setLocale, getLocale } from '@/plugins/i18n'
+import { languageService, type SupportedLocale } from '@/shared/services/languageService'
+import { useAuthStore } from '@/stores'
 
 const { locale } = useI18n()
+const authStore = useAuthStore()
 
 const isOpen = ref(false)
-
-const languages = [
-    { code: 'vi', name: 'Tiếng Việt', flag: '🇻🇳' },
-    { code: 'en', name: 'English', flag: '🇬🇧' }
-]
+const languages = ref<SupportedLocale[]>([
+    { code: 'vi', name: 'Tiếng Việt', native: 'Tiếng Việt', flag: '🇻🇳', is_current: true },
+    { code: 'en', name: 'English', native: 'English', flag: '🇬🇧', is_current: false }
+])
 
 const currentLanguage = computed(() => {
-    return languages.find(lang => lang.code === locale.value) || languages[0]
+    return languages.value.find(lang => lang.code === locale.value) || languages.value[0]
 })
 
-const selectLanguage = (code: string) => {
-    setLocale(code)
+const selectLanguage = async (code: string) => {
+    await setLocale(code as any)
     isOpen.value = false
+
+    // Sync with BE if authenticated
+    if (authStore.isAuthenticated) {
+        try {
+            await languageService.setLocale(code)
+        } catch (error) {
+            console.error('Failed to sync locale with BE:', error)
+        }
+    }
+}
+
+const fetchLanguages = async () => {
+    try {
+        const response = await languageService.getSupportedLocales()
+        if (response.locales && response.locales.length > 0) {
+            languages.value = response.locales
+        }
+    } catch (error) {
+        console.error('Failed to fetch supported languages:', error)
+    }
 }
 
 const closeDropdown = (e: MouseEvent) => {
@@ -28,10 +50,12 @@ const closeDropdown = (e: MouseEvent) => {
     }
 }
 
-onMounted(() => {
+onMounted(async () => {
     document.addEventListener('click', closeDropdown)
     const saved = getLocale()
-    if (saved) setLocale(saved)
+    if (saved) await setLocale(saved)
+
+    await fetchLanguages()
 })
 
 onUnmounted(() => {

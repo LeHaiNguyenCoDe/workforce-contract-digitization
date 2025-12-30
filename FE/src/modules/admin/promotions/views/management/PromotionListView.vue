@@ -19,7 +19,7 @@ const {
   openEditModal,
   savePromotion,
   deletePromotion
-} = usePromotions()
+} = useAdminPromotions()
 
 // Computed from store
 const promotions = computed(() => store.promotions)
@@ -36,7 +36,7 @@ onMounted(async () => {
 <template>
   <div class="h-full flex flex-col p-6">
     <!-- Header -->
-    <AdminPageHeader :title="t('admin.promotions')" description="Quản lý các chương trình khuyến mãi và mã giảm giá">
+    <AdminPageHeader :title="t('admin.promotions')" :description="t('common.managePromotions')">
       <template #actions>
         <DButton variant="primary" @click="openCreateModal">
           <img src="@/assets/admin/icons/plus.svg" class="w-5 h-5 mr-2 brightness-0 invert" alt="Add" />
@@ -46,7 +46,7 @@ onMounted(async () => {
     </AdminPageHeader>
 
     <!-- Table -->
-    <AdminTable :columns="promotionColumns" :data="promotions" :loading="isLoading" empty-text="Chưa có khuyến mãi nào">
+    <AdminTable :columns="promotionColumns" :data="promotions" :loading="isLoading" :empty-text="t('admin.noPromotions')">
       <template #cell-name_code="{ item }">
         <div>
           <p class="font-medium text-white">{{ item.name }}</p>
@@ -69,7 +69,7 @@ onMounted(async () => {
 
       <template #cell-status="{ item }">
         <StatusBadge :status="isExpired(item) ? 'expired' : (item.is_active ? 'active' : 'inactive')" 
-          :text="isExpired(item) ? 'Hết hạn' : (item.is_active ? 'Đang chạy' : 'Tạm dừng')" />
+          :text="isExpired(item) ? t('admin.expired') : (item.is_active ? t('admin.running') : t('admin.paused'))" />
       </template>
 
       <template #actions="{ item }">
@@ -81,49 +81,49 @@ onMounted(async () => {
     </AdminTable>
 
     <!-- Modal -->
-    <DModal v-model="showModal" :title="editingPromotion ? 'Cập nhật khuyến mãi' : 'Tạo khuyến mãi mới'" size="md">
+    <DModal v-model="showModal" :title="editingPromotion ? t('common.updatePromotion') : t('common.createPromotion')" size="md">
       <div class="grid grid-cols-2 gap-4">
         <div class="col-span-2">
-          <label class="block text-sm font-medium text-slate-300 mb-2">Tên chương trình *</label>
+          <label class="block text-sm font-medium text-slate-300 mb-2">{{ t('admin.programName') }} *</label>
           <input v-model="promotionForm.name" type="text" class="form-input" placeholder="Ví dụ: Black Friday 2024" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-300 mb-2">Mã khuyến mãi</label>
+          <label class="block text-sm font-medium text-slate-300 mb-2">{{ t('cart.promoCode') }}</label>
           <input v-model="promotionForm.code" type="text" class="form-input font-mono uppercase" placeholder="Tự động" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-300 mb-2">Trạng thái</label>
+          <label class="block text-sm font-medium text-slate-300 mb-2">{{ t('common.status') }}</label>
           <div class="flex items-center h-10">
             <label class="flex items-center gap-2 cursor-pointer">
               <input v-model="promotionForm.is_active" type="checkbox" class="form-checkbox" />
-              <span class="text-sm text-slate-400">Kích hoạt</span>
+              <span class="text-sm text-slate-400">{{ t('admin.activate') }}</span>
             </label>
           </div>
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-300 mb-2">Loại ưu đãi *</label>
+          <label class="block text-sm font-medium text-slate-300 mb-2">{{ t('admin.discountType') }} *</label>
           <select v-model="promotionForm.type" class="form-input">
-            <option value="percent">Phần trăm (%)</option>
-            <option value="fixed_amount">Số tiền cố định</option>
+            <option value="percent">{{ t('admin.percentage') }}</option>
+            <option value="fixed_amount">{{ t('admin.fixedAmount') }}</option>
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-300 mb-2">Giá trị *</label>
+          <label class="block text-sm font-medium text-slate-300 mb-2">{{ t('admin.value') }} *</label>
           <input v-model.number="promotionForm.value" type="number" class="form-input" min="1" placeholder="0" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-300 mb-2">Ngày bắt đầu</label>
+          <label class="block text-sm font-medium text-slate-300 mb-2">{{ t('admin.startDate') }}</label>
           <input v-model="promotionForm.starts_at" type="date" class="form-input" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-300 mb-2">Ngày kết thúc</label>
+          <label class="block text-sm font-medium text-slate-300 mb-2">{{ t('admin.endDate') }}</label>
           <input v-model="promotionForm.ends_at" type="date" class="form-input" />
         </div>
       </div>
       <template #footer>
         <div class="flex gap-3">
-          <DButton variant="secondary" class="flex-1" @click="showModal = false">Hủy</DButton>
-          <DButton variant="primary" class="flex-1" :loading="isSaving" @click="savePromotion">Lưu khuyến mãi</DButton>
+          <DButton variant="secondary" class="flex-1" @click="showModal = false">{{ t('common.cancel') }}</DButton>
+          <DButton variant="primary" class="flex-1" :loading="isSaving" @click="savePromotion">{{ t('common.savePromotion') }}</DButton>
         </div>
       </template>
     </DModal>

@@ -36,7 +36,7 @@ class OrderController extends Controller
 
             $orders = $this->orderService->getByUserId($userId, $perPage);
 
-            return $this->successResponse($orders);
+            return $this->paginatedResponse($orders);
         } catch (\Exception $ex) {
             return $this->serverErrorResponse('error', $ex);
         }

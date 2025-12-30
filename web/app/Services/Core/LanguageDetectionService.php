@@ -50,18 +50,18 @@ class LanguageDetectionService
             }
         }
 
-        // Strategy 3: User preference (if authenticated)
+        // Strategy 3: Accept-Language header (high priority from FE)
+        $headerLocale = $this->detectFromHeader($request);
+        if ($headerLocale) {
+            return $headerLocale;
+        }
+
+        // Strategy 4: User preference (if authenticated)
         if ($userId) {
             $userLocale = $this->getUserLocale($userId);
             if ($userLocale && $this->isSupported($userLocale)) {
                 return $userLocale;
             }
-        }
-
-        // Strategy 4: Accept-Language header (browser detection)
-        $headerLocale = $this->detectFromHeader($request);
-        if ($headerLocale) {
-            return $headerLocale;
         }
 
         // Strategy 5: IP-based detection (optional, can be enabled)
@@ -249,6 +249,17 @@ class LanguageDetectionService
             $user = $userRepository->findById($userId);
             return $user?->language;
         });
+    }
+
+    /**
+     * Clear user locale cache
+     *
+     * @param  int  $userId
+     * @return void
+     */
+    public function clearUserLocaleCache(int $userId): void
+    {
+        Cache::forget("user_locale_{$userId}");
     }
 
     /**

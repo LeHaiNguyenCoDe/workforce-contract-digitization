@@ -1,4 +1,5 @@
 import Swal from 'sweetalert2'
+import { useI18n } from 'vue-i18n'
 
 export interface SwalOptions {
     title?: string
@@ -14,7 +15,7 @@ export interface SwalOptions {
 }
 
 /**
- * Composable for SweetAlert2
+ * Composable for SweetAlert2 with i18n support
  * Usage:
  * const swal = useSwal()
  * await swal.success('Thành công!')
@@ -22,9 +23,11 @@ export interface SwalOptions {
  * const result = await swal.confirm('Bạn có chắc chắn?')
  */
 export function useSwal() {
+    const { t } = useI18n()
+    
     const defaultOptions: Partial<SwalOptions> = {
-        confirmButtonText: 'Xác nhận',
-        cancelButtonText: 'Hủy',
+        confirmButtonText: t('common.confirmAction'),
+        cancelButtonText: t('common.cancel'),
         confirmButtonColor: '#3b82f6',
         cancelButtonColor: '#6b7280',
     }
@@ -32,7 +35,7 @@ export function useSwal() {
     /**
      * Show success alert
      */
-    const success = async (message: string, title: string = 'Thành công!') => {
+    const success = async (message: string, title: string = t('common.success')) => {
         return await Swal.fire({
             ...defaultOptions,
             title,
@@ -45,7 +48,7 @@ export function useSwal() {
     /**
      * Show error alert
      */
-    const error = async (message: string, title: string = 'Lỗi!') => {
+    const error = async (message: string, title: string = t('common.error')) => {
         return await Swal.fire({
             ...defaultOptions,
             title,
@@ -58,7 +61,7 @@ export function useSwal() {
     /**
      * Show warning alert
      */
-    const warning = async (message: string, title: string = 'Cảnh báo!') => {
+    const warning = async (message: string, title: string = t('common.warning')) => {
         return await Swal.fire({
             ...defaultOptions,
             title,
@@ -71,7 +74,7 @@ export function useSwal() {
     /**
      * Show info alert
      */
-    const info = async (message: string, title: string = 'Thông tin') => {
+    const info = async (message: string, title: string = t('common.info')) => {
         return await Swal.fire({
             ...defaultOptions,
             title,
@@ -87,9 +90,9 @@ export function useSwal() {
      */
     const confirm = async (
         message: string,
-        title: string = 'Xác nhận',
-        confirmText: string = 'Xác nhận',
-        cancelText: string = 'Hủy'
+        title: string = t('common.confirmAction'),
+        confirmText: string = t('common.confirmAction'),
+        cancelText: string = t('common.cancel')
     ): Promise<boolean> => {
         const result = await Swal.fire({
             ...defaultOptions,
@@ -110,10 +113,10 @@ export function useSwal() {
      * Show delete confirmation
      */
     const confirmDelete = async (
-        message: string = 'Bạn có chắc chắn muốn xóa?',
-        title: string = 'Xác nhận xóa'
+        message: string = t('common.confirmDeleteMessage'),
+        title: string = t('common.confirmDeleteTitle')
     ): Promise<boolean> => {
-        return await confirm(message, title, 'Xóa', 'Hủy')
+        return await confirm(message, title, t('common.delete'), t('common.cancel'))
     }
 
     /**
@@ -129,7 +132,7 @@ export function useSwal() {
     /**
      * Show loading alert
      */
-    const loading = (message: string = 'Đang xử lý...') => {
+    const loading = (message: string = t('common.processing')) => {
         Swal.fire({
             title: message,
             allowOutsideClick: false,

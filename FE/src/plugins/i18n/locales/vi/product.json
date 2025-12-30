@@ -1,0 +1,18 @@
+{
+  "title": "Sản phẩm",
+  "detail": "Chi tiết sản phẩm",
+  "price": "Giá",
+  "quantity": "Số lượng",
+  "addToCart": "Thêm vào giỏ",
+  "addToWishlist": "Thêm vào yêu thích",
+  "outOfStock": "Hết hàng",
+  "inStock": "Còn hàng",
+  "reviews": "Đánh giá",
+  "noReviews": "Chưa có đánh giá",
+  "variants": "Phiên bản",
+  "category": "Danh mục",
+  "wishlist": "Danh sách yêu thích",
+  "noWishlistItems": "Chưa có sản phẩm yêu thích",
+  "addToWishlistHint": "Thêm sản phẩm vào danh sách yêu thích để theo dõi",
+  "exploreProducts": "Khám phá sản phẩm"
+}

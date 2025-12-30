@@ -11,7 +11,7 @@ import httpClient from '@/plugins/api/httpClient'
 export interface Category {
   id: number
   name: string
-  slug: string
+  slug?: string
   description?: string
   parent_id?: number
   parent?: Category
@@ -59,12 +59,13 @@ export const useAdminCategoryStore = defineStore('admin-categories', () => {
     }
   }
 
-  async function createCategory(payload: Record<string, unknown>): Promise<boolean> {
+  async function createCategory(payload: Record<string, unknown>): Promise<Category | null> {
     isSaving.value = true
     try {
-      await adminCategoryService.create(payload as any)
+      const response = await adminCategoryService.create(payload as any)
       await fetchCategories()
-      return true
+      // Return created category with id
+      return response as Category
     } catch (error) {
       console.error('Failed to create category:', error)
       throw error

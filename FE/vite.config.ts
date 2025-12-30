@@ -79,13 +79,13 @@ export default defineConfig(({ mode }) => {
       host: true, // Listen on all network interfaces
       proxy: {
         "/api": {
-          target: env.VITE_API_BASE_URL || "http://192.168.1.10",
+          target: env.VITE_API_BASE_URL || "http://127.0.0.1:8000",
           changeOrigin: true,
           secure: false,
         },
         // Laravel Sanctum CSRF cookie endpoint
         "/sanctum": {
-          target: env.VITE_API_BASE_URL || "http://192.168.1.10",
+          target: env.VITE_API_BASE_URL || "http://127.0.0.1:8000",
           changeOrigin: true,
           secure: false,
         },

@@ -32,7 +32,7 @@ class ReviewController extends Controller
             $perPage = $request->query('per_page', 10);
             $reviews = $this->reviewService->getByProductId($product->id, $perPage);
 
-            return $this->successResponse($reviews);
+            return $this->paginatedResponse($reviews);
         } catch (NotFoundException $ex) {
             return $this->notFoundResponse('product_not_found');
         } catch (\Exception $ex) {
@@ -64,7 +64,7 @@ class ReviewController extends Controller
             $perPage = $request->query('per_page', 10);
             $reviews = $this->reviewService->getAll($perPage);
 
-            return $this->successResponse($reviews);
+            return $this->paginatedResponse($reviews);
         } catch (\Exception $ex) {
             return $this->serverErrorResponse('error', $ex);
         }

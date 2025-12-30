@@ -9,7 +9,8 @@ const BASE_URL = '/admin/expenses'
 export const expenseService = {
     async getAll(params?: Record<string, any>) {
         const response = await httpClient.get(BASE_URL, { params })
-        return (response.data as any).data || [] as Expense[]
+        // The backend returns { status: 'success', data: { items: [], meta: { ... } } }
+        return (response.data as any).data?.items || [] as Expense[]
     },
 
     async getCategories() {

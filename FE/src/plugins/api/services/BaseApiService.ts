@@ -1,5 +1,5 @@
 import httpClient from '../httpClient'
-import type { ApiResponse, PaginatedResponse, ListParams } from '../types'
+import type { ApiResponse, PaginatedData, ListParams } from '../types'
 
 /**
  * Abstract Base API Service
@@ -27,7 +27,7 @@ export abstract class BaseApiService<
   /**
    * Get paginated list of entities
    */
-  async getAll(params?: ListParams): Promise<PaginatedResponse<T>> {
+  async getAll(params?: ListParams): Promise<PaginatedData<T>> {
     const searchParams = new URLSearchParams()
     
     if (params) {
@@ -41,7 +41,7 @@ export abstract class BaseApiService<
     const queryString = searchParams.toString()
     const url = queryString ? `${this.formattedEndpoint}?${queryString}` : this.formattedEndpoint
     
-    const response = await httpClient.get<ApiResponse<PaginatedResponse<T>>>(url)
+    const response = await httpClient.get<ApiResponse<PaginatedData<T>>>(url)
     return response.data.data!
   }
 

@@ -4,10 +4,12 @@
  */
 
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores'
 import httpClient from '@/plugins/api/httpClient'
 
 export function useProfile() {
+  const { t } = useI18n()
   const store = useAuthStore()
   const isEditing = ref(false)
   const isSaving = ref(false)
@@ -52,10 +54,10 @@ export function useProfile() {
       const updatedUser = (response.data as any)?.data || response.data
       store.setUser(updatedUser)
       isEditing.value = false
-      message.value = 'Cập nhật thông tin thành công!'
+      message.value = t('common.updateInfoSuccess')
       return true
     } catch (error: any) {
-      message.value = error.response?.data?.message || 'Cập nhật thất bại!'
+      message.value = error.response?.data?.message || t('common.updateFailed')
       throw error
     } finally {
       isSaving.value = false
@@ -71,10 +73,10 @@ export function useProfile() {
         password: data.new_password,
         password_confirmation: data.confirm_password || data.password_confirmation
       })
-      message.value = 'Đổi mật khẩu thành công!'
+      message.value = t('auth.passwordChangeSuccess')
       return true
     } catch (error: any) {
-      message.value = error.response?.data?.message || 'Đổi mật khẩu thất bại!'
+      message.value = error.response?.data?.message || t('auth.passwordChangeFailed')
       throw error
     } finally {
       isSaving.value = false
@@ -86,12 +88,12 @@ export function useProfile() {
     message.value = ''
     try {
       await httpClient.put('/frontend/profile/address', data)
-      message.value = 'Cập nhật địa chỉ thành công!'
+      message.value = t('common.updateAddressSuccess')
       // Optionally re-fetch user to get updated address info if stored there
       await fetchProfile()
       return true
     } catch (error: any) {
-      message.value = error.response?.data?.message || 'Cập nhật thất bại!'
+      message.value = error.response?.data?.message || t('common.updateFailed')
       throw error
     } finally {
       isSaving.value = false

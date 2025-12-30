@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import httpClient from '@/plugins/api/httpClient'
 import BaseModal from '@/shared/components/BaseModal.vue'
 import { useSwal } from '@/shared/utils'
+import { useAutoTranslate } from '@/shared/composables/useAutoTranslate'
 
 const { t } = useI18n()
 
@@ -26,6 +27,7 @@ const editingArticle = ref<Article | null>(null)
 const isSaving = ref(false)
 const formData = ref({ title: '', slug: '', excerpt: '', content: '', thumbnail: '' })
 const swal = useSwal()
+const { autoTranslateAfterSave, isTranslating } = useAutoTranslate()
 
 const formatDate = (date: string) => new Date(date).toLocaleDateString('vi-VN')
 const generateSlug = (text: string): string => text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-').replace(/-+/g, '-')
@@ -66,14 +68,31 @@ const saveArticle = async () => {
         const payload: any = { title: formData.value.title, slug: formData.value.slug || generateSlug(formData.value.title), content: formData.value.content }
         if (formData.value.excerpt) payload.excerpt = formData.value.excerpt
         if (formData.value.thumbnail) payload.thumbnail = formData.value.thumbnail
-        
+
+        let savedArticleId: number
         if (editingArticle.value) {
             await httpClient.put(`/admin/articles/${editingArticle.value.id}`, payload)
+            savedArticleId = editingArticle.value.id
             await swal.success('Cập nhật bài viết thành công!')
         } else {
-            await httpClient.post('/admin/articles', payload)
+            const response = await httpClient.post('/admin/articles', payload)
+            savedArticleId = response.data?.data?.id
             await swal.success('Thêm bài viết thành công!')
         }
+
+        // Auto-translate to all languages after save
+        if (savedArticleId) {
+            await autoTranslateAfterSave(
+                'App\\Models\\Article',
+                savedArticleId,
+                {
+                    title: formData.value.title,
+                    excerpt: formData.value.excerpt,
+                    content: formData.value.content
+                }
+            )
+        }
+
         showModal.value = false
         fetchArticles()
     } catch (error: any) {
@@ -94,7 +113,7 @@ const togglePublish = async (article: Article) => {
 const deleteArticle = async (id: number) => {
     const confirmed = await swal.confirmDelete('Bạn có chắc muốn xóa bài viết này?')
     if (!confirmed) return
-    
+
     try {
         await httpClient.delete(`/admin/articles/${id}`)
         articles.value = articles.value.filter(a => a.id !== id)
@@ -113,7 +132,7 @@ onMounted(fetchArticles)
         <div class="flex items-center justify-between mb-6 flex-shrink-0">
             <div>
                 <h1 class="text-2xl font-bold text-white">{{ t('admin.articles') }}</h1>
-                <p class="text-slate-400 mt-1">Quản lý bài viết / tin tức</p>
+                <p class="text-slate-400 mt-1">{{ t('admin.manageArticles') }}</p>
             </div>
             <button @click="openCreateModal" class="btn btn-primary">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
@@ -137,12 +156,16 @@ onMounted(fetchArticles)
                     <thead class="sticky top-0 z-10 bg-dark-700">
                         <tr class="border-b border-white/10">
                             <th class="px-6 py-4 text-left text-sm font-semibold text-slate-400">ID</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold text-slate-400">Bài viết</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold text-slate-400">Trạng thái</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold text-slate-400">Lượt xem</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold text-slate-400">Ngày tạo</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold text-slate-400">{{ t('admin.articles')
+                                }}</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold text-slate-400">{{ t('common.status')
+                                || 'Status' }}</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold text-slate-400">{{ t('common.views') }}
+                            </th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold text-slate-400">{{
+                                t('common.createdAt') }}</th>
                             <th class="px-6 py-4 text-right text-sm font-semibold text-slate-400">{{ t('common.actions')
-                            }}</th>
+                                }}</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-white/5">
@@ -172,7 +195,7 @@ onMounted(fetchArticles)
                                     :class="['inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors', article.published_at ? 'bg-success/10 text-success hover:bg-success/20' : 'bg-warning/10 text-warning hover:bg-warning/20']">
                                     <span class="w-1.5 h-1.5 rounded-full"
                                         :class="article.published_at ? 'bg-success' : 'bg-warning'"></span>
-                                    {{ article.published_at ? 'Đã xuất bản' : 'Nháp' }}
+                                    {{ article.published_at ? t('common.published') : t('common.draft') }}
                                 </button>
                             </td>
                             <td class="px-6 py-4 text-slate-400">{{ article.views || 0 }}</td>
@@ -200,44 +223,49 @@ onMounted(fetchArticles)
                     </tbody>
                 </table>
                 <div v-if="!articles.length" class="py-16 text-center">
-                    <p class="text-slate-400">Chưa có bài viết nào</p>
+                    <p class="text-slate-400">{{ t('admin.noArticles') }}</p>
                 </div>
             </div>
         </div>
 
         <!-- Modal -->
-        <BaseModal v-model="showModal" :title="editingArticle ? 'Chỉnh sửa bài viết' : 'Tạo bài viết mới'" size="lg">
+        <BaseModal v-model="showModal" :title="editingArticle ? t('admin.editArticle') : t('admin.createArticle')"
+            size="lg">
             <div class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-slate-300 mb-2">Tiêu đề *</label>
-                    <input v-model="formData.title" type="text" class="form-input" placeholder="Tiêu đề bài viết" />
+                    <label class="block text-sm font-medium text-slate-300 mb-2">{{ t('admin.articleTitle') }} *</label>
+                    <input v-model="formData.title" type="text" class="form-input"
+                        :placeholder="t('admin.articleTitle')" />
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-slate-300 mb-2">Slug *</label>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">{{ t('admin.slug') }} *</label>
                     <input v-model="formData.slug" type="text" class="form-input" />
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-slate-300 mb-2">Thumbnail URL</label>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">{{ t('admin.articleThumbnail')
+                        }}</label>
                     <input v-model="formData.thumbnail" type="url" class="form-input" placeholder="https://..." />
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-slate-300 mb-2">Tóm tắt</label>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">{{ t('admin.articleExcerpt') }}</label>
                     <textarea v-model="formData.excerpt" class="form-input" rows="2"></textarea>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-slate-300 mb-2">Nội dung *</label>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">{{ t('admin.articleContent') }}
+                        *</label>
                     <textarea v-model="formData.content" class="form-input" rows="6"></textarea>
                 </div>
             </div>
             <template #footer>
                 <div class="flex justify-end gap-3">
-                    <button @click="showModal = false" class="btn btn-secondary" :disabled="isSaving">{{
-                        t('common.cancel') }}</button>
+                    <button @click="showModal = false" class="btn btn-secondary"
+                        :disabled="isSaving || isTranslating">{{
+                            t('common.cancel') }}</button>
                     <button @click="saveArticle" class="btn btn-primary"
-                        :disabled="isSaving || !formData.title || !formData.content">
-                        <span v-if="isSaving"
+                        :disabled="isSaving || isTranslating || !formData.title || !formData.content">
+                        <span v-if="isSaving || isTranslating"
                             class="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin mr-2"></span>
-                        {{ isSaving ? 'Đang lưu...' : t('common.save') }}
+                        {{ isSaving ? t('common.saving') : isTranslating ? t('common.translating') : t('common.save') }}
                     </button>
                 </div>
             </template>

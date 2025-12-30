@@ -1,0 +1,17 @@
+{
+  "title": "คำสั่งซื้อ",
+  "myOrders": "คำสั่งซื้อของฉัน",
+  "orderNumber": "หมายเลขคำสั่งซื้อ",
+  "status": "สถานะ",
+  "date": "วันที่",
+  "shippingAddress": "ที่อยู่จัดส่ง",
+  "phone": "โทรศัพท์",
+  "paymentMethod": "วิธีชำระเงิน",
+  "notes": "หมายเหตุ",
+  "placeOrder": "สั่งซื้อ",
+  "pending": "รอดำเนินการ",
+  "processing": "กำลังดำเนินการ",
+  "shipped": "จัดส่งแล้ว",
+  "delivered": "ได้รับแล้ว",
+  "cancelled": "ยกเลิก"
+}

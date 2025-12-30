@@ -25,10 +25,10 @@ interface MenuItem {
 // Check if user has a specific permission
 const hasPermission = (permission: string): boolean => {
     if (!authStore.user) return false
-    
+
     // Admin role always has all permissions
     if (authStore.user.roles?.some(r => r.name === 'admin')) return true
-    
+
     // Check permissions array from API
     return authStore.user.permissions?.includes(permission) ?? false
 }
@@ -37,7 +37,7 @@ const hasPermission = (permission: string): boolean => {
 const canSeeMenuItem = (item: MenuItem): boolean => {
     // No permission requirement = everyone can see
     if (!item.requiredPermission) return true
-    
+
     // Check if user has the required permission
     return hasPermission(item.requiredPermission)
 }
@@ -52,18 +52,18 @@ const filterChildren = (item: MenuItem): MenuItem => {
 }
 
 const menuItems: MenuItem[] = [
-    { icon: 'dashboard', path: '/admin', label: 'Dashboard', exact: true, requiredPermission: 'view_dashboard' },
+    { icon: 'dashboard', path: '/admin', label: 'admin.dashboard', exact: true, requiredPermission: 'view_dashboard' },
 
     // Bán hàng
     {
         icon: 'sales',
         path: '/admin/sales',
-        label: 'Bán hàng',
+        label: 'admin.sales',
         requiredPermission: 'view_orders',
         children: [
-            { icon: 'orders', path: '/admin/orders', label: 'Đơn hàng', requiredPermission: 'view_orders' },
-            { icon: 'returns', path: '/admin/returns', label: 'Trả hàng/RMA', requiredPermission: 'view_returns' },
-            { icon: 'customers', path: '/admin/customers', label: 'Khách hàng', requiredPermission: 'view_customers' },
+            { icon: 'orders', path: '/admin/orders', label: 'order.title', requiredPermission: 'view_orders' },
+            { icon: 'returns', path: '/admin/returns', label: 'admin.returns', requiredPermission: 'view_returns' },
+            { icon: 'customers', path: '/admin/customers', label: 'admin.customers', requiredPermission: 'view_customers' },
         ]
     },
 
@@ -71,16 +71,16 @@ const menuItems: MenuItem[] = [
     {
         icon: 'warehouse',
         path: '/admin/warehouse',
-        label: 'Kho',
+        label: 'admin.warehouse',
         requiredPermission: 'view_warehouse',
         children: [
-            { icon: 'products', path: '/admin/products', label: 'Sản phẩm', requiredPermission: 'view_products' },
-            { icon: 'categories', path: '/admin/categories', label: 'Danh mục', requiredPermission: 'view_categories' },
-            { icon: 'batches', path: '/admin/warehouse/inbound-batches', label: 'Lô nhập kho', requiredPermission: 'view_warehouse' },
-            { icon: 'inbound', path: '/admin/warehouse/inbound-receipts', label: 'Phiếu nhập kho', requiredPermission: 'create_inbound' },
-            { icon: 'outbound', path: '/admin/warehouse/outbound-receipts', label: 'Phiếu xuất kho', requiredPermission: 'create_outbound' },
-            { icon: 'stocktake', path: '/admin/warehouse/adjustments', label: 'Điều chỉnh kho', requiredPermission: 'adjust_stock' },
-            { icon: 'inventory', path: '/admin/warehouse/inventory', label: 'Tồn kho', requiredPermission: 'view_warehouse' },
+            { icon: 'products', path: '/admin/products', label: 'admin.products', requiredPermission: 'view_products' },
+            { icon: 'categories', path: '/admin/categories', label: 'admin.categories', requiredPermission: 'view_categories' },
+            { icon: 'batches', path: '/admin/warehouse/inbound-batches', label: 'admin.inboundBatches', requiredPermission: 'view_warehouse' },
+            { icon: 'inbound', path: '/admin/warehouse/inbound-receipts', label: 'admin.inboundReceipts', requiredPermission: 'create_inbound' },
+            { icon: 'outbound', path: '/admin/warehouse/outbound-receipts', label: 'admin.outboundReceipts', requiredPermission: 'create_outbound' },
+            { icon: 'stocktake', path: '/admin/warehouse/adjustments', label: 'admin.adjustments', requiredPermission: 'adjust_stock' },
+            { icon: 'inventory', path: '/admin/warehouse/inventory', label: 'admin.inventory', requiredPermission: 'view_warehouse' },
         ]
     },
 
@@ -88,10 +88,10 @@ const menuItems: MenuItem[] = [
     {
         icon: 'purchase',
         path: '/admin/purchase',
-        label: 'Mua hàng',
+        label: 'admin.purchase',
         requiredPermission: 'view_suppliers',
         children: [
-            { icon: 'supplier', path: '/admin/warehouse/suppliers', label: 'Nhà cung cấp', requiredPermission: 'view_suppliers' },
+            { icon: 'supplier', path: '/admin/warehouse/suppliers', label: 'admin.suppliers', requiredPermission: 'view_suppliers' },
         ]
     },
 
@@ -99,14 +99,14 @@ const menuItems: MenuItem[] = [
     {
         icon: 'finance',
         path: '/admin/finance',
-        label: 'Tài chính',
+        label: 'admin.finance',
         requiredPermission: 'view_finance',
         children: [
-            { icon: 'dashboard', path: '/admin/finance/dashboard', label: 'Tổng quan', requiredPermission: 'view_finance' },
-            { icon: 'expense', path: '/admin/finance/expenses', label: 'Thu chi', requiredPermission: 'create_transactions' },
-            { icon: 'categories', path: '/admin/finance/expense-categories', label: 'Danh mục', requiredPermission: 'view_finance' },
-            { icon: 'receivable', path: '/admin/finance/receivables', label: 'Phải thu', requiredPermission: 'view_receivables' },
-            { icon: 'payable', path: '/admin/finance/payables', label: 'Phải trả', requiredPermission: 'view_payables' },
+            { icon: 'dashboard', path: '/admin/finance/dashboard', label: 'common.overview', requiredPermission: 'view_finance' },
+            { icon: 'expense', path: '/admin/finance/expenses', label: 'admin.expense', requiredPermission: 'create_transactions' },
+            { icon: 'categories', path: '/admin/finance/expense-categories', label: 'admin.categories', requiredPermission: 'view_finance' },
+            { icon: 'receivable', path: '/admin/finance/receivables', label: 'admin.receivables', requiredPermission: 'view_receivables' },
+            { icon: 'payable', path: '/admin/finance/payables', label: 'admin.payables', requiredPermission: 'view_payables' },
         ]
     },
 
@@ -128,20 +128,20 @@ const menuItems: MenuItem[] = [
     {
         icon: 'marketing',
         path: '/admin/marketing',
-        label: 'Marketing',
+        label: 'admin.marketing',
         requiredPermission: 'view_membership',
         children: [
-            { icon: 'membership', path: '/admin/marketing/membership', label: 'Hạng thành viên', requiredPermission: 'view_membership' },
-            { icon: 'points', path: '/admin/marketing/points', label: 'Điểm thưởng', requiredPermission: 'view_points' },
-            { icon: 'promotions', path: '/admin/promotions', label: 'Khuyến mãi', requiredPermission: 'view_promotions' },
-            { icon: 'automation', path: '/admin/marketing/automations', label: 'Automation', requiredPermission: 'view_promotions' },
+            { icon: 'membership', path: '/admin/marketing/membership', label: 'admin.membership', requiredPermission: 'view_membership' },
+            { icon: 'points', path: '/admin/marketing/points', label: 'admin.points', requiredPermission: 'view_points' },
+            { icon: 'promotions', path: '/admin/promotions', label: 'admin.promotions', requiredPermission: 'view_promotions' },
+            { icon: 'automation', path: '/admin/marketing/automations', label: 'admin.automation', requiredPermission: 'view_promotions' },
         ]
     },
     // Nội dung
     {
         icon: 'articles',
         path: '/admin/articles',
-        label: 'Tin tức/Bài viết',
+        label: 'admin.articles',
         requiredPermission: 'view_articles',
     },
 
@@ -149,13 +149,13 @@ const menuItems: MenuItem[] = [
     {
         icon: 'settings',
         path: '/admin/settings',
-        label: 'Cấu hình',
+        label: 'admin.settings',
         requiredPermission: 'view_settings',
         children: [
-            { icon: 'users', path: '/admin/users', label: 'Nhân sự', requiredPermission: 'view_users' },
-            { icon: 'permissions', path: '/admin/settings/permissions', label: 'Phân quyền', requiredPermission: 'view_permissions' },
-            { icon: 'warehouses', path: '/admin/warehouse/list', label: 'Chi nhánh/Kho', requiredPermission: 'view_warehouses' },
-            { icon: 'audit', path: '/admin/settings/audit-logs', label: 'Nhật ký hệ thống', requiredPermission: 'view_audit_logs' },
+            { icon: 'users', path: '/admin/users', label: 'admin.staff', requiredPermission: 'view_users' },
+            { icon: 'permissions', path: '/admin/settings/permissions', label: 'admin.permissions', requiredPermission: 'view_permissions' },
+            { icon: 'warehouses', path: '/admin/warehouse/list', label: 'admin.warehouses', requiredPermission: 'view_warehouses' },
+            { icon: 'audit', path: '/admin/settings/audit-logs', label: 'admin.auditLogs', requiredPermission: 'view_audit_logs' },
         ]
     },
 ]
@@ -297,7 +297,7 @@ const pageTitle = computed(() => {
                                 class="flex items-center gap-2 px-3 py-2 text-slate-500 rounded-lg hover:text-white hover:bg-white/5 transition-all text-sm"
                                 :class="{ 'text-primary bg-primary/10': route.path === child.path }">
                                 <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
-                                <span>{{ child.label }}</span>
+                                <span>{{ t(child.label) }}</span>
                             </RouterLink>
                         </div>
                     </div>

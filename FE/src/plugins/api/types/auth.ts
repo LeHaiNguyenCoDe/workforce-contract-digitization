@@ -36,4 +36,5 @@ export interface RegisterRequest {
 export interface LoginResponse {
   user: User
   token?: string
+  session_id?: string
 }

@@ -6,14 +6,13 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { usePromotions } from '../composables/usePromotions'
 import httpClient from '@/plugins/api/httpClient'
 
 const { t } = useI18n()
 const route = useRoute()
 
 // Use composable
-const { formatDiscount } = usePromotions()
+const { formatDiscount } = useLandingPromotions()
 
 const promo = ref<any>(null)
 const isLoading = ref(true)

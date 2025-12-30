@@ -13,7 +13,7 @@ import type {
  * For customer-facing product operations
  */
 class FrontendProductService extends BaseApiService<Product, CreateProductRequest, UpdateProductRequest> {
-  protected readonly endpoint = 'frontend/categories'
+  protected readonly endpoint = 'frontend/products'
 
   /**
    * Get products by category

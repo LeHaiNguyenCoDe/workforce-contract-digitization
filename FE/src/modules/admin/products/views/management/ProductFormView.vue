@@ -3,10 +3,12 @@ import { ref, onMounted, watch, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import httpClient from '@/plugins/api/httpClient'
+import { useAutoTranslate } from '@/shared/composables/useAutoTranslate'
 
 const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
+const { autoTranslateAfterSave, isTranslating } = useAutoTranslate()
 
 const productId = computed(() => route.params.id as string | undefined)
 const isEditMode = computed(() => !!productId.value)
@@ -47,16 +49,16 @@ const generateSlug = (text: string): string => {
 // Auto-select category and generate description
 const autoSelectCategory = (productName: string) => {
     if (!productName || formData.value.category_id || categories.value.length === 0) return // Skip if already selected or no categories
-    
+
     const nameLower = productName.toLowerCase().trim()
-    
+
     // Find category whose name is contained in product name (best match first)
     let matchedCategory = null
     let bestMatchLength = 0
-    
+
     for (const cat of categories.value) {
         const catNameLower = cat.name.toLowerCase().trim()
-        
+
         // Check if category name is in product name
         if (nameLower.includes(catNameLower)) {
             // Prefer longer category names (more specific)
@@ -73,7 +75,7 @@ const autoSelectCategory = (productName: string) => {
             }
         }
     }
-    
+
     if (matchedCategory) {
         formData.value.category_id = matchedCategory.id.toString()
     }
@@ -82,7 +84,7 @@ const autoSelectCategory = (productName: string) => {
 // Auto-generate short description and full description
 const autoGenerateShortDescription = (productName: string) => {
     if (!productName) return
-    
+
     // Use selected category if available, otherwise find matched category
     let categoryName = 'sản phẩm'
     if (formData.value.category_id) {
@@ -101,13 +103,13 @@ const autoGenerateShortDescription = (productName: string) => {
             categoryName = matchedCategory.name
         }
     }
-    
+
     // Generate short description (only if empty)
     if (!formData.value.short_description) {
         const shortDesc = `${productName} là ${categoryName} chất lượng cao, được thiết kế và sản xuất với tiêu chuẩn nghiêm ngặt. Sản phẩm phù hợp cho mọi nhu cầu sử dụng, mang lại trải nghiệm tuyệt vời cho người dùng.`
         formData.value.short_description = shortDesc
     }
-    
+
     // Generate full description (only if empty)
     if (!formData.value.description) {
         const fullDesc = `## ${productName}
@@ -135,13 +137,13 @@ ${productName} là lựa chọn hoàn hảo cho những ai đang tìm kiếm m�
 watch(() => formData.value.name, (newName) => {
     if (!isEditMode.value && newName) {
         const productName = newName.trim()
-        
+
         // Auto-generate slug
         formData.value.slug = generateSlug(productName)
-        
+
         // Auto-select category
         autoSelectCategory(productName)
-        
+
         // Auto-generate short description and full description
         // Use nextTick to ensure category is selected first
         setTimeout(() => {
@@ -224,10 +226,26 @@ const saveProduct = async () => {
         if (formData.value.thumbnail) payload.thumbnail = formData.value.thumbnail
         payload.is_active = formData.value.is_active
 
+        let savedProductId: number
         if (isEditMode.value) {
             await httpClient.put(`/admin/products/${productId.value}`, payload)
+            savedProductId = parseInt(productId.value!)
         } else {
-            await httpClient.post('/admin/products', payload)
+            const response = await httpClient.post('/admin/products', payload)
+            savedProductId = response.data?.data?.id
+        }
+
+        // Auto-translate to all languages after save
+        if (savedProductId) {
+            await autoTranslateAfterSave(
+                'App\\Models\\Product',
+                savedProductId,
+                {
+                    name: formData.value.name,
+                    short_description: formData.value.short_description,
+                    description: formData.value.description
+                }
+            )
         }
 
         router.push('/admin/products')
@@ -266,14 +284,14 @@ onMounted(() => {
             </button>
             <div>
                 <h1 class="text-2xl font-bold text-white">
-                    {{ isEditMode ? 'Chỉnh sửa sản phẩm' : 'Tạo sản phẩm mới' }}
+                    {{ isEditMode ? t('admin.editProduct') : t('admin.createProduct') }}
                 </h1>
-                <p class="text-slate-400 mt-1">{{ isEditMode ? 'Cập nhật sản phẩm' : 'Thêm sản phẩm mới' }}</p>
+                <p class="text-slate-400 mt-1">{{ isEditMode ? t('admin.updateProduct') : t('admin.addProduct') }}</p>
                 <div class="mt-2 bg-info/10 border border-info/20 rounded-lg p-2 text-xs text-info max-w-2xl">
-                    <strong>Lưu ý:</strong> Sản phẩm không chứa thông tin tồn kho (BR-01.1). 
-                    Để thêm tồn kho, vui lòng sử dụng quy trình 
-                    <router-link :to="{ name: 'admin-warehouse-inbound-batches' }" class="underline font-semibold hover:text-info-light">
-                        Kho hàng → Lô nhập
+                    <strong>{{ t('common.notice') || 'Note' }}:</strong> {{ t('admin.productNotice') }}
+                    <router-link :to="{ name: 'admin-warehouse-inbound-batches' }"
+                        class="underline font-semibold hover:text-info-light">
+                        {{ t('admin.warehouseInbound') }}
                     </router-link>
                 </div>
             </div>
@@ -289,27 +307,29 @@ onMounted(() => {
         <div v-else class="max-w-3xl">
             <div class="bg-dark-800 rounded-2xl border border-white/10 p-6 space-y-6">
 
-                <!-- Basic Info -->
                 <div class="space-y-4">
-                    <h3 class="text-lg font-semibold text-white border-b border-white/10 pb-3">Thông tin cơ bản</h3>
+                    <h3 class="text-lg font-semibold text-white border-b border-white/10 pb-3">{{ t('admin.basicInfo')
+                        }}</h3>
 
                     <div class="grid md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-slate-300 mb-2">Tên sản phẩm *</label>
+                            <label class="block text-sm font-medium text-slate-300 mb-2">{{ t('admin.productName') }}
+                                *</label>
                             <input v-model="formData.name" type="text" class="form-input"
                                 placeholder="VD: iPhone 15 Pro Max" />
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-slate-300 mb-2">Slug *</label>
+                            <label class="block text-sm font-medium text-slate-300 mb-2">{{ t('admin.slug') }} *</label>
                             <input v-model="formData.slug" type="text" class="form-input"
                                 placeholder="tu-dong-tao-tu-ten" />
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-2">Danh mục *</label>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">{{ t('admin.categories') }}
+                            *</label>
                         <select v-model="formData.category_id" class="form-input">
-                            <option value="">-- Chọn danh mục --</option>
+                            <option value="">-- {{ t('common.selectCategory') }} --</option>
                             <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
                         </select>
                     </div>
@@ -317,16 +337,19 @@ onMounted(() => {
 
                 <!-- Price -->
                 <div class="space-y-4">
-                    <h3 class="text-lg font-semibold text-white border-b border-white/10 pb-3">Giá bán</h3>
+                    <h3 class="text-lg font-semibold text-white border-b border-white/10 pb-3">{{ t('admin.pricing') }}
+                    </h3>
 
                     <div class="grid md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-slate-300 mb-2">Giá gốc (VNĐ) *</label>
+                            <label class="block text-sm font-medium text-slate-300 mb-2">{{ t('admin.originalPrice') }}
+                                *</label>
                             <input v-model.number="formData.price" type="number" class="form-input" min="0"
                                 placeholder="1000000" />
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-slate-300 mb-2">Giá khuyến mãi (VNĐ)</label>
+                            <label class="block text-sm font-medium text-slate-300 mb-2">{{ t('admin.salePrice')
+                                }}</label>
                             <input v-model="formData.sale_price" type="number" class="form-input" min="0"
                                 placeholder="900000" />
                         </div>
@@ -335,27 +358,32 @@ onMounted(() => {
 
                 <!-- Description -->
                 <div class="space-y-4">
-                    <h3 class="text-lg font-semibold text-white border-b border-white/10 pb-3">Mô tả</h3>
+                    <h3 class="text-lg font-semibold text-white border-b border-white/10 pb-3">{{ t('admin.description')
+                        }}</h3>
 
                     <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-2">Mô tả ngắn</label>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">{{ t('admin.shortDescription')
+                            }}</label>
                         <textarea v-model="formData.short_description" class="form-input" rows="2"
-                            placeholder="Mô tả ngắn gọn về sản phẩm"></textarea>
+                            :placeholder="t('admin.shortDescription')"></textarea>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-2">Mô tả chi tiết</label>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">{{ t('admin.detailedDescription')
+                            }}</label>
                         <textarea v-model="formData.description" class="form-input" rows="5"
-                            placeholder="Mô tả chi tiết về sản phẩm, tính năng, thông số..."></textarea>
+                            :placeholder="t('admin.detailedDescription')"></textarea>
                     </div>
                 </div>
 
                 <!-- Image -->
                 <div class="space-y-4">
-                    <h3 class="text-lg font-semibold text-white border-b border-white/10 pb-3">Hình ảnh</h3>
+                    <h3 class="text-lg font-semibold text-white border-b border-white/10 pb-3">{{ t('admin.images') }}
+                    </h3>
 
                     <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-2">URL Thumbnail</label>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">{{ t('admin.thumbnailUrl')
+                            }}</label>
                         <input v-model="formData.thumbnail" type="url" class="form-input"
                             placeholder="https://example.com/image.jpg" />
                     </div>
@@ -363,14 +391,14 @@ onMounted(() => {
                     <div v-if="formData.thumbnail" class="flex items-center gap-4">
                         <img :src="formData.thumbnail" alt="Preview"
                             class="w-24 h-24 rounded-lg object-cover bg-dark-700" />
-                        <span class="text-sm text-slate-500">Xem trước</span>
+                        <span class="text-sm text-slate-500">{{ t('admin.preview') }}</span>
                     </div>
                 </div>
 
                 <!-- Status -->
                 <div class="flex items-center gap-3 pt-4 border-t border-white/10">
                     <input v-model="formData.is_active" type="checkbox" id="is_active" class="w-5 h-5 rounded" />
-                    <label for="is_active" class="text-slate-300">Kích hoạt sản phẩm (hiển thị trên trang chủ)</label>
+                    <label for="is_active" class="text-slate-300">{{ t('admin.activateProduct') }}</label>
                 </div>
 
                 <!-- Actions -->
@@ -379,10 +407,11 @@ onMounted(() => {
                         {{ t('common.cancel') }}
                     </button>
                     <button @click="saveProduct" class="btn btn-primary"
-                        :disabled="isSaving || !formData.name || !formData.category_id || !formData.price">
-                        <span v-if="isSaving"
+                        :disabled="isSaving || isTranslating || !formData.name || !formData.category_id || !formData.price">
+                        <span v-if="isSaving || isTranslating"
                             class="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin mr-2"></span>
-                        {{ isSaving ? 'Đang lưu...' : (isEditMode ? 'Cập nhật' : 'Tạo mới') }}
+                        {{ isSaving ? t('common.saving') : isTranslating ? t('common.translating') : (isEditMode ?
+                            t('common.update') : t('common.create')) }}
                     </button>
                 </div>
             </div>

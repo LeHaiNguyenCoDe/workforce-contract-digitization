@@ -7,7 +7,6 @@ import { ref, onMounted, computed } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores'
-import { useProducts } from '../composables/useProducts'
 import httpClient from '@/plugins/api/httpClient'
 
 const { t } = useI18n()
@@ -15,7 +14,7 @@ const route = useRoute()
 const authStore = useAuthStore()
 
 // Use composable
-const { formatPrice } = useProducts()
+const { formatPrice } = useLandingProducts()
 
 const product = ref<any>(null)
 const reviews = ref<any[]>([])
@@ -37,8 +36,8 @@ const allImages = computed(() => {
     if (product.value.thumbnail) imgs.push(product.value.thumbnail)
     if (product.value.images?.length) {
         product.value.images.forEach((img: any) => {
-            if (img.image_url && !imgs.includes(img.image_url)) {
-                imgs.push(img.image_url)
+            if (img.url && !imgs.includes(img.url)) {
+                imgs.push(img.url)
             }
         })
     }
@@ -204,18 +203,21 @@ onMounted(fetchProduct)
                                         points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                                 </svg>
                             </div>
-                            <span class="text-slate-400 text-sm">({{ product.reviews_count || reviews.length }} đánh giá)</span>
+                            <span class="text-slate-400 text-sm">({{ product.reviews_count || reviews.length }} đánh
+                                giá)</span>
                         </div>
 
                         <div class="flex items-center gap-4 mb-6">
-                            <span class="text-3xl font-bold gradient-text">{{ formatPrice(product.sale_price || product.price) }}</span>
+                            <span class="text-3xl font-bold gradient-text">{{ formatPrice(product.sale_price ||
+                                product.price) }}</span>
                             <span v-if="product.sale_price && product.sale_price < product.price"
                                 class="text-xl text-slate-500 line-through">
                                 {{ formatPrice(product.price) }}
                             </span>
                         </div>
 
-                        <p v-if="product.short_description" class="text-slate-400 mb-6 leading-relaxed">{{ product.short_description }}</p>
+                        <p v-if="product.short_description" class="text-slate-400 mb-6 leading-relaxed">{{
+                            product.short_description }}</p>
 
                         <div class="flex items-center gap-4 mb-8">
                             <div class="flex items-center bg-dark-700 rounded-xl overflow-hidden border border-white/5">
@@ -223,18 +225,24 @@ onMounted(fetchProduct)
                                     class="px-4 py-3 text-slate-400 hover:text-white hover:bg-dark-600 transition-colors">
                                     -
                                 </button>
-                                <span class="px-6 py-3 font-bold text-white min-w-[3rem] text-center">{{ quantity }}</span>
+                                <span class="px-6 py-3 font-bold text-white min-w-[3rem] text-center">{{ quantity
+                                }}</span>
                                 <button @click="quantity++"
                                     class="px-4 py-3 text-slate-400 hover:text-white hover:bg-dark-600 transition-colors">
                                     +
                                 </button>
                             </div>
-                            <button @click="addToCart" :disabled="isAddingToCart" class="btn btn-primary flex-1 py-4 font-bold flex items-center justify-center gap-2">
-                                <svg v-if="!isAddingToCart" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="8" cy="21" r="1" /><circle cx="19" cy="21" r="1" />
-                                    <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
+                            <button @click="addToCart" :disabled="isAddingToCart"
+                                class="btn btn-primary flex-1 py-4 font-bold flex items-center justify-center gap-2">
+                                <svg v-if="!isAddingToCart" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="8" cy="21" r="1" />
+                                    <circle cx="19" cy="21" r="1" />
+                                    <path
+                                        d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
                                 </svg>
-                                <span v-else class="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></span>
+                                <span v-else
+                                    class="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></span>
                                 {{ isAddingToCart ? 'Đang thêm...' : t('cart.addToCart') }}
                             </button>
                         </div>
@@ -276,29 +284,34 @@ onMounted(fetchProduct)
                         </button>
                     </div>
 
-                    <div v-if="showReviewForm" class="card bg-dark-800 border-primary/20 mb-12 animate-in fade-in slide-in-from-top-4 duration-300">
+                    <div v-if="showReviewForm"
+                        class="card bg-dark-800 border-primary/20 mb-12 animate-in fade-in slide-in-from-top-4 duration-300">
                         <h3 class="text-lg font-bold text-white mb-6">Đánh giá của bạn</h3>
                         <div class="space-y-6">
                             <div>
                                 <label class="block text-sm font-medium text-slate-400 mb-3">Chất lượng sản phẩm</label>
                                 <div class="flex gap-2">
-                                    <button v-for="i in 5" :key="i" @click="reviewRating = i" class="transition-transform active:scale-95">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
-                                            :fill="i <= reviewRating ? 'currentColor' : 'none'"
+                                    <button v-for="i in 5" :key="i" @click="reviewRating = i"
+                                        class="transition-transform active:scale-95">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"
+                                            viewBox="0 0 24 24" :fill="i <= reviewRating ? 'currentColor' : 'none'"
                                             :class="i <= reviewRating ? 'text-yellow-400' : 'text-slate-700'"
                                             stroke="currentColor" stroke-width="2">
-                                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                            <polygon
+                                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                                         </svg>
                                     </button>
                                 </div>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-slate-400 mb-2">Lời nhắn</label>
-                                <textarea v-model="reviewComment" class="form-input min-h-[120px]" 
+                                <textarea v-model="reviewComment" class="form-input min-h-[120px]"
                                     placeholder="Bạn thấy sản phẩm này thế nào? Chia sẻ trải nghiệm của bạn nhé..."></textarea>
                             </div>
-                            <button @click="submitReview" :disabled="isSubmittingReview || !reviewComment.trim()" class="btn btn-primary px-8">
-                                <span v-if="isSubmittingReview" class="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin mr-2"></span>
+                            <button @click="submitReview" :disabled="isSubmittingReview || !reviewComment.trim()"
+                                class="btn btn-primary px-8">
+                                <span v-if="isSubmittingReview"
+                                    class="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin mr-2"></span>
                                 Gửi đánh giá ngay
                             </button>
                         </div>
@@ -308,31 +321,38 @@ onMounted(fetchProduct)
                         <div v-for="review in reviews" :key="review.id" class="group">
                             <div class="card bg-dark-800/30 border-white/5 hover:border-white/10 transition-colors p-6">
                                 <div class="flex items-start gap-4">
-                                    <div class="w-12 h-12 rounded-full bg-gradient-primary flex-shrink-0 flex items-center justify-center font-bold text-white ring-4 ring-primary/10">
+                                    <div
+                                        class="w-12 h-12 rounded-full bg-gradient-primary flex-shrink-0 flex items-center justify-center font-bold text-white ring-4 ring-primary/10">
                                         {{ review.user?.name?.charAt(0)?.toUpperCase() || '?' }}
                                     </div>
                                     <div class="flex-1 min-w-0">
                                         <div class="flex items-center justify-between gap-4 mb-2">
                                             <div>
-                                                <h4 class="font-bold text-white">{{ review.user?.name || 'Ẩn danh' }}</h4>
+                                                <h4 class="font-bold text-white">{{ review.user?.name || 'Ẩn danh' }}
+                                                </h4>
                                                 <div class="flex gap-1 mt-1">
-                                                    <svg v-for="i in 5" :key="i" width="12" height="12" viewBox="0 0 24 24"
+                                                    <svg v-for="i in 5" :key="i" width="12" height="12"
+                                                        viewBox="0 0 24 24"
                                                         :fill="i <= review.rating ? 'currentColor' : 'none'"
                                                         :class="i <= review.rating ? 'text-yellow-400' : 'text-slate-700'"
                                                         stroke="currentColor" stroke-width="2">
-                                                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                                        <polygon
+                                                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                                                     </svg>
                                                 </div>
                                             </div>
-                                            <span class="text-xs text-slate-500 whitespace-nowrap">{{ formatDate(review.created_at) }}</span>
+                                            <span class="text-xs text-slate-500 whitespace-nowrap">{{
+                                                formatDate(review.created_at) }}</span>
                                         </div>
-                                        <p class="text-slate-300 text-sm leading-relaxed">{{ review.content || (review as any).comment }}</p>
+                                        <p class="text-slate-300 text-sm leading-relaxed">{{ review.content ||
+                                            review.comment }}</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div v-if="!reviews.length" class="text-center py-20 bg-dark-800/10 rounded-2xl border border-dashed border-white/5">
+                        <div v-if="!reviews.length"
+                            class="text-center py-20 bg-dark-800/10 rounded-2xl border border-dashed border-white/5">
                             <div class="text-5xl mb-4 opacity-20">💬</div>
                             <p class="text-slate-500 font-medium">Chưa có đánh giá nào cho sản phẩm này.</p>
                             <p v-if="!authStore.isAuthenticated" class="text-xs text-slate-600 mt-2">

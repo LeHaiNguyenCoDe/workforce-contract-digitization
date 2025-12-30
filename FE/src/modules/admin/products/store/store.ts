@@ -58,25 +58,11 @@ export const useAdminProductStore = defineStore('admin-products', () => {
       // Add cache busting timestamp to ensure fresh data
       queryParams._t = Date.now()
 
-      const response = await httpClient.get<{ data: { data: Product[]; last_page: number; current_page: number } | Product[] }>('/admin/products', { params: queryParams })
-      const data = response.data as any
-
-      if (data?.data?.data && Array.isArray(data.data.data)) {
-        // Replace entire array to trigger reactivity
-        products.value = [...data.data.data]
-        totalPages.value = data.data.last_page || 1
-        currentPage.value = data.data.current_page || 1
-      } else if (Array.isArray(data?.data)) {
-        products.value = [...data.data]
-        totalPages.value = 1
-        currentPage.value = 1
-      } else {
-        products.value = []
-        totalPages.value = 1
-        currentPage.value = 1
-      }
-
-      console.log('Fetched products:', products.value.length, 'items')
+      const response = await adminProductService.getAll(queryParams)
+      
+      products.value = response?.items || []
+      totalPages.value = response?.meta?.last_page || 1
+      currentPage.value = response?.meta?.current_page || 1
     } catch (error) {
       console.error('Failed to fetch products:', error)
       products.value = []

@@ -7,10 +7,14 @@ export interface Product {
   name: string
   slug: string
   price: number
+  sale_price?: number
   thumbnail?: string
   short_description?: string
   description?: string
   category?: Category
+  category_id?: number
+  is_active?: boolean
+  stock_quantity?: number
   images?: ProductImage[]
   variants?: ProductVariant[]
   rating?: ProductRating
@@ -20,7 +24,7 @@ export interface Product {
 
 export interface ProductImage {
   id: number
-  image_url: string
+  url: string
   is_main: boolean
 }
 
@@ -42,7 +46,7 @@ export interface Category {
   name: string
   slug?: string
   description?: string
-  image_url?: string
+  image?: string
   parent_id?: number | null
   children?: Category[]
 }

@@ -28,7 +28,7 @@ class PromotionController extends Controller
             $perPage = $request->query('per_page', 10);
             $promotions = $this->promotionService->getAll($perPage);
 
-            return $this->successResponse($promotions);
+            return $this->paginatedResponse($promotions);
         } catch (\Exception $ex) {
             return $this->serverErrorResponse('error', $ex);
         }

@@ -1,0 +1,14 @@
+{
+  "home": "Ana Sayfa",
+  "products": "Ürünler",
+  "categories": "Kategoriler",
+  "articles": "Makaleler",
+  "promotions": "Promosyonlar",
+  "cart": "Sepet",
+  "wishlist": "İstek Listesi",
+  "orders": "Siparişler",
+  "profile": "Hesap",
+  "login": "Giriş Yap",
+  "register": "Kayıt Ol",
+  "logout": "Çıkış Yap"
+}

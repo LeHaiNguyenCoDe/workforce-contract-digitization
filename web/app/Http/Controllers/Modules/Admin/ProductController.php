@@ -35,11 +35,11 @@ class ProductController extends Controller
             $search = $request->query('search');
             $categoryId = $request->query('category_id');
             // For admin products page: only show products with stock
-            $onlyWithStock = $request->query('only_with_stock', false);
+            $onlyWithStock = (bool) $request->query('only_with_stock', false);
 
             $products = $this->productService->getAll($perPage, $search, $categoryId, $onlyWithStock);
 
-            return $this->successResponse($products);
+            return $this->paginatedResponse($products);
         } catch (\Exception $ex) {
             return $this->serverErrorResponse('error', $ex);
         }
@@ -54,7 +54,7 @@ class ProductController extends Controller
             $perPage = $request->query('per_page', 12);
             $products = $this->productService->getByCategory($category->id, $perPage);
 
-            return $this->successResponse($products);
+            return $this->paginatedResponse($products);
         } catch (\Exception $ex) {
             return $this->serverErrorResponse('error', $ex);
         }

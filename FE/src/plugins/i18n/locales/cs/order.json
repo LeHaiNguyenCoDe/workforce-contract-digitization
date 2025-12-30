@@ -1,0 +1,17 @@
+{
+  "title": "Objednávky",
+  "myOrders": "Moje objednávky",
+  "orderNumber": "Číslo objednávky",
+  "status": "Stav",
+  "date": "Datum",
+  "shippingAddress": "Dodací adresa",
+  "phone": "Telefon",
+  "paymentMethod": "Způsob platby",
+  "notes": "Poznámky",
+  "placeOrder": "Odeslat objednávku",
+  "pending": "Čeká na vyřízení",
+  "processing": "Zpracovává se",
+  "shipped": "Odesláno",
+  "delivered": "Doručeno",
+  "cancelled": "Zrušeno"
+}

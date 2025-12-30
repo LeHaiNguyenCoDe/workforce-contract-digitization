@@ -1,0 +1,18 @@
+{
+  "title": "Products",
+  "detail": "Product Detail",
+  "price": "Price",
+  "quantity": "Quantity",
+  "addToCart": "Add to Cart",
+  "addToWishlist": "Add to Wishlist",
+  "outOfStock": "Out of Stock",
+  "inStock": "In Stock",
+  "reviews": "Reviews",
+  "noReviews": "No reviews yet",
+  "variants": "Variants",
+  "category": "Category",
+  "wishlist": "Wishlist",
+  "noWishlistItems": "No wishlist items yet",
+  "addToWishlistHint": "Add products to your wishlist to track them",
+  "exploreProducts": "Explore Products"
+}

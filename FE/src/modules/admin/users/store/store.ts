@@ -1,32 +1,11 @@
-/**
- * Users Store
- * Manages state for user management
- */
-
-import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import httpClient from '@/plugins/api/httpClient'
-
-export interface Role {
-  id: number
-  name: string
-}
-
-export interface User {
-  id: number
-  name: string
-  email: string
-  phone?: string
-  roles?: Role[]
-  active?: boolean
-  created_at: string
-}
+import { adminUserService } from '@/plugins/api/services/UserService'
+import type { User, Role } from '@/plugins/api/types'
 
 export interface UserForm {
   name: string
   email: string
-  phone: string
-  password: string
+  phone?: string
+  password?: string
   role: string
   is_active: boolean
 }
@@ -66,19 +45,11 @@ export const useUserStore = defineStore('admin-users', () => {
       }
       if (params?.search) queryParams.search = params.search
 
-      const response = await httpClient.get('/admin/users', { params: queryParams })
-      const data = response.data as any
-
-      if (data?.data?.data && Array.isArray(data.data.data)) {
-        users.value = data.data.data
-        totalPages.value = data.data.last_page || 1
-        currentPage.value = data.data.current_page || 1
-      } else if (Array.isArray(data?.data)) {
-        users.value = data.data
-        totalPages.value = 1
-      } else {
-        users.value = []
-      }
+      const response = await adminUserService.getAll(queryParams)
+      
+      users.value = response?.items || []
+      totalPages.value = response?.meta?.last_page || 1
+      currentPage.value = response?.meta?.current_page || 1
     } catch (error) {
       console.error('Failed to fetch users:', error)
       users.value = []
@@ -90,7 +61,7 @@ export const useUserStore = defineStore('admin-users', () => {
   async function createUser(payload: Partial<UserForm>): Promise<boolean> {
     isSaving.value = true
     try {
-      await httpClient.post('/admin/users', payload)
+      await adminUserService.create(payload as any)
       await fetchUsers({ page: 1 })
       return true
     } catch (error) {
@@ -104,7 +75,7 @@ export const useUserStore = defineStore('admin-users', () => {
   async function updateUser(id: number, payload: Partial<UserForm>): Promise<boolean> {
     isSaving.value = true
     try {
-      await httpClient.put(`/admin/users/${id}`, payload)
+      await adminUserService.update(id, payload as any)
       await fetchUsers({ page: currentPage.value })
       return true
     } catch (error) {
@@ -117,7 +88,7 @@ export const useUserStore = defineStore('admin-users', () => {
 
   async function deleteUser(id: number): Promise<boolean> {
     try {
-      await httpClient.delete(`/admin/users/${id}`)
+      await adminUserService.delete(id)
       users.value = users.value.filter(u => u.id !== id)
       await fetchUsers({ page: currentPage.value })
       return true
@@ -130,7 +101,7 @@ export const useUserStore = defineStore('admin-users', () => {
   async function updateUserRole(userId: number, role: string): Promise<boolean> {
     isSaving.value = true
     try {
-      await httpClient.put(`/admin/users/${userId}`, { role })
+      await adminUserService.update(userId, { role })
       await fetchUsers({ page: currentPage.value })
       return true
     } catch (error) {

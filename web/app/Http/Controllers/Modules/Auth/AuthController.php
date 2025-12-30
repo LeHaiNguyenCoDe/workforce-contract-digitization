@@ -60,7 +60,8 @@ class AuthController extends Controller
 
             return $this->successResponse($user);
         } catch (AuthenticationException $ex) {
-            return $this->errorResponse($ex->getMessage(), null, $ex->getCode());
+            // Return 200 but with null user to avoid red 401 logs in browser console
+            return $this->successResponse(null, 'unauthenticated');
         } catch (\Exception $ex) {
             Helper::trackingError('auth', $ex->getMessage());
             return $this->serverErrorResponse('error', $ex);

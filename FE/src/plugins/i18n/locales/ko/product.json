@@ -1,0 +1,14 @@
+{
+  "title": "상품",
+  "detail": "상품 상세",
+  "price": "가격",
+  "quantity": "수량",
+  "addToCart": "장바구니에 추가",
+  "addToWishlist": "위시리스트에 추가",
+  "outOfStock": "품절",
+  "inStock": "재고 있음",
+  "reviews": "리뷰",
+  "noReviews": "아직 리뷰가 없습니다",
+  "variants": "옵션",
+  "category": "카테고리"
+}

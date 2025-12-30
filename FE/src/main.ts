@@ -1,9 +1,13 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
+import { initConsoleSanitizer } from './shared/helpers/consoleSanitizer'
+
+// Initialize log optimization
+initConsoleSanitizer()
 
 import App from './App.vue'
 import router from './router'
-import i18n from './plugins/i18n'
+import i18n, { loadLocaleMessages, getLocale } from './plugins/i18n'
 import { vClickOutside } from './shared/directives'
 
 import './shared/styles/main.css'
@@ -18,5 +22,8 @@ app.use(i18n)
 // Register global directives
 app.directive('click-outside', vClickOutside)
 
-app.mount('#app')
+// Ensure initial locale is loaded before mounting
+loadLocaleMessages(getLocale()).then(() => {
+  app.mount('#app')
+})
 

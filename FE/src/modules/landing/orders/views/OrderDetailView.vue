@@ -5,8 +5,6 @@
  */
 import { onMounted } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
-import { useOrders } from '../composables/useOrders'
-
 const route = useRoute()
 
 // Use composable
@@ -18,7 +16,7 @@ const {
     getStatusLabel,
     getStatusColor,
     fetchOrderById
-} = useOrders()
+} = useLandingOrders()
 
 onMounted(() => {
     if (route.params.id) {
@@ -29,7 +27,8 @@ onMounted(() => {
 
 <template>
     <div class="container py-8">
-        <RouterLink to="/orders" class="inline-flex items-center gap-2 text-slate-400 hover:text-primary transition-colors mb-6">
+        <RouterLink to="/orders"
+            class="inline-flex items-center gap-2 text-slate-400 hover:text-primary transition-colors mb-6">
             ← Quay lại đơn hàng
         </RouterLink>
 
@@ -41,10 +40,11 @@ onMounted(() => {
             <!-- Header -->
             <div class="card flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div class="space-y-1">
-                    <h1 class="text-2xl font-bold text-white">Đơn hàng #{{ order.code || order.order_number || order.id }}</h1>
+                    <h1 class="text-2xl font-bold text-white">Đơn hàng #{{ order.code || order.order_number || order.id
+                    }}</h1>
                     <p class="text-slate-400 text-sm">Đặt lúc {{ formatDate(order.created_at) }}</p>
                 </div>
-                <div class="px-4 py-2 rounded-full text-sm font-bold" 
+                <div class="px-4 py-2 rounded-full text-sm font-bold"
                     :class="['bg-' + getStatusColor(order.status) + '-500/10', 'text-' + getStatusColor(order.status) + '-400']">
                     {{ getStatusLabel(order.status) }}
                 </div>
@@ -72,11 +72,12 @@ onMounted(() => {
                 <!-- Info -->
                 <div class="lg:col-span-1 card space-y-6">
                     <h3 class="text-lg font-bold text-white border-b border-white/5 pb-4">Thông tin giao hàng</h3>
-                    
+
                     <div class="space-y-4">
                         <div class="space-y-1">
                             <span class="block text-xs text-slate-500 uppercase font-bold">Địa chỉ</span>
-                            <span class="text-white text-sm leading-relaxed">{{ order.address_line || order.shipping_address }}</span>
+                            <span class="text-white text-sm leading-relaxed">{{ order.address_line ||
+                                order.shipping_address }}</span>
                         </div>
                         <div class="space-y-1">
                             <span class="block text-xs text-slate-500 uppercase font-bold">Điện thoại</span>

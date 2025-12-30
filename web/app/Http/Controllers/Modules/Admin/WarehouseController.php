@@ -274,7 +274,7 @@ class WarehouseController extends Controller
             $perPage = $request->query('per_page', 20);
             $logs = $this->warehouseService->getInventoryLogs($warehouse->id, $perPage);
 
-            return $this->successResponse($logs);
+            return $this->paginatedResponse($logs);
         } catch (NotFoundException $ex) {
             return $this->notFoundResponse($ex->getMessage());
         } catch (\Exception $ex) {

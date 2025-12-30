@@ -17,7 +17,7 @@ export interface BaseEntity {
  */
 export interface Category extends BaseEntity {
   name: string
-  slug: string
+  slug?: string
   description?: string
   image?: string
   parent_id?: number | null
