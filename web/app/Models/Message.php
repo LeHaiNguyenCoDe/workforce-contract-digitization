@@ -30,9 +30,12 @@ class Message extends Model
     /**
      * Broadcast events when message is created.
      */
-    protected $dispatchesEvents = [
-        'created' => MessageSent::class,
-    ];
+    /**
+     * Broadcast events when message is created.
+     */
+    // protected $dispatchesEvents = [
+    //     'created' => MessageSent::class,
+    // ];
 
     /**
      * Get the conversation this message belongs to.

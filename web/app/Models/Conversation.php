@@ -15,10 +15,14 @@ class Conversation extends Model
         'type',
         'avatar',
         'created_by',
+        'metadata',
     ];
+
+    protected $appends = ['is_guest', 'guest_session'];
 
     protected $casts = [
         'type' => 'string',
+        'metadata' => 'array',
     ];
 
     /**
@@ -56,11 +60,51 @@ class Conversation extends Model
     }
 
     /**
+     * Get the guest session associated with this conversation.
+     */
+    public function guestSession(): HasOne
+    {
+        return $this->hasOne(GuestChatSession::class, 'conversation_id');
+    }
+
+    /**
+     * Attribute: Check if this is a guest conversation.
+     */
+    public function getIsGuestAttribute(): bool
+    {
+        return $this->guestSession()->exists();
+    }
+
+    /**
+     * Attribute: Get guest session data for frontend.
+     */
+    public function getGuestSessionAttribute(): ?array
+    {
+        $session = $this->guestSession()->with('assignedStaff')->first();
+        if (!$session) {
+            return null;
+        }
+
+        return [
+            'id' => $session->id,
+            'session_token' => $session->session_token,
+            'guest_name' => $session->guest_name,
+            'guest_contact' => $session->guest_contact,
+            'status' => $session->status,
+            'assigned_staff' => $session->assignedStaff ? [
+                'id' => $session->assignedStaff->id,
+                'name' => $session->assignedStaff->name,
+                'avatar' => $session->assignedStaff->avatar,
+            ] : null,
+        ];
+    }
+
+    /**
      * Scope: Get conversations for a specific user.
      */
     public function scopeForUser($query, $userId)
     {
-        return $query->whereHas('users', fn ($q) => $q->where('user_id', $userId));
+        return $query->whereHas('users', fn($q) => $q->where('user_id', $userId));
     }
 
     /**

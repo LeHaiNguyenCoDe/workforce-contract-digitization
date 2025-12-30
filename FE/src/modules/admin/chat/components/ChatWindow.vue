@@ -28,12 +28,25 @@
                         {{ getTypingText() }}
                     </p>
                     <p v-else class="text-xs text-gray-400">
-                        {{ isUserOnline ? t('common.chat.online') : (conversation.type === 'group' ?
-                            `${conversation.users.length} ${t('common.chat.members')}` : t('common.chat.offline')) }}
+                        {{ isGuestChat ? 'Khách hàng' : (isUserOnline ? t('common.chat.online') : (conversation.type === 'group' ?
+                            `${conversation.users.length} ${t('common.chat.members')}` : t('common.chat.offline'))) }}
                     </p>
                 </div>
             </div>
             <div class="flex items-center gap-1">
+                <!-- Assign Staff Button (System Admins only) -->
+                <button v-if="isGuestChat && canAssign"
+                    @click="showAssignModal = true"
+                    class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-full transition-all border border-amber-100"
+                    title="Phân công nhân viên trả lời">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="9" cy="7" r="4"></circle>
+                      <polyline points="16 11 18 13 22 9"></polyline>
+                    </svg>
+                    <span>Phân công</span>
+                </button>
+
                 <button
                     class="w-9 h-9 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 flex items-center justify-center transition-all">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
@@ -118,6 +131,13 @@
         <!-- Input -->
         <MessageInput :disabled="sending" :replyTo="replyToMessage" @send="handleSend" @typing="$emit('typing', $event)"
             @cancel-reply="replyToMessage = null" />
+
+        <!-- Staff Assignment Modal -->
+        <StaffAssignmentModal 
+            v-if="showAssignModal" 
+            @close="showAssignModal = false"
+            @select="onStaffSelected"
+        />
     </div>
 </template>
 
@@ -127,8 +147,10 @@ import { useI18n } from 'vue-i18n'
 import type { IConversation, IMessage } from '../models/Chat'
 import MessageBubble from './MessageBubble.vue'
 import MessageInput from './MessageInput.vue'
+import StaffAssignmentModal from './StaffAssignmentModal.vue'
 
 import { useAuthStore } from '@/stores/auth'
+import { useChatStore } from '../stores/chatStore'
 
 const props = defineProps<{
     conversation: IConversation
@@ -151,6 +173,7 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 const authStore = useAuthStore()
+const chatStore = useChatStore()
 
 const avatarColors = ['bg-teal-500', 'bg-blue-500', 'bg-purple-500', 'bg-pink-500', 'bg-orange-500']
 
@@ -162,21 +185,52 @@ const currentUserId = computed(() => {
 })
 
 const isUserOnline = computed(() => {
-    if (props.conversation.type === 'private' && props.conversation.users.length === 1) {
+    if (props.conversation.type === 'private' && props.conversation.users?.length === 1) {
         return props.conversation.users[0].is_online || false
     }
     return false
 })
 
+const isGuestChat = computed(() => {
+    return !!props.conversation.is_guest
+})
+
+const canAssign = computed(() => {
+    // Only admins or managers for now - assuming role is in authStore.user
+    const role = authStore.user?.role
+    return role === 'admin' || role === 'manager' || authStore.user?.email?.includes('admin') || authStore.user?.email?.includes('manager')
+})
+
+const showAssignModal = ref(false)
+
+async function onStaffSelected(userId: number) {
+    if (!isGuestChat.value) return
+    
+    if (!props.conversation.guest_session) {
+        console.error('ChatWindow: Missing guest_session for assignment', props.conversation)
+        return
+    }
+    
+    try {
+        await chatStore.assignGuestChat(props.conversation.guest_session.session_token, userId)
+        showAssignModal.value = false
+        // Trigger a refresh if needed
+        chatStore.fetchConversations(1)
+    } catch (error) {
+        console.error('Failed to assign staff:', error)
+    }
+}
+
 function getName(): string {
     if (props.conversation.name) return props.conversation.name
+    if (!props.conversation.users || props.conversation.users.length === 0) return t('common.chat.no_name')
     if (props.conversation.users.length === 1) return props.conversation.users[0].name
     return props.conversation.users.map(u => u.name.split(' ')[0]).join(', ')
 }
 
 function getAvatar(): string | null {
     if (props.conversation.avatar) return props.conversation.avatar
-    if (props.conversation.type === 'private' && props.conversation.users.length === 1) {
+    if (props.conversation.type === 'private' && props.conversation.users?.length === 1) {
         return props.conversation.users[0].avatar || null
     }
     return null

@@ -10,7 +10,9 @@
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix"
   },
   "dependencies": {
+    "@types/dompurify": "^3.0.5",
     "axios": "^1.6.2",
+    "dompurify": "^3.3.1",
     "laravel-echo": "^2.2.7",
     "pinia": "^2.1.7",
     "pusher-js": "^8.4.0",

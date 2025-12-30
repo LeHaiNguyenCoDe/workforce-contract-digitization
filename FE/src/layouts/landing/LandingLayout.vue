@@ -2,6 +2,7 @@
 import { RouterView } from 'vue-router'
 import LandingHeader from '@/components/layouts/LandingHeader.vue'
 import LandingFooter from '@/components/layouts/LandingFooter.vue'
+import ChatBubble from '@/modules/landing/chat/components/ChatBubble.vue'
 </script>
 
 <template>
@@ -19,5 +20,9 @@ import LandingFooter from '@/components/layouts/LandingFooter.vue'
             </RouterView>
         </main>
         <LandingFooter />
+        
+        <!-- Guest Chat Bubble -->
+        <ChatBubble />
     </div>
 </template>
+

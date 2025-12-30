@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { IConversation, IMessage, IUser } from '../models/Chat'
+import type { IConversation, IMessage } from '../models/Chat'
 import { ChatService } from '../services/ChatService'
+import { GuestChatService } from '@/modules/landing/chat/services/GuestChatService'
 
 export const useChatStore = defineStore('chat', () => {
   // State
@@ -84,8 +85,12 @@ export const useChatStore = defineStore('chat', () => {
         attachments,
         reply_to_id: replyToId
       })
-      // Message will be added via WebSocket, but add optimistically
-      messages.value.push(message)
+      // Message might have already been added via WebSocket during the API call
+      // Avoid duplicates with explicit casting for safety
+      const isDuplicate = messages.value.some(m => Number(m.id) === Number(message.id))
+      if (!isDuplicate) {
+          messages.value.push(message)
+      }
       return message
     } finally {
       isSendingMessage.value = false
@@ -133,6 +138,72 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
+  async function assignGuestChat(sessionToken: string, staffId: number) {
+    try {
+      const staff = await GuestChatService.assignStaff(sessionToken, staffId)
+      // Update current conversation 
+      if (currentConversation.value) {
+        // Update guest_session.assigned_staff
+        if (currentConversation.value.guest_session) {
+          currentConversation.value.guest_session.assigned_staff = {
+            id: staff.id,
+            name: staff.name,
+            avatar: staff.avatar
+          }
+        }
+        // Also add staff to conversation.users if not there
+        if (!currentConversation.value.users.some(u => u.id === staffId)) {
+          currentConversation.value.users.push({
+            id: staff.id,
+            name: staff.name,
+            avatar: staff.avatar,
+            role: 'member'
+          } as any)
+        }
+      }
+      // Also update in conversations list
+      const convInList = conversations.value.find(c => c.guest_session?.session_token === sessionToken)
+      if (convInList?.guest_session) {
+        convInList.guest_session.assigned_staff = {
+          id: staff.id,
+          name: staff.name,
+          avatar: staff.avatar
+        }
+      }
+      return staff
+    } catch (error) {
+      console.error('ChatStore: Failed to assign guest chat', error)
+      throw error
+    }
+  }
+
+  async function selectConversationById(conversationId: number) {
+    // 1. Check if already in list
+    let conversation = conversations.value.find(c => c.id === conversationId)
+
+    // 2. If not, fetch it
+    if (!conversation) {
+      isLoadingConversations.value = true
+      try {
+        conversation = await ChatService.getConversation(conversationId)
+        // Add to list if valid
+        if (conversation) {
+          conversations.value.unshift(conversation)
+        }
+      } catch (error) {
+        console.error('ChatStore: Failed to fetch conversation', conversationId, error)
+        return
+      } finally {
+        isLoadingConversations.value = false
+      }
+    }
+
+    // 3. Select it
+    if (conversation) {
+      selectConversation(conversation)
+    }
+  }
+
   function selectConversation(conversation: IConversation) {
     currentConversation.value = conversation
     messages.value = []
@@ -147,34 +218,49 @@ export const useChatStore = defineStore('chat', () => {
   }
 
   // WebSocket handlers
-  function handleNewMessage(message: IMessage) {
-    // Add message if it's for current conversation
-    if (currentConversation.value?.id === message.conversation_id) {
-      // Avoid duplicates
-      if (!messages.value.find(m => m.id === message.id)) {
-        messages.value.push(message)
+  async function handleNewMessage(message: IMessage) {
+    // 1. Check if conversation is in the list
+    let conv = conversations.value.find(c => c.id === message.conversation_id)
+
+    // 2. If not, fetch it from backend
+    if (!conv) {
+      console.log(`ChatStore: Received message for unknown conversation ${message.conversation_id}, fetching...`)
+      try {
+        conv = await ChatService.getConversation(message.conversation_id)
+        if (conv) {
+          conversations.value.unshift(conv)
+          // The fetched conversation already has the latest message and unread count from server
+        }
+      } catch (error) {
+        console.error('ChatStore: Failed to fetch missing conversation', error)
+        return
       }
-      // Mark as read since we're viewing
-      ChatService.markAsRead(message.conversation_id)
     } else {
-      // Increment unread count for the conversation
-      const conv = conversations.value.find(c => c.id === message.conversation_id)
-      if (conv) {
+      // 3. For existing conversation, update unread count and latest message
+      if (currentConversation.value?.id === message.conversation_id) {
+        // Avoid duplicates in current window
+        const isDuplicate = messages.value.some(m => Number(m.id) === Number(message.id))
+        if (!isDuplicate) {
+          messages.value.push(message)
+        }
+        // Mark as read since we're viewing
+        ChatService.markAsRead(message.conversation_id)
+      } else {
+        // Increment unread count for other tabs/conversations
         conv.unread_count = (conv.unread_count || 0) + 1
-        conv.latest_message = message
       }
+      conv.latest_message = message
     }
 
-    // Move conversation to top
+    // 4. Move conversation to top if it's not already
     const index = conversations.value.findIndex(c => c.id === message.conversation_id)
     if (index > 0) {
-      const [conv] = conversations.value.splice(index, 1)
-      conv.latest_message = message
-      conversations.value.unshift(conv)
+      const [c] = conversations.value.splice(index, 1)
+      conversations.value.unshift(c)
     }
   }
 
-  function handleUserTyping(conversationId: number, userId: number, userName: string, isTyping: boolean) {
+  function handleUserTyping(_conversationId: number, userId: number, userName: string, isTyping: boolean) {
     if (isTyping) {
       typingUsers.value.set(userId, { userId, userName })
     } else {
@@ -223,6 +309,9 @@ export const useChatStore = defineStore('chat', () => {
     deleteConversation,
     leaveConversation,
     selectConversation,
+    selectConversationById,
+    selectConversationId: selectConversationById,
+    assignGuestChat,
     handleNewMessage,
     handleUserTyping,
     clearTypingUsers,

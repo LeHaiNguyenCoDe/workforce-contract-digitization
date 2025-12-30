@@ -11,6 +11,7 @@ use App\Http\Controllers\Modules\Admin\PromotionController;
 use App\Http\Controllers\Modules\Admin\ReviewController;
 use App\Http\Controllers\Modules\Admin\UserController;
 use App\Http\Controllers\Modules\Admin\OrderController;
+use App\Http\Controllers\Api\GuestChatController;
 use App\Http\Middleware\Authenticate;
 use Illuminate\Support\Facades\Route;
 
@@ -19,6 +20,16 @@ use Illuminate\Support\Facades\Route;
 | Landing/Frontend Routes (Public + Authenticated Customer)
 |--------------------------------------------------------------------------
 */
+
+// Guest Chat (Public - no auth required)
+Route::prefix('guest-chat')->group(function () {
+    Route::post('session', [GuestChatController::class, 'startSession']);
+    Route::get('{sessionToken}/info', [GuestChatController::class, 'getSessionInfo']);
+    Route::get('{sessionToken}/messages', [GuestChatController::class, 'getMessages']);
+    Route::post('{sessionToken}/messages', [GuestChatController::class, 'sendMessage']);
+    Route::get('{sessionToken}/status', [GuestChatController::class, 'getStatus']);
+    Route::post('{sessionToken}/assign', [GuestChatController::class, 'assignStaff']);
+});
 
 // Language
 Route::get('language', [LanguageController::class, 'current']);

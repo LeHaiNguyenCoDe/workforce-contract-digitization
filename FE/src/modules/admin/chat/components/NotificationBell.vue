@@ -68,6 +68,7 @@ import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
 import { useNotificationStore } from '../stores/notificationStore'
 import type { INotification } from '../models/Chat'
+import { sanitizeSimpleHtml } from '@/shared/utils/sanitize'
 
 const { t } = useI18n()
 const notificationStore = useNotificationStore()
@@ -166,21 +167,28 @@ function getIcon(type: string) {
 function formatNotification(notification: INotification): string {
     const data = notification.data
 
+    let result: string
     switch (notification.type) {
         case 'friend_request':
-            return t('common.notifications.friend_request', { name: `<strong>${data.from_user_name}</strong>` })
+            result = t('common.notifications.friend_request', { name: `<strong>${data.from_user_name}</strong>` })
+            break
         case 'friend_accepted':
-            return t('common.notifications.friend_accepted', { name: `<strong>${data.user_name}</strong>` })
+            result = t('common.notifications.friend_accepted', { name: `<strong>${data.user_name}</strong>` })
+            break
         case 'new_message':
-            return t('common.notifications.new_message', { name: `<strong>${data.sender_name}</strong>` })
+            result = t('common.notifications.new_message', { name: `<strong>${data.sender_name}</strong>` })
+            break
         case 'group_invite':
-            return t('common.notifications.group_invite', {
+            result = t('common.notifications.group_invite', {
                 name: `<strong>${data.inviter_name}</strong>`,
                 group: `<strong>${data.group_name}</strong>`
             })
+            break
         default:
-            return data.message || t('common.notifications.generic')
+            result = data.message || t('common.notifications.generic')
     }
+    // Sanitize to prevent XSS
+    return sanitizeSimpleHtml(result)
 }
 
 function formatTime(dateStr: string): string {

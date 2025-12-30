@@ -74,7 +74,28 @@
                     </div>
                 </div>
 
-                <!-- Non-image Attachments -->
+                <!-- Audio Attachments -->
+                <div v-if="hasAudio" class="flex flex-col gap-2 mb-2 w-full min-w-[200px] sm:min-w-[280px]">
+                    <div v-for="att in audioAttachments" :key="att.id" 
+                        class="flex flex-col gap-2 p-3 bg-gray-50 rounded-2xl border border-gray-100">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-teal-500 flex items-center justify-center text-white shadow-sm flex-shrink-0">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                                    <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                                    <line x1="12" x2="12" y1="19" y2="22" />
+                                </svg>
+                            </div>
+                            <div class="flex flex-col min-w-0 flex-1">
+                                <span class="text-xs font-bold text-gray-700 truncate">{{ att.name }}</span>
+                                <span class="text-[10px] text-gray-500">{{ att.size }}</span>
+                            </div>
+                        </div>
+                        <audio controls :src="att.url" class="w-full h-8 custom-audio"></audio>
+                    </div>
+                </div>
+
+                <!-- Non-image/audio Attachments -->
                 <div v-if="hasFiles" class="flex flex-col gap-1 mb-2">
                     <a v-for="att in fileAttachments" :key="att.id" :href="att.url" target="_blank"
                         class="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors border border-gray-100">
@@ -193,7 +214,28 @@
                     </div>
                 </div>
 
-                <!-- Non-image Attachments -->
+                <!-- Audio Attachments -->
+                <div v-if="hasAudio" class="flex flex-col gap-2 mb-2 w-full min-w-[200px] sm:min-w-[280px]">
+                    <div v-for="att in audioAttachments" :key="att.id" 
+                        class="flex flex-col gap-2 p-3 bg-white/10 rounded-2xl border border-white/10">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-teal-500 shadow-sm flex-shrink-0">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                                    <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                                    <line x1="12" x2="12" y1="19" y2="22" />
+                                </svg>
+                            </div>
+                            <div class="flex flex-col min-w-0 flex-1">
+                                <span class="text-xs font-bold text-white truncate">{{ att.name }}</span>
+                                <span class="text-[10px] text-white/70">{{ att.size }}</span>
+                            </div>
+                        </div>
+                        <audio controls :src="att.url" class="w-full h-8 custom-audio custom-audio--mine"></audio>
+                    </div>
+                </div>
+
+                <!-- Non-image/audio Attachments -->
                 <div v-if="hasFiles" class="flex flex-col gap-1 mb-2">
                     <a v-for="att in fileAttachments" :key="att.id" :href="att.url" target="_blank"
                         class="flex items-center gap-2 px-3 py-2 bg-white/10 rounded-xl hover:bg-white/20 transition-colors border border-white/10">
@@ -307,19 +349,30 @@ const normalizedAttachments = computed(() => {
         const name = att.name || att.file_name || att.filename || 'File'
         const type = att.type || att.file_type || att.mime_type || ''
 
-        // FIX: Handle relative paths from Laravel public storage
-        if (url && !url.startsWith('http') && !url.startsWith('data:')) {
-            // Clean the path and encode components
-            const cleanPath = url.replace(/^\//, '')
-            // We use encodeURI instead of encodeURIComponent to preserve slashes
-            url = '/storage/' + encodeURI(cleanPath)
+        // FIX: Handle URLs from Laravel backend which may have different domains
+        // e.g., http://workforce_contract_digitization.io/storage/chat-attachments/2025/12/file.png
+        if (url) {
+            // If URL contains /storage/, extract the path and use local proxy
+            if (url.includes('/storage/')) {
+                const storageIndex = url.indexOf('/storage/')
+                url = url.substring(storageIndex)
+            } else if (!url.startsWith('http') && !url.startsWith('data:') && !url.startsWith('/storage/')) {
+                // Handle relative paths like 'chat-attachments/2025/12/file.png'
+                const cleanPath = url.replace(/^\//, '')
+                url = '/storage/' + encodeURI(cleanPath)
+            }
         }
 
-        // Better image detection
+        // Better detection
         const isImage = (type && typeof type === 'string' && type.startsWith('image')) ||
             /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(url) ||
             /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(name) ||
             (url && url.startsWith('data:image/'))
+        
+        const isAudio = (type && typeof type === 'string' && type.startsWith('audio')) ||
+            /\.(mp3|wav|ogg|webm|m4a)$/i.test(url) ||
+            /\.(mp3|wav|ogg|webm|m4a)$/i.test(name) ||
+            (url && url.startsWith('data:audio/'))
 
         // Format size
         let sizeText = ''
@@ -335,14 +388,17 @@ const normalizedAttachments = computed(() => {
             name,
             type,
             isImage,
+            isAudio,
             size: sizeText
         }
     })
 })
 
 const imageAttachments = computed(() => normalizedAttachments.value.filter(a => a.isImage))
-const fileAttachments = computed(() => normalizedAttachments.value.filter(a => !a.isImage))
+const audioAttachments = computed(() => normalizedAttachments.value.filter(a => a.isAudio))
+const fileAttachments = computed(() => normalizedAttachments.value.filter(a => !a.isImage && !a.isAudio))
 const hasImages = computed(() => imageAttachments.value.length > 0)
+const hasAudio = computed(() => audioAttachments.value.length > 0)
 const hasFiles = computed(() => fileAttachments.value.length > 0)
 const imageCount = computed(() => imageAttachments.value.length)
 

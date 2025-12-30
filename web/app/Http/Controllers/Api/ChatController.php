@@ -14,7 +14,9 @@ class ChatController extends Controller
 {
     use StoreApiResponse;
 
-    public function __construct(protected ChatService $chatService) {}
+    public function __construct(protected ChatService $chatService)
+    {
+    }
 
     /**
      * Get all conversations for the current user.
@@ -22,9 +24,19 @@ class ChatController extends Controller
     public function index(Request $request): JsonResponse
     {
         $perPage = $request->input('per_page', 20);
-        $conversations = $this->chatService->getConversationsForUser(Auth::id(), $perPage);
+        $type = $request->input('type'); // 'guest', 'private', 'group', or null
+        $conversations = $this->chatService->getConversationsForUser(Auth::id(), $perPage, $type);
 
         return $this->successResponse($conversations, __('messages.success'));
+    }
+
+    /**
+     * Get details of a single conversation.
+     */
+    public function show(int $conversationId): JsonResponse
+    {
+        $conversation = $this->chatService->getConversation($conversationId, Auth::id());
+        return $this->successResponse($conversation, __('messages.success'));
     }
 
     /**

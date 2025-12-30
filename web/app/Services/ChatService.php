@@ -16,16 +16,16 @@ use Illuminate\Support\Facades\Storage;
 class ChatService
 {
     /**
-     * Get conversations for a user with pagination and optimization.
+     * Get a single conversation with details.
      */
-    public function getConversationsForUser(int $userId, int $perPage = 20): LengthAwarePaginator
+    public function getConversation(int $conversationId, int $userId): Conversation
     {
-        return Conversation::forUser($userId)
-            ->with([
-                'latestMessage',
-                'latestMessage.user:id,name,avatar',
-                'users:id,name,avatar,last_seen_at',
-            ])
+        return Conversation::with([
+            'latestMessage',
+            'latestMessage.user:id,name,avatar',
+            'users:id,name,avatar,last_seen_at',
+            'guestSession',
+        ])
             ->withCount([
                 'messages as unread_count' => function ($query) use ($userId) {
                     $query->whereHas('conversation.users', function ($q) use ($userId) {
@@ -34,7 +34,54 @@ class ChatService
                     })->where('user_id', '!=', $userId);
                 }
             ])
-            ->orderByRaw('(SELECT MAX(created_at) FROM messages WHERE messages.conversation_id = conversations.id) DESC')
+            ->findOrFail($conversationId);
+    }
+
+    /**
+     * Get conversations for a user with pagination and optimization.
+     * @param string|null $type Filter by type: 'guest', 'private', 'group', or null for all
+     */
+    public function getConversationsForUser(int $userId, int $perPage = 20, ?string $type = null): LengthAwarePaginator
+    {
+        $query = Conversation::forUser($userId)
+            ->with([
+                'latestMessage',
+                'latestMessage.user:id,name,avatar',
+                'users:id,name,avatar,last_seen_at',
+                'guestSession',
+            ])
+            ->withCount([
+                'messages as unread_count' => function ($query) use ($userId) {
+                    $query->whereHas('conversation.users', function ($q) use ($userId) {
+                        $q->where('user_id', $userId)
+                            ->whereRaw('messages.created_at > COALESCE(conversation_user.last_read_at, \'1970-01-01\')');
+                    })->where('user_id', '!=', $userId);
+                }
+            ]);
+
+        // Filter by type
+        if ($type === 'guest') {
+            // Check if user is admin or manager - they can see all guest chats
+            $user = User::find($userId);
+            $isAdminOrManager = $user && in_array($user->role, ['admin', 'manager', 'super_admin']);
+
+            if ($isAdminOrManager) {
+                // Admin/Manager can see all guest conversations
+                $query->whereHas('guestSession');
+            } else {
+                // Regular staff only see their assigned guest conversations
+                $query->whereHas('guestSession', function ($q) use ($userId) {
+                    $q->where('assigned_staff_id', $userId);
+                });
+            }
+        } elseif ($type === 'private') {
+            $query->where('type', 'private')
+                ->whereDoesntHave('guestSession');
+        } elseif ($type === 'group') {
+            $query->where('type', 'group');
+        }
+
+        return $query->orderByRaw('(SELECT MAX(created_at) FROM messages WHERE messages.conversation_id = conversations.id) DESC')
             ->paginate($perPage);
     }
 
@@ -43,10 +90,12 @@ class ChatService
      */
     public function getOrCreatePrivateConversation(int $userId, int $targetUserId): Conversation
     {
-        // Try to find existing private conversation
+        // Try to find existing private conversation (internal only, not guest chats)
         $existing = Conversation::private()
-            ->whereHas('users', fn ($q) => $q->where('user_id', $userId))
-            ->whereHas('users', fn ($q) => $q->where('user_id', $targetUserId))
+            ->with('users')
+            ->whereDoesntHave('guestSession')
+            ->whereHas('users', fn($q) => $q->where('user_id', $userId))
+            ->whereHas('users', fn($q) => $q->where('user_id', $targetUserId))
             ->first();
 
         if ($existing) {

@@ -10,11 +10,20 @@ const API_BASE = '/chat'
 export const ChatService = {
   /**
    * Get all conversations
+   * @param type - Filter: 'guest', 'private', 'group', or undefined for all
    */
-  async getConversations(page = 1, perPage = 20): Promise<IPaginatedResponse<IConversation>> {
+  async getConversations(page = 1, perPage = 20, type?: 'guest' | 'private' | 'group'): Promise<IPaginatedResponse<IConversation>> {
     const response = await httpClient.get(`${API_BASE}/conversations`, {
-      params: { page, per_page: perPage }
+      params: { page, per_page: perPage, type }
     })
+    return response.data.data
+  },
+
+  /**
+   * Get a single conversation
+   */
+  async getConversation(conversationId: number): Promise<IConversation> {
+    const response = await httpClient.get(`${API_BASE}/conversations/${conversationId}`)
     return response.data.data
   },
 

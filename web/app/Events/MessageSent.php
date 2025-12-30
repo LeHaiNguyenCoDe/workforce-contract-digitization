@@ -61,19 +61,32 @@ class MessageSent implements ShouldBroadcastNow
      */
     public function broadcastWith(): array
     {
+        // Handle guest messages with null user
+        $userData = null;
+        if ($this->message->user) {
+            $userData = [
+                'id' => $this->message->user->id,
+                'name' => $this->message->user->name,
+                'avatar' => $this->message->user->avatar,
+            ];
+        } elseif ($this->message->metadata['is_guest'] ?? false) {
+            // Guest message - use metadata for name
+            $userData = [
+                'id' => null,
+                'name' => $this->message->metadata['guest_name'] ?? 'Khách hàng',
+                'avatar' => null,
+            ];
+        }
+
         return [
             'id' => $this->message->id,
             'conversation_id' => $this->message->conversation_id,
             'user_id' => $this->message->user_id,
-            'user' => [
-                'id' => $this->message->user->id,
-                'name' => $this->message->user->name,
-                'avatar' => $this->message->user->avatar,
-            ],
+            'user' => $userData,
             'content' => $this->message->content,
             'type' => $this->message->type,
             'metadata' => $this->message->metadata,
-            'attachments' => $this->message->attachments->map(fn ($a) => [
+            'attachments' => $this->message->attachments->map(fn($a) => [
                 'id' => $a->id,
                 'file_name' => $a->file_name,
                 'file_path' => $a->file_path,

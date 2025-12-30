@@ -26,8 +26,8 @@ class FriendService
             ->where('status', 'accepted')
             ->get()
             ->map(function ($friendship) use ($userId) {
-                return $friendship->user_id === $userId 
-                    ? $friendship->friend_id 
+                return $friendship->user_id === $userId
+                    ? $friendship->friend_id
                     : $friendship->user_id;
             });
 
@@ -194,6 +194,7 @@ class FriendService
     /**
      * Search users to add as friends.
      * If query is empty, returns all users (except current user).
+     * Returns users with their friendship status relative to current user.
      */
     public function searchUsers(int $currentUserId, ?string $query = null, int $limit = 50): Collection
     {
@@ -207,18 +208,91 @@ class FriendService
             });
         }
 
-        return $queryBuilder->limit($limit)->get();
+        $users = $queryBuilder->limit($limit)->get();
+
+        // Get all friendships involving current user
+        $friendships = Friendship::where(function ($q) use ($currentUserId) {
+            $q->where('user_id', $currentUserId)
+                ->orWhere('friend_id', $currentUserId);
+        })->get()->keyBy(function ($friendship) use ($currentUserId) {
+            return $friendship->user_id === $currentUserId
+                ? $friendship->friend_id
+                : $friendship->user_id;
+        });
+
+        // Add friendship status to each user
+        return $users->map(function ($user) use ($friendships, $currentUserId) {
+            $friendship = $friendships->get($user->id);
+
+            if (!$friendship) {
+                $user->friendship_status = 'none';
+                $user->friendship_id = null;
+            } elseif ($friendship->status === 'accepted') {
+                $user->friendship_status = 'accepted';
+                $user->friendship_id = $friendship->id;
+            } elseif ($friendship->status === 'blocked') {
+                $user->friendship_status = 'blocked';
+                $user->friendship_id = $friendship->id;
+            } elseif ($friendship->status === 'pending') {
+                // Determine if sent or received
+                if ($friendship->user_id === $currentUserId) {
+                    $user->friendship_status = 'sent'; // Current user sent the request
+                } else {
+                    $user->friendship_status = 'pending'; // Current user received the request
+                }
+                $user->friendship_id = $friendship->id;
+            }
+
+            return $user;
+        });
     }
 
     /**
      * Get all users for selection (friends/group members).
+     * Returns users with their friendship status relative to current user.
      */
     public function getAllUsers(int $currentUserId, int $limit = 50): Collection
     {
-        return User::where('id', '!=', $currentUserId)
+        $users = User::where('id', '!=', $currentUserId)
             ->select(['id', 'name', 'email', 'avatar', 'last_seen_at'])
             ->limit($limit)
             ->get();
+
+        // Get all friendships involving current user
+        $friendships = Friendship::where(function ($q) use ($currentUserId) {
+            $q->where('user_id', $currentUserId)
+                ->orWhere('friend_id', $currentUserId);
+        })->get()->keyBy(function ($friendship) use ($currentUserId) {
+            return $friendship->user_id === $currentUserId
+                ? $friendship->friend_id
+                : $friendship->user_id;
+        });
+
+        // Add friendship status to each user
+        return $users->map(function ($user) use ($friendships, $currentUserId) {
+            $friendship = $friendships->get($user->id);
+
+            if (!$friendship) {
+                $user->friendship_status = 'none';
+                $user->friendship_id = null;
+            } elseif ($friendship->status === 'accepted') {
+                $user->friendship_status = 'accepted';
+                $user->friendship_id = $friendship->id;
+            } elseif ($friendship->status === 'blocked') {
+                $user->friendship_status = 'blocked';
+                $user->friendship_id = $friendship->id;
+            } elseif ($friendship->status === 'pending') {
+                // Determine if sent or received
+                if ($friendship->user_id === $currentUserId) {
+                    $user->friendship_status = 'sent'; // Current user sent the request
+                } else {
+                    $user->friendship_status = 'pending'; // Current user received the request
+                }
+                $user->friendship_id = $friendship->id;
+            }
+
+            return $user;
+        });
     }
 
     /**

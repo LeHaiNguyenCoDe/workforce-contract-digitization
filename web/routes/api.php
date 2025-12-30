@@ -53,12 +53,12 @@ Route::prefix('v1')->group(function () {
     */
     Route::middleware([Authenticate::class])->group(function () {
         require __DIR__ . '/api/chat.php';
-        
+
         // Custom broadcasting auth route to use API guard
         Route::post('broadcasting/auth', function (\Illuminate\Http\Request $request) {
             $user = $request->user();
             $channelName = $request->channel_name;
-            
+
             \Log::info('Broadcasting Auth (Manual)', [
                 'user_id' => $user?->id,
                 'channel' => $channelName
@@ -83,13 +83,13 @@ Route::prefix('v1')->group(function () {
 
             // user.{id}
             if (preg_match('/^user\.(\d+)$/', $normalizedName, $matches)) {
-                if ((int)$user->id === (int)$matches[1]) {
+                if ((int) $user->id === (int) $matches[1]) {
                     $authorized = true;
                 }
             }
             // conversation.{id}
             elseif (preg_match('/^conversation\.(\d+)$/', $normalizedName, $matches)) {
-                $conversationId = (int)$matches[1];
+                $conversationId = (int) $matches[1];
                 $authorized = \DB::table('conversation_user')
                     ->where('conversation_id', $conversationId)
                     ->where('user_id', $user->id)
@@ -97,7 +97,7 @@ Route::prefix('v1')->group(function () {
             }
             // presence.conversation.{id}
             elseif (preg_match('/^presence\.conversation\.(\d+)$/', $normalizedName, $matches)) {
-                $conversationId = (int)$matches[1];
+                $conversationId = (int) $matches[1];
                 $authorized = \DB::table('conversation_user')
                     ->where('conversation_id', $conversationId)
                     ->where('user_id', $user->id)
@@ -113,7 +113,7 @@ Route::prefix('v1')->group(function () {
 
             if ($authorized) {
                 return Broadcast::validAuthenticationResponse(
-                    $request, 
+                    $request,
                     $isPresence ? $presenceData : true
                 );
             }
@@ -133,9 +133,9 @@ Route::prefix('v1')->group(function () {
 Route::prefix('v1')->group(function () {
     // Include landing routes again at root level for backward compatibility
     require __DIR__ . '/api/landing.php';
-    
-    // Protected legacy routes
-    Route::middleware([Authenticate::class])->group(function () {
+
+    // Protected legacy routes - SECURITY: Added AdminMiddleware to prevent unauthorized access
+    Route::middleware([Authenticate::class, AdminMiddleware::class])->group(function () {
         // Legacy admin routes that were at root level
         Route::post('promotions', [\App\Http\Controllers\Modules\Admin\PromotionController::class, 'store']);
         Route::put('promotions/{promotion}', [\App\Http\Controllers\Modules\Admin\PromotionController::class, 'update']);

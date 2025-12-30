@@ -31,6 +31,7 @@ declare module 'vue' {
     LandingHeader: typeof import('./components/layouts/LandingHeader.vue')['default']
     LanguageSwitcher: typeof import('./shared/components/LanguageSwitcher.vue')['default']
     NotFound: typeof import('./shared/components/NotFound.vue')['default']
+    NotificationBell: typeof import('./shared/components/admin/NotificationBell.vue')['default']
     Pagination: typeof import('./shared/components/admin/Pagination.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']

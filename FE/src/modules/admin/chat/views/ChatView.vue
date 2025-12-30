@@ -70,13 +70,29 @@
                     ]" @click="activeListTab = 'groups'">
                         Groups
                     </button>
+                    <!-- Guest Tab - only show if user has guest chats -->
+                    <button v-if="hasGuestChats" :class="[
+                        'flex-1 py-2 text-xs font-medium rounded-lg transition-all relative',
+                        activeListTab === 'guests'
+                            ? 'bg-amber-50 text-amber-600'
+                            : 'text-gray-500 hover:bg-gray-50'
+                    ]" @click="activeListTab = 'guests'">
+                        <span class="flex items-center justify-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                <circle cx="12" cy="7" r="4"/>
+                            </svg>
+                            Guest
+                        </span>
+                    </button>
                 </div>
 
                 <!-- Content based on tab -->
                 <!-- Contacts Tab -->
-                <ContactList v-if="activeListTab === 'contacts'" :users="filteredUsers" :friends="friends"
+                <ContactList v-if="activeListTab === 'contacts'" :users="filteredUsers"
                     :loading="isLoadingUsers" :searchQuery="searchQuery" @start-chat="handleStartChatFromContact"
-                    @add-friend="handleAddFriend" />
+                    @add-friend="handleAddFriend" @accept-friend="handleAcceptFriend" 
+                    @reject-friend="handleRejectFriend" @cancel-friend="handleCancelFriend" />
 
                 <!-- Chats Tab -->
                 <ConversationList v-if="activeListTab === 'chats'" :conversations="filteredPrivateConversations"
@@ -86,6 +102,11 @@
                 <!-- Groups Tab -->
                 <ConversationList v-if="activeListTab === 'groups'" :conversations="filteredGroupConversations"
                     :selectedId="currentConversation?.id" :loading="isLoadingConversations"
+                    @select="handleSelectConversation" @delete="handleDeleteConversation" />
+
+                <!-- Guest Tab -->
+                <ConversationList v-if="activeListTab === 'guests'" :conversations="filteredGuestConversations"
+                    :selectedId="currentConversation?.id" :loading="isLoadingGuestConversations"
                     @select="handleSelectConversation" @delete="handleDeleteConversation" />
             </aside>
 
@@ -141,9 +162,11 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useChatStore } from '../stores/chatStore'
+import { useAuthStore } from '@/stores/auth'
 import { storeToRefs } from 'pinia'
 import { useRealtime } from '../composables/useRealtime'
 import { FriendService } from '../services/FriendService'
+import { ChatService } from '../services/ChatService'
 import { NotificationHelper } from '../helpers/notificationHelper'
 import ContactList from '../components/ContactList.vue'
 import ConversationList from '../components/ConversationList.vue'
@@ -162,7 +185,6 @@ const {
 } = useRealtime()
 
 const {
-    conversations,
     currentConversation,
     messages,
     isLoadingConversations,
@@ -176,11 +198,10 @@ const {
 const searchQuery = ref('')
 const showNewChat = ref(false)
 const sidebarOpen = ref(true)
-const activeListTab = ref<'contacts' | 'chats' | 'groups'>('chats')
+const activeListTab = ref<'contacts' | 'chats' | 'groups' | 'guests'>('chats')
 
 // Users data for Contacts tab
 const allUsers = ref<IUser[]>([])
-const friends = ref<number[]>([]) // Friend user IDs
 const isLoadingUsers = ref(false)
 
 // Filtered data
@@ -194,7 +215,17 @@ const filteredUsers = computed(() => {
 })
 
 const filteredPrivateConversations = computed(() => {
-    const list = sortedConversations.value.filter(c => c.type === 'private')
+    // Only show internal private chats, exclude guest conversations
+    const list = sortedConversations.value.filter(c => {
+        const isPrivate = c.type === 'private'
+        const isGuest = c.is_guest === true || !!c.guest_session
+        return isPrivate && !isGuest
+    })
+    
+    if (list.length > 0) {
+        console.log('Filtered private conversations:', list.length)
+    }
+
     if (!searchQuery.value) return list
     const query = searchQuery.value.toLowerCase()
     return list.filter(conv => {
@@ -210,14 +241,70 @@ const filteredGroupConversations = computed(() => {
     return list.filter(conv => conv.name?.toLowerCase().includes(query))
 })
 
-// Load users for Contacts tab
+const isLoadingGuestConversations = ref(false)
+
+// Show Guest tab for admin/manager OR if user has assigned guest chats
+const authStore = useAuthStore()
+const hasGuestChats = computed(() => {
+    const user = authStore.user
+    // Check if store already has guest conversations
+    const storeHasGuest = sortedConversations.value.some(c => c.is_guest || !!c.guest_session)
+    if (storeHasGuest) return true
+
+    if (!user) return false
+    
+    // Check role string
+    const adminRoles = ['admin', 'manager', 'super_admin']
+    if (user.role && adminRoles.includes(user.role)) {
+        return true
+    }
+    
+    // Check roles array (Laravel format)
+    if (user.roles && Array.isArray(user.roles)) {
+        const hasAdminRole = user.roles.some((r: any) => adminRoles.includes(r.name || r))
+        if (hasAdminRole) return true
+    }
+    
+    return false
+})
+
+const filteredGuestConversations = computed(() => {
+    const list = sortedConversations.value.filter(c => c.is_guest || !!c.guest_session)
+    if (!searchQuery.value) return list
+    const query = searchQuery.value.toLowerCase()
+    return list.filter(conv => 
+        conv.name?.toLowerCase().includes(query) ||
+        conv.guest_session?.guest_name?.toLowerCase().includes(query)
+    )
+})
+
+async function loadGuestConversations() {
+    // We already fetch everything in onMounted via chatStore.fetchConversations()
+    // but if we want to be sure to get all guest sessions (even unassigned ones for admins),
+    // we can keep a dedicated fetch if the backend returns different results for 'guest' type.
+    isLoadingGuestConversations.value = true
+    try {
+        const response = await ChatService.getConversations(1, 50, 'guest')
+        // Merge into store if not already there
+        if (response.data) {
+            response.data.forEach(conv => {
+                if (!chatStore.conversations.some(c => c.id === conv.id)) {
+                    chatStore.conversations.push(conv)
+                }
+            })
+        }
+    } catch (error) {
+        console.error('Failed to load guest conversations:', error)
+    } finally {
+        isLoadingGuestConversations.value = false
+    }
+}
+
+// Load users for Contacts tab (with friendship status from backend)
 async function loadUsers() {
     isLoadingUsers.value = true
     try {
         allUsers.value = await FriendService.getAllUsers()
-        // Load friends list
-        const friendsData = await FriendService.getFriends()
-        friends.value = (friendsData as any)?.data?.map((u: IUser) => u.id) || []
     } catch (error) {
         console.error('Failed to load users:', error)
     } finally {
@@ -240,18 +327,79 @@ function handleBack() {
 }
 
 async function handleStartChatFromContact(userId: number) {
-    const conversation = await chatStore.startPrivateChat(userId)
-    subscribeToConversation(conversation.id)
-    activeListTab.value = 'chats'
-    sidebarOpen.value = false
+    try {
+        console.log('handleStartChatFromContact for user:', userId)
+        const conversation = await chatStore.startPrivateChat(userId)
+        console.log('Started/Found private conversation:', conversation)
+        
+        subscribeToConversation(conversation.id)
+        activeListTab.value = 'chats'
+        sidebarOpen.value = false
+        
+        // Ensure conversations are refreshed if it was a brand new one
+        if (!sortedConversations.value.some(c => c.id === conversation.id)) {
+            await chatStore.fetchConversations()
+        }
+    } catch (error) {
+        console.error('Failed to start chat from contact:', error)
+    }
 }
 
 async function handleAddFriend(userId: number) {
     try {
+        console.log('handleAddFriend:', userId)
         await FriendService.sendRequest(userId)
-        // Optionally refresh friends list or show notification
+        // Refresh users list to show updated status
+        await loadUsers()
     } catch (error) {
         console.error('Failed to send friend request:', error)
+    }
+}
+
+async function handleAcceptFriend(friendshipId: number) {
+    console.log('handleAcceptFriend:', friendshipId)
+    if (!friendshipId) {
+        console.error('Missing friendshipId for accept')
+        return
+    }
+    try {
+        await FriendService.acceptRequest(friendshipId)
+        // Refresh users list to show updated status
+        await loadUsers()
+        // Also refresh conversations to show new friend in chats
+        await chatStore.fetchConversations()
+    } catch (error) {
+        console.error('Failed to accept friend request:', error)
+    }
+}
+
+async function handleRejectFriend(friendshipId: number) {
+    console.log('handleRejectFriend:', friendshipId)
+    if (!friendshipId) {
+        console.error('Missing friendshipId for reject')
+        return
+    }
+    try {
+        await FriendService.rejectRequest(friendshipId)
+        // Refresh users list to show updated status
+        await loadUsers()
+    } catch (error) {
+        console.error('Failed to reject friend request:', error)
+    }
+}
+
+async function handleCancelFriend(friendshipId: number) {
+    console.log('handleCancelFriend:', friendshipId)
+    if (!friendshipId) {
+        console.error('Missing friendshipId for cancel')
+        return
+    }
+    try {
+        await FriendService.cancelRequest(friendshipId)
+        // Refresh users list to show updated status
+        await loadUsers()
+    } catch (error) {
+        console.error('Failed to cancel friend request:', error)
     }
 }
 
@@ -317,12 +465,14 @@ onMounted(async () => {
     NotificationHelper.requestPermission()
 
     // Listen for global conversation selection (from notifications)
-    window.addEventListener('chat:select-conversation', (e: any) => {
+    // Listen for global conversation selection (from notifications)
+    window.addEventListener('chat:select-conversation', async (e: any) => {
         const { conversationId } = e.detail
-        const conv = conversations.value.find(c => c.id === conversationId)
-        if (conv) {
-            handleSelectConversation(conv)
-        }
+        // Use the smart selection action that handles fetching if needed
+        await chatStore.selectConversationById(conversationId)
+        
+        // Update sidebar state if on mobile
+        sidebarOpen.value = false
     })
 
     const authStore = (window as any).authStore || useAuthStore()
@@ -339,7 +489,8 @@ onMounted(async () => {
 
     await Promise.all([
         chatStore.fetchConversations(),
-        loadUsers()
+        loadUsers(),
+        loadGuestConversations()
     ])
 })
 

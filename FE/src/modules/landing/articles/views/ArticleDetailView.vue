@@ -3,10 +3,11 @@
  * Article Detail View
  * Uses useArticles composable for article fetching and formatting
  */
-import { onMounted } from 'vue'
+import { onMounted, computed } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useArticles } from '../composables/useArticles'
+import { sanitizeHtml } from '@/shared/utils/sanitize'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -18,6 +19,11 @@ const {
     formatDate,
     fetchArticleById
 } = useArticles()
+
+// Sanitize article content to prevent XSS
+const sanitizedContent = computed(() => {
+    return article.value?.content ? sanitizeHtml(article.value.content) : ''
+})
 
 onMounted(() => {
     if (route.params.id) {
@@ -83,7 +89,8 @@ onMounted(() => {
 
             <!-- Content -->
             <div class="prose prose-invert prose-lg max-w-none">
-                <div v-html="article.content" class="text-slate-300 leading-relaxed space-y-4"></div>
+                <!-- XSS sanitized content -->
+                <div v-html="sanitizedContent" class="text-slate-300 leading-relaxed space-y-4"></div>
             </div>
 
             <!-- Back Button -->

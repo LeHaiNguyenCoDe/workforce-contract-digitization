@@ -4,6 +4,7 @@ import { RouterView, RouterLink, useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores'
 import LanguageSwitcher from '@/shared/components/LanguageSwitcher.vue'
+import NotificationBell from '@/shared/components/admin/NotificationBell.vue'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -228,9 +229,9 @@ const pageTitle = computed(() => {
 
             <!-- Navigation -->
             <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
-                <template v-for="item in visibleMenuItems" :key="item.path">
+                <template v-for="item in visibleMenuItems">
                     <!-- Menu item with children (submenu) -->
-                    <div v-if="item.children && item.children.length > 0">
+                    <div v-if="item.children && item.children.length > 0" :key="`parent-${item.path}`">
                         <button @click="toggleSubmenu(item.icon)"
                             class="w-full flex items-center gap-3 px-3 py-3 text-slate-400 rounded-xl hover:text-white hover:bg-primary/10 transition-all"
                             :class="{ 'bg-primary/10 text-white': isActiveRoute(item) }"
@@ -309,7 +310,7 @@ const pageTitle = computed(() => {
                         </div>
                     </div>
                     <!-- Regular menu item (no children) -->
-                    <RouterLink v-else :to="item.path"
+                    <RouterLink v-else :to="item.path" :key="`item-${item.path}`"
                         class="flex items-center gap-3 px-3 py-3 text-slate-400 rounded-xl hover:text-white hover:bg-primary/10 transition-all"
                         :class="{ 'bg-gradient-primary text-white shadow-lg shadow-primary/25': isActiveRoute(item) }"
                         :title="isSidebarCollapsed ? t(item.label) : undefined">
@@ -411,6 +412,7 @@ const pageTitle = computed(() => {
                 <h1 class="text-xl font-bold text-white">{{ pageTitle }}</h1>
                 <div class="flex items-center gap-4">
                     <LanguageSwitcher />
+                    <NotificationBell />
                     <div class="flex items-center gap-3">
                         <div class="text-right">
                             <p class="text-sm font-medium text-white">{{ authStore.userName }}</p>

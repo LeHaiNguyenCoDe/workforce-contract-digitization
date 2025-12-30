@@ -44,10 +44,11 @@
                         <p class="text-xs text-gray-400 truncate">{{ user.email }}</p>
                     </div>
 
-                    <!-- Actions -->
+                    <!-- Actions based on friendship status -->
                     <div class="flex items-center gap-1.5 flex-shrink-0">
-                        <!-- Start Chat -->
-                        <button @click.stop="$emit('start-chat', user.id)"
+                        <!-- Start Chat (only if accepted friend) -->
+                        <button v-if="user.friendship_status === 'accepted'" 
+                            @click.stop="$emit('start-chat', user.id)"
                             class="p-2 rounded-lg text-gray-400 hover:text-teal-500 hover:bg-teal-50 transition-all"
                             :title="t('common.chat.start_chat')">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
@@ -56,8 +57,62 @@
                             </svg>
                         </button>
 
-                        <!-- Add Friend (if not already friend) -->
-                        <button v-if="!isFriend(user.id)" @click.stop="$emit('add-friend', user.id)"
+                        <!-- Accepted friend indicator -->
+                        <div v-if="user.friendship_status === 'accepted'" 
+                            class="p-2 text-green-500" 
+                            title="Bạn bè">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                                <circle cx="8.5" cy="7" r="4" />
+                                <polyline points="17 11 19 13 23 9" />
+                            </svg>
+                        </div>
+
+                        <!-- Pending request (received) - Accept/Reject -->
+                        <template v-else-if="user.friendship_status === 'pending'">
+                            <button @click.stop="$emit('accept-friend', user.friendship_id)"
+                                class="p-2 rounded-lg text-gray-400 hover:text-green-500 hover:bg-green-50 transition-all"
+                                title="Chấp nhận">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                            </button>
+                            <button @click.stop="$emit('reject-friend', user.friendship_id)"
+                                class="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all"
+                                title="Từ chối">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="18" y1="6" x2="6" y2="18" />
+                                    <line x1="6" y1="6" x2="18" y2="18" />
+                                </svg>
+                            </button>
+                        </template>
+
+                        <!-- Sent request - Cancel -->
+                        <template v-else-if="user.friendship_status === 'sent'">
+                            <div class="p-2 text-purple-500" title="Đã gửi lời mời kết bạn">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <polyline points="12 6 12 12 16 14" />
+                                </svg>
+                            </div>
+                            <button @click.stop="$emit('cancel-friend', user.friendship_id)"
+                                class="p-2 rounded-lg text-gray-400 hover:text-orange-500 hover:bg-orange-50 transition-all"
+                                title="Hủy lời mời">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="18" y1="6" x2="6" y2="18" />
+                                    <line x1="6" y1="6" x2="18" y2="18" />
+                                </svg>
+                            </button>
+                        </template>
+
+                        <!-- No friendship - Add Friend -->
+                        <button v-else-if="user.friendship_status === 'none' || !user.friendship_status" 
+                            @click.stop="$emit('add-friend', user.id)"
                             class="p-2 rounded-lg text-gray-400 hover:text-blue-500 hover:bg-blue-50 transition-all"
                             :title="t('common.friend.add_friend')">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
@@ -69,13 +124,14 @@
                             </svg>
                         </button>
 
-                        <!-- Already Friend indicator -->
-                        <div v-else class="p-2 text-green-500" :title="t('common.messages.friend.already_friends')">
+                        <!-- Blocked indicator -->
+                        <div v-else-if="user.friendship_status === 'blocked'" 
+                            class="p-2 text-gray-400" 
+                            title="Đã chặn">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
                                 fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                                <circle cx="8.5" cy="7" r="4" />
-                                <polyline points="17 11 19 13 23 9" />
+                                <circle cx="12" cy="12" r="10" />
+                                <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
                             </svg>
                         </div>
                     </div>
@@ -92,7 +148,6 @@ import type { IUser } from '../models/Chat'
 
 const props = defineProps<{
     users: IUser[]
-    friends: number[]
     loading: boolean
     searchQuery: string
 }>()
@@ -100,6 +155,9 @@ const props = defineProps<{
 defineEmits<{
     (e: 'start-chat', userId: number): void
     (e: 'add-friend', userId: number): void
+    (e: 'accept-friend', friendshipId: number): void
+    (e: 'reject-friend', friendshipId: number): void
+    (e: 'cancel-friend', friendshipId: number): void
 }>()
 
 const { t } = useI18n()
@@ -128,9 +186,5 @@ function getAvatarColor(id: number): string {
 
 function getInitials(name: string): string {
     return name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase()
-}
-
-function isFriend(userId: number): boolean {
-    return props.friends.includes(userId)
 }
 </script>

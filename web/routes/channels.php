@@ -16,6 +16,22 @@ Broadcast::channel('user.{id}', function ($user, $id) {
 
 /*
 |--------------------------------------------------------------------------
+| Admin Guest Chats Channel (New session alerts)
+|--------------------------------------------------------------------------
+*/
+Broadcast::channel('admin.guest-chats', function ($user) {
+    $isAdmin = false;
+    if (isset($user->role)) {
+        $isAdmin = in_array($user->role, ['admin', 'manager', 'super_admin']);
+    }
+    if (!$isAdmin && method_exists($user, 'hasAnyRole')) {
+        $isAdmin = $user->hasAnyRole(['admin', 'manager', 'super_admin']);
+    }
+    return $isAdmin;
+});
+
+/*
+|--------------------------------------------------------------------------
 | Conversation Channel (Private messages)
 |--------------------------------------------------------------------------
 */
@@ -25,6 +41,28 @@ Broadcast::channel('conversation.{conversationId}', function ($user, $conversati
         \Log::warning('Channel Auth: conversation.{id} NOT FOUND', ['conversation_id' => $conversationId]);
         return false;
     }
+
+    // Check if it's a guest chat (direct attribute or relation)
+    $isGuest = $conversation->is_guest || $conversation->guestSession()->exists();
+
+    if ($isGuest) {
+        // For guest chats, allow all admin/manager/super_admin to listen even if not assigned
+        $isAdmin = false;
+        if (isset($user->role)) {
+            $isAdmin = in_array($user->role, ['admin', 'manager', 'super_admin']);
+        }
+        // Also check Spatie roles if they exist
+        if (!$isAdmin && method_exists($user, 'hasAnyRole')) {
+            $isAdmin = $user->hasAnyRole(['admin', 'manager', 'super_admin']);
+        }
+
+        if ($isAdmin) {
+            \Log::info('Channel Auth: conversation.{id} (GUEST) ALLOWED for Admin', ['user_id' => $user->id, 'conversation_id' => $conversationId]);
+            return true;
+        }
+    }
+
+    // Normal private/group chat logic: must be a member
     $result = $conversation->users()->where('user_id', $user->id)->exists();
     \Log::info('Channel Auth: conversation.{id}', ['user_id' => $user->id, 'conversation_id' => $conversationId, 'result' => $result]);
     return $result;

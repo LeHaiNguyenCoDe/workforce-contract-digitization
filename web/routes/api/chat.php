@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Route;
 // Chat routes
 Route::prefix('chat')->group(function () {
     Route::get('conversations', [ChatController::class, 'index']);
+    Route::get('conversations/{conversationId}', [ChatController::class, 'show']);
     Route::post('conversations/private', [ChatController::class, 'startPrivateChat']);
     Route::post('conversations/group', [ChatController::class, 'createGroup']);
     Route::get('conversations/{conversationId}/messages', [ChatController::class, 'getMessages']);

@@ -6,6 +6,9 @@ export interface IUser {
   avatar?: string | null
   last_seen_at?: string | null
   is_online?: boolean
+  // Friendship status relative to current user
+  friendship_status?: 'none' | 'pending' | 'sent' | 'accepted' | 'blocked'
+  friendship_id?: number | null
 }
 
 export interface IConversation {
@@ -25,6 +28,19 @@ export interface IConversation {
     is_muted: boolean
     is_pinned: boolean
   }
+  is_guest?: boolean
+  guest_session?: {
+    id?: number
+    session_token: string
+    guest_name: string
+    guest_contact?: string
+    status: string
+    assigned_staff?: {
+      id: number
+      name: string
+      avatar?: string | null
+    } | null
+  } | null
 }
 
 export interface IConversationUser extends IUser {
