@@ -1,5 +1,5 @@
 import Echo from 'laravel-echo'
-import axios from 'axios'
+import httpClient from '@/plugins/api/httpClient'
 import Pusher from 'pusher-js'
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useChatStore } from '../stores/chatStore'
@@ -52,24 +52,26 @@ export function getEcho(): Echo<any> {
       authorizer: (channel: any) => {
         return {
           authorize: (socketId: string, callback: Function) => {
-            console.log(`Realtime: Authorizing channel ${channel.name} with socket ${socketId}`)
-            // Use axios to see the RAW response body
-            axios.post('/api/v1/broadcasting/auth', {
+            // console.log(`Realtime: Authorizing channel ${channel.name} with socket ${socketId}`)
+            // Use httpClient which has the correct baseURL configured
+            httpClient.post('/broadcasting/auth', {
               socket_id: socketId,
               channel_name: channel.name
             }, {
-              withCredentials: true,
               headers: {
                 'X-XSRF-TOKEN': getCsrfToken(),
                 'Accept': 'application/json'
               }
             })
             .then((response: any) => {
-              // console.log('Realtime: Auth Response Status:', response.status)
-              if (!response.data || typeof response.data !== 'object') {
-                console.error('Realtime: Invalid JSON response from auth endpoint:', response.data)
+              // console.log(`Realtime: Auth OK for ${channel.name} (Socket: ${socketId})`)
+              // Pusher expects {auth: "..."} object
+              if (response.data && (response.data.auth || typeof response.data === 'object')) {
+                callback(false, response.data)
+              } else {
+                console.error('Realtime: Invalid auth response format:', response.data)
+                callback(true, { error: 'Invalid response format' })
               }
-              callback(false, response.data)
             })
             .catch((error: any) => {
               console.error(`Realtime: Failed authorizing ${channel.name}`, error.response?.status, error.response?.data)
@@ -82,7 +84,7 @@ export function getEcho(): Echo<any> {
 
     // Debug connection events
     echoInstance.connector.pusher.connection.bind('state_change', (states: any) => {
-      console.log('Echo connection state change:', states)
+      return states
     })
 
     echoInstance.connector.pusher.connection.bind('error', (err: any) => {
@@ -117,26 +119,26 @@ export function useRealtime() {
     }
 
     if (isConnected.value && currentUserId.value === userId) {
-      console.log('Realtime: Already connected as user', userId)
+      // console.log('Realtime: Already connected as user', userId)
       return
     }
 
-    console.log(`Realtime: Connecting as user ${userId}`)
+    // console.log(`Realtime: Connecting as user ${userId}`)
     currentUserId.value = userId
     const echo = getEcho()
 
     // Subscribe to user's private channel for notifications
-    console.log(`Realtime: Subscribing to user.${userId}`)
     echo.private(`user.${userId}`)
+      .subscribed(() => {
+      })
+      .error((error: any) => {
+        console.error(`Realtime: Error subscribing to user.${userId}`, error)
+      })
       .listen('.notification.new', (data: INotification) => {
         notificationStore.handleNewNotification(data)
         AudioHelper.playMessageSound()
       })
       .listen('.message.sent', async (data: IMessage) => {
-        console.log('Realtime: Received message.sent on user channel', data)
-        const isGuest = data.metadata?.is_guest || (data as any).is_guest
-        console.log(`Realtime: Message isGuest: ${isGuest}, conversation_id: ${data.conversation_id}`)
-        
         const messageId = Number(data.id)
         const isListeningOnConversation = subscribedConversations.value.has(data.conversation_id)
         
@@ -147,20 +149,16 @@ export function useRealtime() {
 
         // If we are listening on the conversation channel, we don't need to process it here
         if (isListeningOnConversation) {
-          console.log(`Realtime: Skipping user channel processing for message ${messageId} as we are listening on conversation.${data.conversation_id}`)
           return
         }
 
         if (processedMessageIds.has(messageId)) {
-          console.log(`Realtime: Already processed message ${messageId}, skipping duplicate (User Channel)`)
           return
         }
         processedMessageIds.add(messageId)
 
-        console.log('Realtime: Processing global notification for message (User Channel)')
         await chatStore.handleNewMessage(data)
         
-        // Dispatch global event for NotificationBell toast
         window.dispatchEvent(new CustomEvent('notification:show-toast', { 
           detail: {
             ...data,
@@ -170,7 +168,6 @@ export function useRealtime() {
         
         // Trigger browser notification if tab is hidden
         if (document.hidden) {
-          console.log('Realtime: Showing browser notification')
           AudioHelper.playMessageSound()
           NotificationHelper.showNotification(data.user?.name || 'New Message', {
             body: typeof data.content === 'string' ? data.content : 'Sent an attachment',
@@ -208,14 +205,14 @@ export function useRealtime() {
     }
 
     if (isAdmin) {
-      console.log('Realtime: Subscribing to admin.guest-chats')
+      // console.log('Realtime: Subscribing to admin.guest-chats')
       echo.private('admin.guest-chats')
         .listen('.guest.chat.started', (data: { conversation: IConversation }) => {
-          console.log('Realtime: Received guest.chat.started', data)
+          // console.log('Realtime: Received guest.chat.started', data)
           // Add extra properties for filtering consistency if they come from PHP
           const conv = data.conversation
           if (conv && !chatStore.conversations.some(c => c.id === conv.id)) {
-            console.log(`Realtime: Adding new guest conversation ${conv.id} to list`)
+            // console.log(`Realtime: Adding new guest conversation ${conv.id} to list`)
             chatStore.conversations.unshift(conv)
             AudioHelper.playMessageSound()
             
@@ -232,7 +229,7 @@ export function useRealtime() {
               }
             }))
           } else {
-            console.log(`Realtime: Guest conversation ${conv?.id} already exists or invalid`)
+            // console.log(`Realtime: Guest conversation ${conv?.id} already exists or invalid`)
           }
         })
     }
@@ -250,10 +247,10 @@ export function useRealtime() {
 
     const echo = getEcho()
     
-    console.log(`Realtime: Subscribing to conversation.${conversationId}`)
+    // console.log(`Realtime: Subscribing to conversation.${conversationId}`)
     echo.private(`conversation.${conversationId}`)
       .subscribed(() => {
-        console.log(`Realtime: Successfully subscribed to conversation.${conversationId}`)
+        // console.log(`Realtime: Successfully subscribed to conversation.${conversationId}`)
       })
       .error((error: any) => {
         console.error(`Realtime: Error subscribing to conversation.${conversationId}`, error)
@@ -261,17 +258,39 @@ export function useRealtime() {
       .listen('.message.sent', (data: IMessage) => {
         const messageId = Number(data.id)
         if (processedMessageIds.has(messageId)) {
-          console.log(`Realtime: Already processed message ${messageId}, skipping duplicate (Conv Channel)`)
+          // console.log(`Realtime: Already processed message ${messageId}, skipping duplicate (Conv Channel)`)
           return
         }
         processedMessageIds.add(messageId)
 
-        console.log(`Realtime: Received message.sent on conversation.${conversationId}`, data)
+        // console.log(`Realtime: Received message.sent on conversation.${conversationId}`, data)
         chatStore.handleNewMessage(data)
         
-        // Suppress sound for own messages
+        // Skip notification for own messages
         if (Number(data.user_id) !== Number(currentUserId.value)) {
-            AudioHelper.playMessageSound()
+          AudioHelper.playMessageSound()
+          
+          // Dispatch toast notification event for NotificationBell
+          window.dispatchEvent(new CustomEvent('notification:show-toast', { 
+            detail: {
+              ...data,
+              type: 'message'
+            }
+          }))
+          
+          // Show browser notification if tab is hidden
+          if (document.hidden) {
+            // console.log('Realtime: Showing browser notification')
+            NotificationHelper.showNotification(data.user?.name || 'New Message', {
+              body: typeof data.content === 'string' ? data.content : 'Sent an attachment',
+              tag: `chat-${data.conversation_id}`,
+              onClick: () => {
+                window.dispatchEvent(new CustomEvent('chat:select-conversation', { 
+                  detail: { conversationId: data.conversation_id } 
+                }))
+              }
+            })
+          }
         }
       })
       .listen('.user.typing', (data: { user_id: number; user_name: string; is_typing: boolean }) => {
@@ -336,11 +355,76 @@ export function useRealtime() {
   }
 }
 
+import { ChatService } from '../services/ChatService'
+
+// ... existing code ... (at the end)
+
 /**
- * Auto-connect composable for use in components
+ * Global polling monitor for messages when WebSocket is unreliable
+ */
+let globalMessagePollingInterval: ReturnType<typeof setInterval> | null = null
+
+export function useGlobalPolling() {
+  const chatStore = useChatStore()
+  const authStore = useAuthStore()
+
+  async function pollForNewMessages() {
+    // Only poll if window is visible and user is authenticated
+    if (document.hidden || !authStore.user?.id) return
+
+    try {
+      // 1. Refresh conversation list to get unread counts/latest messages
+      await chatStore.fetchConversations(1, true)
+      
+      // 2. If there's a current conversation, fetch latest messages for it
+      if (chatStore.currentConversation) {
+        const messages = await ChatService.getMessages(chatStore.currentConversation.id, 50)
+        for (const msg of messages) {
+          // handleNewMessage checks for duplicates
+          await chatStore.handleNewMessage(msg)
+        }
+      }
+      
+      // 3. Refresh unread notification count
+      const notificationStore = useNotificationStore()
+      await notificationStore.fetchUnreadCount()
+      
+      // console.log('Realtime: Global polling sync completed')
+    } catch (error) {
+      console.warn('Realtime: Global polling failed', error)
+    }
+  }
+
+  function startGlobalPolling(intervalMs: number = 30000) {
+    if (globalMessagePollingInterval) return
+    
+    // Initial poll
+    pollForNewMessages()
+    
+    globalMessagePollingInterval = setInterval(pollForNewMessages, intervalMs)
+  }
+
+  function stopGlobalPolling() {
+    if (globalMessagePollingInterval) {
+      clearInterval(globalMessagePollingInterval)
+      globalMessagePollingInterval = null
+      // console.log('Realtime: Global polling stopped')
+    }
+  }
+
+  return {
+    startGlobalPolling,
+    stopGlobalPolling
+  }
+}
+
+/**
+ * Auto-connect and auto-poll composable for use in Layouts
  */
 export function useAutoConnect() {
+  // console.log('Realtime: useAutoConnect called')
   const { connect, disconnect } = useRealtime()
+  const { startGlobalPolling, stopGlobalPolling } = useGlobalPolling()
   const authStore = useAuthStore()
   
   onMounted(async () => {
@@ -350,12 +434,13 @@ export function useAutoConnect() {
     
     if (authStore.user?.id) {
       connect(authStore.user.id)
-    } else {
-      console.warn('Realtime: AutoConnect failed, no user found in authStore')
+      // Start global polling as a fallback (Silent)
+      startGlobalPolling(30000)
     }
   })
 
   onUnmounted(() => {
     disconnect()
+    stopGlobalPolling()
   })
 }

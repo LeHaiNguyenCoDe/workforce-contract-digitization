@@ -6,6 +6,7 @@ use App\Models\Conversation;
 use App\Models\GuestChatSession;
 use App\Models\Message;
 use App\Models\User;
+use App\Models\Role;
 use App\Events\MessageSent;
 use App\Events\GuestChatStarted;
 use App\Models\Product;
@@ -395,14 +396,37 @@ class GuestChatService
 
     /**
      * Find available support staff.
-     * Simplified: just return first admin user or user ID 1
+     * Tìm user admin hoặc user đầu tiên có sẵn
      */
     private function findAvailableStaff(): ?int
     {
-        // Simple approach: get first available user (admin)
-        $staff = User::where('id', 1)->first();
+        // Tìm user admin đầu tiên
+        $adminRole = Role::where('name', 'admin')->first();
+        if ($adminRole) {
+            $adminUser = User::whereHas('roles', function ($query) use ($adminRole) {
+                $query->where('roles.id', $adminRole->id);
+            })->where('active', true)->first();
+            
+            if ($adminUser) {
+                return $adminUser->id;
+            }
+        }
+        
+        // Nếu không có admin, tìm user đầu tiên có sẵn (không phải customer)
+        $staff = User::where('active', true)
+            ->whereHas('roles', function ($query) {
+                $query->whereIn('roles.name', ['admin', 'manager', 'staff']);
+            })
+            ->first();
 
-        return $staff?->id;
+        if ($staff) {
+            return $staff->id;
+        }
+        
+        // Cuối cùng, lấy user đầu tiên (fallback)
+        $fallbackUser = User::where('active', true)->first();
+        
+        return $fallbackUser?->id;
     }
 
     /**

@@ -130,6 +130,7 @@ declare global {
   const useCustomers: typeof import('./modules/admin/erp/customers/composables/useCustomers').useCustomers
   const useExpenseCategories: typeof import('./modules/admin/erp/expenses/composables/useExpenseCategories').useExpenseCategories
   const useExpenses: typeof import('./modules/admin/erp/expenses/composables/useExpenses').useExpenses
+  const useGlobalPolling: typeof import('./modules/admin/chat/composables/useRealtime').useGlobalPolling
   const useHome: typeof import('./modules/landing/home/composables/useHome').useHome
   const useHomeStore: typeof import('./modules/landing/home/store/store').useHomeStore
   const useI18n: typeof import('vue-i18n').useI18n
@@ -339,6 +340,7 @@ declare module 'vue' {
     readonly useCustomers: UnwrapRef<typeof import('./modules/admin/erp/customers/composables/useCustomers')['useCustomers']>
     readonly useExpenseCategories: UnwrapRef<typeof import('./modules/admin/erp/expenses/composables/useExpenseCategories')['useExpenseCategories']>
     readonly useExpenses: UnwrapRef<typeof import('./modules/admin/erp/expenses/composables/useExpenses')['useExpenses']>
+    readonly useGlobalPolling: UnwrapRef<typeof import('./modules/admin/chat/composables/useRealtime')['useGlobalPolling']>
     readonly useHome: UnwrapRef<typeof import('./modules/landing/home/composables/useHome')['useHome']>
     readonly useHomeStore: UnwrapRef<typeof import('./modules/landing/home/store/store')['useHomeStore']>
     readonly useI18n: UnwrapRef<typeof import('vue-i18n')['useI18n']>

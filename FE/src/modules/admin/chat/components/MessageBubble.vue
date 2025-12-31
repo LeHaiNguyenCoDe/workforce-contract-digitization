@@ -1,6 +1,7 @@
 <template>
     <!-- Individual message row - takes full width -->
-    <div class="w-full flex" :class="isMine ? 'justify-end' : 'justify-start'">
+    <div class="w-full flex message-row" :class="isMine ? 'justify-end' : 'justify-start'"
+        :data-message-id="message.id">
 
         <!-- Received Message Layout -->
         <div v-if="!isMine" class="flex flex-col items-start max-w-[90%] sm:max-w-[75%]">
@@ -76,11 +77,13 @@
 
                 <!-- Audio Attachments -->
                 <div v-if="hasAudio" class="flex flex-col gap-2 mb-2 w-full min-w-[200px] sm:min-w-[280px]">
-                    <div v-for="att in audioAttachments" :key="att.id" 
+                    <div v-for="att in audioAttachments" :key="att.id"
                         class="flex flex-col gap-2 p-3 bg-gray-50 rounded-2xl border border-gray-100">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-full bg-teal-500 flex items-center justify-center text-white shadow-sm flex-shrink-0">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <div
+                                class="w-10 h-10 rounded-full bg-teal-500 flex items-center justify-center text-white shadow-sm flex-shrink-0">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
                                     <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
                                     <line x1="12" x2="12" y1="19" y2="22" />
@@ -216,11 +219,13 @@
 
                 <!-- Audio Attachments -->
                 <div v-if="hasAudio" class="flex flex-col gap-2 mb-2 w-full min-w-[200px] sm:min-w-[280px]">
-                    <div v-for="att in audioAttachments" :key="att.id" 
+                    <div v-for="att in audioAttachments" :key="att.id"
                         class="flex flex-col gap-2 p-3 bg-white/10 rounded-2xl border border-white/10">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-teal-500 shadow-sm flex-shrink-0">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <div
+                                class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-teal-500 shadow-sm flex-shrink-0">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
                                     <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
                                     <line x1="12" x2="12" y1="19" y2="22" />
@@ -368,7 +373,7 @@ const normalizedAttachments = computed(() => {
             /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(url) ||
             /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(name) ||
             (url && url.startsWith('data:image/'))
-        
+
         const isAudio = (type && typeof type === 'string' && type.startsWith('audio')) ||
             /\.(mp3|wav|ogg|webm|m4a)$/i.test(url) ||
             /\.(mp3|wav|ogg|webm|m4a)$/i.test(name) ||
@@ -431,3 +436,23 @@ if (typeof window !== 'undefined') {
     })
 }
 </script>
+
+<style scoped>
+/* Highlight effect for scrolled-to message */
+.message-row.message-highlight {
+    animation: message-highlight-pulse 2s ease-out;
+}
+
+@keyframes message-highlight-pulse {
+
+    0%,
+    50% {
+        background-color: rgba(20, 184, 166, 0.2);
+        border-radius: 12px;
+    }
+
+    100% {
+        background-color: transparent;
+    }
+}
+</style>

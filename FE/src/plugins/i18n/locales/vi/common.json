@@ -21,7 +21,7 @@
   "shopNow": "Mua sắm ngay",
   "download": "Tải về",
   "reply": "Trả lời",
-  "viewAll": "Xem tất cả",
+  "view_all": "Xem tất cả",
   "featuredProducts": "Sản phẩm nổi bật",
   "categories": "Danh mục",
   "pageNotFound": "Không tìm thấy trang",
@@ -242,7 +242,12 @@
     "search_to_add": "Tìm kiếm để thêm...",
     "search_users": "Tìm kiếm người dùng...",
     "no_users_found": "Không tìm thấy người dùng",
-    "create": "Tạo"
+    "create": "Tạo",
+    "delete_chat": "Xóa cuộc trò chuyện",
+    "delete_group": "Xóa nhóm",
+    "confirm_delete_chat": "Bạn có chắc chắn muốn xóa cuộc trò chuyện này?",
+    "confirm_delete_group": "Bạn có chắc chắn muốn xóa nhóm này?",
+    "confirm_delete_message": "Bạn có chắc chắn muốn xóa tin nhắn này?"
   },
 
   "friend": {
@@ -263,6 +268,7 @@
     "mark_all_read": "Đánh dấu tất cả đã đọc",
     "empty": "Không có thông báo",
     "view_all": "Xem tất cả thông báo",
+    "new_notification": "Thông báo mới",
     "friend_request": "{name} đã gửi lời mời kết bạn",
     "friend_accepted": "{name} đã chấp nhận lời mời kết bạn",
     "new_message": "{name} đã gửi tin nhắn cho bạn",

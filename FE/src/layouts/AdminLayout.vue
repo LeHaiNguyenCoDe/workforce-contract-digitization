@@ -5,6 +5,10 @@ import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores'
 import LanguageSwitcher from '@/shared/components/LanguageSwitcher.vue'
 import NotificationBell from '@/shared/components/admin/NotificationBell.vue'
+import { useAutoConnect } from '@/modules/admin/chat/composables/useRealtime'
+
+// Initialize real-time connection for notifications across all admin pages
+useAutoConnect()
 
 const { t } = useI18n()
 const router = useRouter()
@@ -150,7 +154,7 @@ const menuItems: MenuItem[] = [
     {
         icon: 'chat',
         path: '/admin/chat',
-        label: 'chat.title',
+        label: 'common.chat.title',
     },
 
     // Cấu hình

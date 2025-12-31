@@ -110,12 +110,70 @@ Route::prefix('v1')->group(function () {
                     ];
                 }
             }
+            // admin.guest-chats - only for admin/manager/super_admin
+            elseif ($normalizedName === 'admin.guest-chats') {
+                $adminRoles = ['admin', 'manager', 'super_admin'];
+                $userRole = $user->role ?? null;
+                $authorized = in_array($userRole, $adminRoles);
+                
+                \Log::info('Broadcasting Auth admin.guest-chats', [
+                    'user_id' => $user->id,
+                    'user_role' => $userRole,
+                    'authorized_by_role' => $authorized,
+                ]);
+                
+                // Also check Spatie roles if they exist
+                if (!$authorized && method_exists($user, 'hasAnyRole')) {
+                    $authorized = $user->hasAnyRole($adminRoles);
+                    \Log::info('Broadcasting Auth admin.guest-chats Spatie check', [
+                        'authorized_by_spatie' => $authorized,
+                    ]);
+                }
+                
+                // Also check roles relationship if exists
+                if (!$authorized && method_exists($user, 'roles')) {
+                    $userRoleNames = $user->roles->pluck('name')->toArray();
+                    $authorized = count(array_intersect($userRoleNames, $adminRoles)) > 0;
+                    \Log::info('Broadcasting Auth admin.guest-chats roles relation check', [
+                        'user_role_names' => $userRoleNames,
+                        'authorized_by_roles_relation' => $authorized,
+                    ]);
+                }
+            }
+
+            \Log::info('Broadcasting Auth Final', [
+                'channel' => $channelName,
+                'normalized' => $normalizedName,
+                'authorized' => $authorized,
+            ]);
 
             if ($authorized) {
-                return Broadcast::validAuthenticationResponse(
-                    $request,
-                    $isPresence ? $presenceData : true
-                );
+                // Generate auth signature manually for Reverb/Pusher
+                // Format: {auth: "app_key:signature"} for private channels
+                // Format: {auth: "app_key:signature", channel_data: {...}} for presence channels
+                $socketId = $request->socket_id;
+                $appKey = config('broadcasting.connections.reverb.key');
+                $appSecret = config('broadcasting.connections.reverb.secret');
+                
+                $stringToSign = $socketId . ':' . $channelName;
+                if ($isPresence && $presenceData) {
+                    $channelData = json_encode(['user_id' => (string)$presenceData['id'], 'user_info' => $presenceData]);
+                    $stringToSign .= ':' . $channelData;
+                }
+                
+                $signature = hash_hmac('sha256', $stringToSign, $appSecret);
+                
+                $response = ['auth' => $appKey . ':' . $signature];
+                if ($isPresence && $presenceData) {
+                    $response['channel_data'] = $channelData;
+                }
+                
+                \Log::info('Broadcasting Auth Success', [
+                    'channel' => $channelName,
+                    'auth' => $response['auth'],
+                ]);
+                
+                return response()->json($response);
             }
 
             return response()->json(['message' => 'Forbidden'], 403);

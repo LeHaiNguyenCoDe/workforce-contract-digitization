@@ -26,7 +26,6 @@ export const NotificationHelper = {
    * Show a browser notification
    */
   showNotification(title: string, options: NotificationOptions & { onClick?: () => void }) {
-    console.log('NotificationHelper: Attempting to show notification', title, options)
     if (!('Notification' in window)) {
         console.error('NotificationHelper: Notifications not supported')
         return

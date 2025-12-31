@@ -44,8 +44,8 @@ export const useChatStore = defineStore('chat', () => {
   })
 
   // Actions
-  async function fetchConversations(page = 1) {
-    isLoadingConversations.value = true
+  async function fetchConversations(page = 1, silent = false) {
+    if (!silent) isLoadingConversations.value = true
     try {
       const response = await ChatService.getConversations(page)
       if (page === 1) {
@@ -55,12 +55,12 @@ export const useChatStore = defineStore('chat', () => {
       }
       return response
     } finally {
-      isLoadingConversations.value = false
+      if (!silent) isLoadingConversations.value = false
     }
   }
 
-  async function fetchMessages(conversationId: number, beforeId?: number) {
-    isLoadingMessages.value = true
+  async function fetchMessages(conversationId: number, beforeId?: number, silent = false) {
+    if (!silent) isLoadingMessages.value = true
     try {
       const newMessages = await ChatService.getMessages(conversationId, 50, beforeId)
       if (beforeId) {
@@ -71,7 +71,7 @@ export const useChatStore = defineStore('chat', () => {
       hasMoreMessages.value = newMessages.length >= 50
       return newMessages
     } finally {
-      isLoadingMessages.value = false
+      if (!silent) isLoadingMessages.value = false
     }
   }
 
@@ -224,11 +224,10 @@ export const useChatStore = defineStore('chat', () => {
 
     // 2. If not, fetch it from backend
     if (!conv) {
-      console.log(`ChatStore: Received message for unknown conversation ${message.conversation_id}, fetching...`)
       try {
         conv = await ChatService.getConversation(message.conversation_id)
         if (conv) {
-          conversations.value.unshift(conv)
+          conversations.value = [conv, ...conversations.value]
           // The fetched conversation already has the latest message and unread count from server
         }
       } catch (error) {
@@ -237,17 +236,34 @@ export const useChatStore = defineStore('chat', () => {
       }
     } else {
       // 3. For existing conversation, update unread count and latest message
+      const isCurrentUser = Number(message.user_id) === (window as any).authStore?.user?.id
+      
       if (currentConversation.value?.id === message.conversation_id) {
         // Avoid duplicates in current window
         const isDuplicate = messages.value.some(m => Number(m.id) === Number(message.id))
         if (!isDuplicate) {
-          messages.value.push(message)
+          messages.value = [...messages.value, message]
+          
+          // Emit event for UI (Smart Scroll)
+          window.dispatchEvent(new CustomEvent('chat:new-message-arrived', { 
+            detail: { message, isFromSelf: isCurrentUser } 
+          }))
         }
         // Mark as read since we're viewing
         ChatService.markAsRead(message.conversation_id)
       } else {
         // Increment unread count for other tabs/conversations
-        conv.unread_count = (conv.unread_count || 0) + 1
+        const isDuplicate = conv.latest_message?.id === message.id
+        if (!isDuplicate) {
+          conv.unread_count = (conv.unread_count || 0) + 1
+          
+          // Dispatch toast if from others
+          if (!isCurrentUser) {
+            window.dispatchEvent(new CustomEvent('notification:show-toast', { 
+              detail: { ...message, type: 'message' } 
+            }))
+          }
+        }
       }
       conv.latest_message = message
     }

@@ -73,6 +73,16 @@ export default defineConfig(({ mode }) => {
       alias: {
         "@": fileURLToPath(new URL("./src", import.meta.url)),
       },
+      dedupe: ["dompurify"],
+      // Ensure ESM modules are resolved correctly
+      conditions: ['import', 'module', 'browser', 'default'],
+    },
+    optimizeDeps: {
+      include: ["dompurify"],
+      esbuildOptions: {
+        // Ensure dompurify is treated as ESM
+        mainFields: ['module', 'browser', 'main'],
+      },
     },
     server: {
       port: 3000,

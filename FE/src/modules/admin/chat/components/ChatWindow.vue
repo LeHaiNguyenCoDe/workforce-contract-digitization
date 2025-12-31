@@ -28,21 +28,22 @@
                         {{ getTypingText() }}
                     </p>
                     <p v-else class="text-xs text-gray-400">
-                        {{ isGuestChat ? 'Khách hàng' : (isUserOnline ? t('common.chat.online') : (conversation.type === 'group' ?
+                        {{ isGuestChat ? 'Khách hàng' : (isUserOnline ? t('common.chat.online') : (conversation.type ===
+                            'group' ?
                             `${conversation.users.length} ${t('common.chat.members')}` : t('common.chat.offline'))) }}
                     </p>
                 </div>
             </div>
             <div class="flex items-center gap-1">
                 <!-- Assign Staff Button (System Admins only) -->
-                <button v-if="isGuestChat && canAssign"
-                    @click="showAssignModal = true"
+                <button v-if="isGuestChat && canAssign" @click="showAssignModal = true"
                     class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-full transition-all border border-amber-100"
                     title="Phân công nhân viên trả lời">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-                      <circle cx="9" cy="7" r="4"></circle>
-                      <polyline points="16 11 18 13 22 9"></polyline>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <polyline points="16 11 18 13 22 9"></polyline>
                     </svg>
                     <span>Phân công</span>
                 </button>
@@ -133,11 +134,7 @@
             @cancel-reply="replyToMessage = null" />
 
         <!-- Staff Assignment Modal -->
-        <StaffAssignmentModal 
-            v-if="showAssignModal" 
-            @close="showAssignModal = false"
-            @select="onStaffSelected"
-        />
+        <StaffAssignmentModal v-if="showAssignModal" @close="showAssignModal = false" @select="onStaffSelected" />
     </div>
 </template>
 
@@ -205,12 +202,12 @@ const showAssignModal = ref(false)
 
 async function onStaffSelected(userId: number) {
     if (!isGuestChat.value) return
-    
+
     if (!props.conversation.guest_session) {
         console.error('ChatWindow: Missing guest_session for assignment', props.conversation)
         return
     }
-    
+
     try {
         await chatStore.assignGuestChat(props.conversation.guest_session.session_token, userId)
         showAssignModal.value = false
@@ -306,10 +303,62 @@ function handleSend(content: string, attachments?: File[]) {
     replyToMessage.value = null
 }
 
-watch(() => props.messages.length, async () => {
-    await nextTick()
+// Smart scroll to bottom
+const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
     if (messagesContainer.value) {
-        messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
+        messagesContainer.value.scrollTo({
+            top: messagesContainer.value.scrollHeight,
+            behavior
+        })
+    }
+}
+
+// Check if user is near bottom
+const isAtBottom = () => {
+    if (!messagesContainer.value) return true
+    const threshold = 150 // px
+    const position = messagesContainer.value.scrollTop + messagesContainer.value.clientHeight
+    const height = messagesContainer.value.scrollHeight
+    return height - position < threshold
+}
+
+// Listen for new messages from store
+let messageArrivalHandler: EventListener | null = null
+
+onMounted(() => {
+    messageArrivalHandler = ((e: CustomEvent) => {
+        const { isFromSelf } = e.detail
+
+        // Always scroll if it's our own message
+        // Or if we are already at the bottom
+        if (isFromSelf || isAtBottom()) {
+            nextTick(() => {
+                scrollToBottom(isFromSelf ? 'auto' : 'smooth')
+            })
+        }
+    }) as EventListener
+
+    window.addEventListener('chat:new-message-arrived', messageArrivalHandler)
+
+    // Initial scroll
+    nextTick(() => {
+        scrollToBottom('auto')
+    })
+})
+
+onUnmounted(() => {
+    if (messageArrivalHandler) {
+        window.removeEventListener('chat:new-message-arrived', messageArrivalHandler)
+    }
+})
+
+// Still watch for count changes but only for initial load or manual triggers if needed
+watch(() => props.messages.length, (newVal, oldVal) => {
+    // If it's the first load (from 0 to N), scroll to bottom
+    if ((oldVal === 0 || oldVal === undefined) && newVal > 0) {
+        nextTick(() => {
+            scrollToBottom('auto')
+        })
     }
 })
 </script>

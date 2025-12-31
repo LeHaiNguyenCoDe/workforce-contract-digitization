@@ -61,9 +61,8 @@
             <!-- Action Bar (Left Side) -->
             <div class="flex items-center gap-1">
                 <!-- Voice Recording Button -->
-                <button @click="startVoiceRecording" :disabled="!voiceRecorder.isSupported.value"
-                    class="action-btn" :class="{ 'opacity-50 cursor-not-allowed': !voiceRecorder.isSupported.value }"
-                    title="Ghi âm">
+                <button @click="startVoiceRecording" :disabled="!voiceRecorder.isSupported.value" class="action-btn"
+                    :class="{ 'opacity-50 cursor-not-allowed': !voiceRecorder.isSupported.value }" title="Ghi âm">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2">
                         <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
@@ -248,9 +247,7 @@ function insertEmoji(emoji: string) {
 
 // Voice recording functions
 async function startVoiceRecording() {
-    console.log('Starting voice recording...')
     const success = await voiceRecorder.startRecording()
-    console.log('Recording start success:', success)
     if (!success && voiceRecorder.error.value) {
         console.error('Recording error:', voiceRecorder.error.value)
         alert(voiceRecorder.error.value)
@@ -267,7 +264,7 @@ async function sendVoiceMessage() {
         voiceRecorder.cancelRecording()
         return
     }
-    
+
     const audioBlob = await voiceRecorder.stopRecording()
     if (audioBlob) {
         const audioFile = new File([audioBlob], 'voice-message.webm', { type: audioBlob.type })
@@ -316,13 +313,15 @@ watch(() => props.replyTo, (val) => {
     transform: scale(0.95);
 }
 
-.emoji-picker-overlay, .picker-overlay {
+.emoji-picker-overlay,
+.picker-overlay {
     position: fixed;
     inset: 0;
     z-index: 9999;
 }
 
-.emoji-picker-container, .picker-container {
+.emoji-picker-container,
+.picker-container {
     z-index: 10000;
 }
 

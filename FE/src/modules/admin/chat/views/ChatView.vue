@@ -78,9 +78,10 @@
                             : 'text-gray-500 hover:bg-gray-50'
                     ]" @click="activeListTab = 'guests'">
                         <span class="flex items-center justify-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                                <circle cx="12" cy="7" r="4"/>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                <circle cx="12" cy="7" r="4" />
                             </svg>
                             Guest
                         </span>
@@ -89,10 +90,10 @@
 
                 <!-- Content based on tab -->
                 <!-- Contacts Tab -->
-                <ContactList v-if="activeListTab === 'contacts'" :users="filteredUsers"
-                    :loading="isLoadingUsers" :searchQuery="searchQuery" @start-chat="handleStartChatFromContact"
-                    @add-friend="handleAddFriend" @accept-friend="handleAcceptFriend" 
-                    @reject-friend="handleRejectFriend" @cancel-friend="handleCancelFriend" />
+                <ContactList v-if="activeListTab === 'contacts'" :users="filteredUsers" :loading="isLoadingUsers"
+                    :searchQuery="searchQuery" @start-chat="handleStartChatFromContact" @add-friend="handleAddFriend"
+                    @accept-friend="handleAcceptFriend" @reject-friend="handleRejectFriend"
+                    @cancel-friend="handleCancelFriend" />
 
                 <!-- Chats Tab -->
                 <ConversationList v-if="activeListTab === 'chats'" :conversations="filteredPrivateConversations"
@@ -144,7 +145,7 @@
                                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                             </svg>
                             <h3 class="text-xl font-medium text-gray-400 mb-2">{{ t('common.chat.select_conversation')
-                                }}</h3>
+                            }}</h3>
                             <p class="text-gray-400 max-w-xs mx-auto">{{ t('common.chat.select_hint') }}</p>
                         </div>
                     </div>
@@ -221,10 +222,6 @@ const filteredPrivateConversations = computed(() => {
         const isGuest = c.is_guest === true || !!c.guest_session
         return isPrivate && !isGuest
     })
-    
-    if (list.length > 0) {
-        console.log('Filtered private conversations:', list.length)
-    }
 
     if (!searchQuery.value) return list
     const query = searchQuery.value.toLowerCase()
@@ -252,19 +249,19 @@ const hasGuestChats = computed(() => {
     if (storeHasGuest) return true
 
     if (!user) return false
-    
+
     // Check role string
     const adminRoles = ['admin', 'manager', 'super_admin']
     if (user.role && adminRoles.includes(user.role)) {
         return true
     }
-    
+
     // Check roles array (Laravel format)
     if (user.roles && Array.isArray(user.roles)) {
         const hasAdminRole = user.roles.some((r: any) => adminRoles.includes(r.name || r))
         if (hasAdminRole) return true
     }
-    
+
     return false
 })
 
@@ -272,7 +269,7 @@ const filteredGuestConversations = computed(() => {
     const list = sortedConversations.value.filter(c => c.is_guest || !!c.guest_session)
     if (!searchQuery.value) return list
     const query = searchQuery.value.toLowerCase()
-    return list.filter(conv => 
+    return list.filter(conv =>
         conv.name?.toLowerCase().includes(query) ||
         conv.guest_session?.guest_name?.toLowerCase().includes(query)
     )
@@ -328,14 +325,12 @@ function handleBack() {
 
 async function handleStartChatFromContact(userId: number) {
     try {
-        console.log('handleStartChatFromContact for user:', userId)
         const conversation = await chatStore.startPrivateChat(userId)
-        console.log('Started/Found private conversation:', conversation)
-        
+
         subscribeToConversation(conversation.id)
         activeListTab.value = 'chats'
         sidebarOpen.value = false
-        
+
         // Ensure conversations are refreshed if it was a brand new one
         if (!sortedConversations.value.some(c => c.id === conversation.id)) {
             await chatStore.fetchConversations()
@@ -347,7 +342,6 @@ async function handleStartChatFromContact(userId: number) {
 
 async function handleAddFriend(userId: number) {
     try {
-        console.log('handleAddFriend:', userId)
         await FriendService.sendRequest(userId)
         // Refresh users list to show updated status
         await loadUsers()
@@ -357,7 +351,6 @@ async function handleAddFriend(userId: number) {
 }
 
 async function handleAcceptFriend(friendshipId: number) {
-    console.log('handleAcceptFriend:', friendshipId)
     if (!friendshipId) {
         console.error('Missing friendshipId for accept')
         return
@@ -374,7 +367,6 @@ async function handleAcceptFriend(friendshipId: number) {
 }
 
 async function handleRejectFriend(friendshipId: number) {
-    console.log('handleRejectFriend:', friendshipId)
     if (!friendshipId) {
         console.error('Missing friendshipId for reject')
         return
@@ -389,7 +381,6 @@ async function handleRejectFriend(friendshipId: number) {
 }
 
 async function handleCancelFriend(friendshipId: number) {
-    console.log('handleCancelFriend:', friendshipId)
     if (!friendshipId) {
         console.error('Missing friendshipId for cancel')
         return
@@ -460,6 +451,31 @@ async function handleCreateGroup(name: string, memberIds: number[], avatar?: Fil
     activeListTab.value = 'groups'
 }
 
+// Scroll to a specific message in the chat window
+function scrollToMessage(messageId: number) {
+    // Find the message element by data attribute or id
+    const messageElement = document.querySelector(`[data-message-id="${messageId}"]`)
+        || document.getElementById(`message-${messageId}`)
+
+    if (messageElement) {
+        // Scroll smoothly to the message
+        messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+
+        // Add highlight effect temporarily
+        messageElement.classList.add('message-highlight')
+        setTimeout(() => {
+            messageElement.classList.remove('message-highlight')
+        }, 2000)
+    } else {
+        console.warn('ChatView: Message element not found for id', messageId)
+        // If message not found, scroll to bottom (where newest messages are)
+        const chatWindow = document.querySelector('.chat-window .messages-area')
+        if (chatWindow) {
+            chatWindow.scrollTop = chatWindow.scrollHeight
+        }
+    }
+}
+
 onMounted(async () => {
     // Request notification permission
     NotificationHelper.requestPermission()
@@ -470,9 +486,35 @@ onMounted(async () => {
         const { conversationId } = e.detail
         // Use the smart selection action that handles fetching if needed
         await chatStore.selectConversationById(conversationId)
-        
+
         // Update sidebar state if on mobile
         sidebarOpen.value = false
+    })
+
+    // Listen for select-and-scroll event (from notification clicks)
+    window.addEventListener('chat:select-and-scroll', async (e: any) => {
+        const { conversationId, messageId } = e.detail
+
+        if (conversationId) {
+            // Select the conversation first
+            await chatStore.selectConversationById(conversationId)
+            sidebarOpen.value = false
+
+            // Wait for messages to load, then scroll to the message
+            if (messageId) {
+                setTimeout(() => {
+                    scrollToMessage(messageId)
+                }, 500)
+            }
+        }
+    })
+
+    // Listen for tab switch event
+    window.addEventListener('chat:switch-tab', (e: any) => {
+        const { tab } = e.detail
+        if (tab && ['chats', 'groups', 'guest', 'contacts'].includes(tab)) {
+            activeListTab.value = tab
+        }
     })
 
     const authStore = (window as any).authStore || useAuthStore()
@@ -481,10 +523,7 @@ onMounted(async () => {
     }
 
     if (authStore.user?.id) {
-        console.log('ChatView: Initializing realtime for user', authStore.user.id)
         connect(authStore.user.id)
-    } else {
-        console.error('ChatView: Failed to initialize realtime, no user found')
     }
 
     await Promise.all([
@@ -501,6 +540,7 @@ onUnmounted(() => {
     disconnect()
 })
 
+// Polling is now handled globally via useRealtime/useGlobalPolling
 watch(currentConversation, (newConv, oldConv) => {
     if (oldConv) {
         unsubscribeFromConversation(oldConv.id)
