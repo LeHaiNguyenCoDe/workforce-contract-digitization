@@ -3,7 +3,7 @@
         <div class="flex flex-1 overflow-hidden bg-white shadow-sm border border-gray-100">
             <!-- Sidebar -->
             <aside class="absolute md:relative inset-y-0 left-0 z-20 
-                       w-full sm:w-72 md:w-64 lg:w-72 
+                       w-full sm:w-80 md:w-72 lg:w-80 
                        flex flex-col bg-white border-r border-gray-100
                        transform transition-transform duration-300
                        md:translate-x-0" :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'">
@@ -47,43 +47,67 @@
                 <!-- Tabs -->
                 <div class="flex px-3 pb-2 gap-1">
                     <button :class="[
-                        'flex-1 py-2 text-xs font-medium rounded-lg transition-all',
+                        'flex-1 py-1.5 rounded-lg transition-all',
                         activeListTab === 'contacts'
-                            ? 'bg-teal-50 text-teal-600'
+                            ? 'bg-teal-50 text-teal-600 font-semibold'
                             : 'text-gray-500 hover:bg-gray-50'
                     ]" @click="activeListTab = 'contacts'">
-                        Contacts
-                    </button>
-                    <button :class="[
-                        'flex-1 py-2 text-xs font-medium rounded-lg transition-all',
-                        activeListTab === 'chats'
-                            ? 'bg-teal-50 text-teal-600'
-                            : 'text-gray-500 hover:bg-gray-50'
-                    ]" @click="activeListTab = 'chats'">
-                        Chats
-                    </button>
-                    <button :class="[
-                        'flex-1 py-2 text-xs font-medium rounded-lg transition-all',
-                        activeListTab === 'groups'
-                            ? 'bg-teal-50 text-teal-600'
-                            : 'text-gray-500 hover:bg-gray-50'
-                    ]" @click="activeListTab = 'groups'">
-                        Groups
-                    </button>
-                    <!-- Guest Tab - only show if user has guest chats -->
-                    <button v-if="hasGuestChats" :class="[
-                        'flex-1 py-2 text-xs font-medium rounded-lg transition-all relative',
-                        activeListTab === 'guests'
-                            ? 'bg-amber-50 text-amber-600'
-                            : 'text-gray-500 hover:bg-gray-50'
-                    ]" @click="activeListTab = 'guests'">
-                        <span class="flex items-center justify-center gap-1">
+                        <span class="flex items-center justify-center gap-1 text-[11px] whitespace-nowrap">
                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
                                 fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                                 <circle cx="12" cy="7" r="4" />
                             </svg>
-                            Guest
+                            {{ t('common.chat.tabs.contacts') }}
+                        </span>
+                    </button>
+                    <button :class="[
+                        'flex-1 py-1.5 rounded-lg transition-all',
+                        activeListTab === 'chats'
+                            ? 'bg-teal-50 text-teal-600 font-semibold'
+                            : 'text-gray-500 hover:bg-gray-50'
+                    ]" @click="activeListTab = 'chats'">
+                        <span class="flex items-center justify-center gap-1 text-[11px] whitespace-nowrap">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                            </svg>
+                            {{ t('common.chat.tabs.chats') }}
+                        </span>
+                    </button>
+                    <button :class="[
+                        'flex-1 py-1.5 rounded-lg transition-all',
+                        activeListTab === 'groups'
+                            ? 'bg-teal-50 text-teal-600 font-semibold'
+                            : 'text-gray-500 hover:bg-gray-50'
+                    ]" @click="activeListTab = 'groups'">
+                        <span class="flex items-center justify-center gap-1 text-[11px] whitespace-nowrap">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                                <circle cx="9" cy="7" r="4" />
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                            </svg>
+                            {{ t('common.chat.tabs.groups') }}
+                        </span>
+                    </button>
+                    <!-- Guest Tab - only show if user has guest chats -->
+                    <button v-if="hasGuestChats" :class="[
+                        'flex-1 py-1.5 rounded-lg transition-all relative',
+                        activeListTab === 'guests'
+                            ? 'bg-amber-50 text-amber-600 font-semibold'
+                            : 'text-gray-500 hover:bg-gray-50'
+                    ]" @click="activeListTab = 'guests'">
+                        <span class="flex items-center justify-center gap-1 text-[11px] whitespace-nowrap">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                                <circle cx="9" cy="7" r="4" />
+                                <path d="M19 8v2" />
+                                <path d="M19 12v.01" />
+                            </svg>
+                            {{ t('common.chat.tabs.guests') }}
                         </span>
                     </button>
                 </div>
@@ -131,10 +155,10 @@
                 <template v-if="currentConversation">
                     <ChatWindow :conversation="currentConversation" :messages="messages" :loading="isLoadingMessages"
                         :sending="isSendingMessage" :hasMore="hasMoreMessages"
-                        :typingUsers="Array.from(typingUsers.values()).map(u => u.userName)" @send="handleSendMessage"
-                        @load-more="handleLoadMore" @typing="handleTyping" @back="handleBack"
+                        :typingUsers="Array.from(typingUsers.values()).map(u => u.userName)" :showDetails="showDetails"
+                        @send="handleSendMessage" @load-more="handleLoadMore" @typing="handleTyping" @back="handleBack"
                         @delete-message="handleDeleteMessage" @delete-conversation="handleDeleteConversation"
-                        @leave-group="handleLeaveGroup" />
+                        @leave-group="handleLeaveGroup" @toggle-details="showDetails = !showDetails" />
                 </template>
                 <template v-else>
                     <div class="flex-1 flex items-center justify-center p-4">
@@ -145,12 +169,16 @@
                                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                             </svg>
                             <h3 class="text-xl font-medium text-gray-400 mb-2">{{ t('common.chat.select_conversation')
-                            }}</h3>
+                                }}</h3>
                             <p class="text-gray-400 max-w-xs mx-auto">{{ t('common.chat.select_hint') }}</p>
                         </div>
                     </div>
                 </template>
             </main>
+
+            <!-- Conversation Details Sidebar -->
+            <ConversationDetails v-if="currentConversation && showDetails" :conversation="currentConversation"
+                @close="showDetails = false" />
         </div>
 
         <!-- New Chat Modal -->
@@ -172,6 +200,7 @@ import { NotificationHelper } from '../helpers/notificationHelper'
 import ContactList from '../components/ContactList.vue'
 import ConversationList from '../components/ConversationList.vue'
 import ChatWindow from '../components/ChatWindow.vue'
+import ConversationDetails from '../components/ConversationDetails.vue'
 import NewChatModal from '../components/NewChatModal.vue'
 import type { IConversation, IUser } from '../models/Chat'
 
@@ -199,6 +228,7 @@ const {
 const searchQuery = ref('')
 const showNewChat = ref(false)
 const sidebarOpen = ref(true)
+const showDetails = ref(false)
 const activeListTab = ref<'contacts' | 'chats' | 'groups' | 'guests'>('chats')
 
 // Users data for Contacts tab
