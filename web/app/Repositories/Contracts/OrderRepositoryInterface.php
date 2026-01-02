@@ -8,6 +8,15 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 interface OrderRepositoryInterface
 {
     /**
+     * Get all orders with pagination
+     *
+     * @param  int  $perPage
+     * @param  array  $filters
+     * @return LengthAwarePaginator
+     */
+    public function getAll(int $perPage = 10, array $filters = []): LengthAwarePaginator;
+
+    /**
      * Get orders by user ID
      *
      * @param  int|null  $userId

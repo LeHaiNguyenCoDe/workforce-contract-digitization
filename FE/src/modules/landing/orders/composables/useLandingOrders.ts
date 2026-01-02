@@ -59,10 +59,15 @@ export function useLandingOrders() {
     try {
       const response = await httpClient.get('/frontend/orders')
       const data = response.data as any
-      if (data?.data?.data && Array.isArray(data.data.data)) {
-        orders.value = data.data.data
-      } else if (Array.isArray(data?.data)) {
-        orders.value = data.data
+      
+      const responseData = data?.data || data
+      
+      if (responseData?.items && Array.isArray(responseData.items)) {
+        orders.value = responseData.items
+      } else if (responseData?.data && Array.isArray(responseData.data)) {
+        orders.value = responseData.data
+      } else if (Array.isArray(responseData)) {
+        orders.value = responseData
       } else {
         orders.value = []
       }

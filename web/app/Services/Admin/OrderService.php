@@ -28,6 +28,18 @@ class OrderService
     }
 
     /**
+     * Get all orders (for admin)
+     *
+     * @param  int  $perPage
+     * @param  array  $filters
+     * @return LengthAwarePaginator
+     */
+    public function getAll(int $perPage = 10, array $filters = []): LengthAwarePaginator
+    {
+        return $this->orderRepository->getAll($perPage, $filters);
+    }
+
+    /**
      * Get orders by user
      *
      * @param  int|null  $userId

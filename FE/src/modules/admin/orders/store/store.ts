@@ -83,13 +83,20 @@ export const useAdminOrderStore = defineStore('admin-orders', () => {
 
       const response = await httpClient.get('/admin/orders', { params: queryParams })
       const data = response.data as any
-
-      if (data?.data?.data && Array.isArray(data.data.data)) {
-        orders.value = data.data.data
-        totalPages.value = data.data.last_page || 1
-        currentPage.value = data.data.current_page || 1
-      } else if (Array.isArray(data?.data)) {
-        orders.value = data.data
+      
+      // Support for wrapped data.items or direct data array
+      const responseData = data?.data || data
+      
+      if (responseData?.items && Array.isArray(responseData.items)) {
+        orders.value = responseData.items
+        totalPages.value = responseData.last_page || responseData.meta?.last_page || 1
+        currentPage.value = responseData.current_page || responseData.meta?.current_page || 1
+      } else if (responseData?.data && Array.isArray(responseData.data)) {
+        orders.value = responseData.data
+        totalPages.value = responseData.last_page || 1
+        currentPage.value = responseData.current_page || 1
+      } else if (Array.isArray(responseData)) {
+        orders.value = responseData
         totalPages.value = 1
       } else {
         orders.value = []

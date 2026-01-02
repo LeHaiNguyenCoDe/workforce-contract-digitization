@@ -52,6 +52,16 @@ class Order extends Model
         'cancelled_at' => 'datetime',
     ];
 
+    protected $appends = ['order_number'];
+
+    /**
+     * Get order_number attribute (alias for code)
+     */
+    public function getOrderNumberAttribute(): string
+    {
+        return $this->code ?? '';
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

@@ -26,15 +26,34 @@ class OrderController extends Controller
     }
 
     /**
-     * Get user orders
+     * Get user orders (or all orders for admin)
      */
     public function index(Request $request): JsonResponse
     {
         try {
-            $userId = Auth::id();
-            $perPage = $request->query('per_page', 10);
+            $user = Auth::user();
+            $perPage = (int) $request->query('per_page', 10);
 
-            $orders = $this->orderService->getByUserId($userId, $perPage);
+            // Check if request is from Admin API AND user has admin roles
+            $isAdminRequest = $request->is('api/v1/admin/*') || $request->is('v1/admin/*');
+            
+            $adminRoles = ['admin', 'manager', 'super_admin'];
+            $hasAdminRole = $user && (
+                in_array($user->role, $adminRoles) ||
+                (method_exists($user, 'roles') && $user->roles()->whereIn('name', $adminRoles)->exists())
+            );
+
+            if ($isAdminRequest && $hasAdminRole) {
+                // Admin panel: sees all orders with filters
+                $filters = [
+                    'status' => $request->query('status'),
+                    'search' => $request->query('search'),
+                ];
+                $orders = $this->orderService->getAll($perPage, $filters);
+            } else {
+                // Landing page or non-admin: always sees only their own orders
+                $orders = $this->orderService->getByUserId(Auth::id(), $perPage);
+            }
 
             return $this->paginatedResponse($orders);
         } catch (\Exception $ex) {

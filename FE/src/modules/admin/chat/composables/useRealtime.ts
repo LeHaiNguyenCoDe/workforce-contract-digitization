@@ -17,7 +17,7 @@ declare global {
   }
 }
 
-// Initialize Pusher
+// Initialize Pusher globally for Laravel Echo
 window.Pusher = Pusher
 
 let echoInstance: Echo<any> | null = null
