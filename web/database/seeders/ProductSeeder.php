@@ -49,13 +49,13 @@ class ProductSeeder extends Seeder
             $slug = Str::slug($name) . '-' . uniqid();
 
             $ceramicImages = [
-                'https://images.unsplash.com/photo-1578749553375-35071f65682b?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1610701596007-11502861dcfa?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1565191999001-551c187427bb?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1593166541910-f199347d9595?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1544259217-061078c1df24?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1525414674753-48b4e7052994?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1613274554329-70f997f5789f?auto=format&fit=crop&q=80&w=800',
+                'https://www.elledecoration.vn/wp-content/uploads/2024/08/Kutani-yaki-1536x1024.jpeg',
+                'https://www.elledecoration.vn/wp-content/uploads/2024/08/Kutani-yaki-1536x1024.jpeg',
+                'https://www.elledecoration.vn/wp-content/uploads/2024/08/Kutani-yaki-1536x1024.jpeg',
+                'https://www.elledecoration.vn/wp-content/uploads/2024/08/Kutani-yaki-1536x1024.jpeg',
+                'https://www.elledecoration.vn/wp-content/uploads/2024/08/Kutani-yaki-1536x1024.jpeg',
+                'https://www.elledecoration.vn/wp-content/uploads/2024/08/Kutani-yaki-1536x1024.jpeg',
+                'https://www.elledecoration.vn/wp-content/uploads/2024/08/Kutani-yaki-1536x1024.jpeg'
             ];
 
             $product = Product::create([

@@ -252,7 +252,6 @@
 /* Firefox scrollbar */
 * {
     scrollbar-width: thin;
-    scrollbar-color: #8b5cf6 rgba(30, 41, 59, 0.5);
 }
 
 /* Thin scrollbar variant */

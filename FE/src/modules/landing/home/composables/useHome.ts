@@ -8,6 +8,7 @@ import httpClient from '@/plugins/api/httpClient'
 
 export function useHome() {
   // State
+  const productsByCategory = ref<Array<{ category: any; products: any[] }>>([])
   const featuredProducts = ref<any[]>([])
   const featuredCategories = ref<any[]>([])
   const banners = ref<any[]>([])
@@ -17,16 +18,37 @@ export function useHome() {
   // Methods
   async function fetchFeaturedProducts() {
     try {
-      const response = await httpClient.get('/frontend/products', { params: { per_page: 8 } })
-      const data = response.data as any
+      const categoriesResponse = await httpClient.get('/frontend/categories', { params: { per_page: 6 } })
+      const categories = (categoriesResponse as any).data?.data || []
       
-      if (data?.data?.items && Array.isArray(data.data.items)) {
-        featuredProducts.value = data.data.items
-      } else if (data?.data?.data && Array.isArray(data.data.data)) {
-        featuredProducts.value = data.data.data
-      } else if (Array.isArray(data?.data)) {
-        featuredProducts.value = data.data
+      const categoryProducts: Array<{ category: any; products: any[] }> = []
+      for (const category of categories) {
+        const response = await httpClient.get('/frontend/products', { 
+          params: { 
+            category_id: category.id,
+            per_page: 4 
+          } 
+        })
+        const data = response.data as any
+        
+        let products = []
+        if (data?.data?.items && Array.isArray(data.data.items)) {
+          products = data.data.items
+        } else if (data?.data?.data && Array.isArray(data.data.data)) {
+          products = data.data.data
+        } else if (Array.isArray(data?.data)) {
+          products = data.data
+        }
+        
+        if (products.length > 0) {
+          categoryProducts.push({
+            category,
+            products
+          })
+        }
       }
+      
+      productsByCategory.value = categoryProducts
     } catch (error) {
       console.error('Failed to fetch featured products:', error)
     }
@@ -72,6 +94,7 @@ export function useHome() {
   onMounted(loadHomeData)
 
   return {
+    productsByCategory,
     featuredProducts,
     featuredCategories,
     banners,

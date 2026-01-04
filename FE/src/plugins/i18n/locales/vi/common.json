@@ -18,11 +18,11 @@
   "noData": "Không có dữ liệu",
   "no_data": "Không có dữ liệu",
   "all": "Tất cả",
-  "shopNow": "Mua sắm ngay",
+  "shopNow": "Mua ngay",
   "download": "Tải về",
   "reply": "Trả lời",
   "view_all": "Xem tất cả",
-  "featuredProducts": "Sản phẩm nổi bật",
+  "featuredProducts": "Sản phẩm chính",
   "categories": "Danh mục",
   "pageNotFound": "Không tìm thấy trang",
   "overview": "Tổng quan",
@@ -201,6 +201,7 @@
   "selectShipper": "Chọn Shipper phụ trách",
   "selectEmployee": "-- Chọn nhân viên --",
   "confirmAssignment": "Xác nhận phân công",
+  "viewMore": "Xem thêm",
 
   "chat": {
     "title": "Tin nhắn",

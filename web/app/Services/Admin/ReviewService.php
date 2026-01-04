@@ -62,7 +62,7 @@ class ReviewService
         $this->createAutoReply($review);
 
         $review->load([
-            'user:id,name', 
+            'user:id,name',
             'replies' => function($q) {
                 $q->with('user:id,name');
             }

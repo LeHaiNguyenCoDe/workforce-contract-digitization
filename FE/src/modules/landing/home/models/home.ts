@@ -12,3 +12,19 @@ export interface BannerModel {
     position: number
     is_active: boolean
 }
+
+export interface PostModel {
+    id: number
+    title: string
+    image: string
+    link: string
+    slug: string
+}
+
+export interface ReviewModel {
+    id: number
+    image: string
+    comment: string
+    rating: number
+    author: string
+}

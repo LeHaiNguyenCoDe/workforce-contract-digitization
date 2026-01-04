@@ -66,7 +66,7 @@ onUnmounted(() => {
 <template>
     <div class="language-switcher relative">
         <button @click="isOpen = !isOpen"
-            class="flex items-center gap-2 px-3 py-2 text-sm text-slate-400 bg-dark-700 border border-white/10 rounded-lg hover:border-primary hover:text-white transition-all">
+            class="flex items-center gap-2 px-3 py-2 text-sm bg-[#9F7A5F] border border-white/10 rounded-lg hover:text-white transition-all">
             <span>{{ currentLanguage.flag }}</span>
             <span class="hidden sm:inline">{{ currentLanguage.name }}</span>
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
@@ -80,10 +80,10 @@ onUnmounted(() => {
             leave-active-class="transition-all duration-150 ease-in"
             leave-from-class="opacity-100 scale-100 translate-y-0" leave-to-class="opacity-0 scale-95 -translate-y-2">
             <div v-if="isOpen"
-                class="absolute top-full right-0 mt-2 min-w-[160px] bg-dark-800 border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden">
+                class="absolute top-full right-0 mt-2 min-w-[160px] bg-[#9F7A5F] border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden">
                 <button v-for="lang in languages" :key="lang.code" @click="selectLanguage(lang.code)"
                     class="flex items-center gap-3 w-full px-4 py-3 text-sm text-left transition-colors"
-                    :class="locale === lang.code ? 'bg-primary/10 text-primary' : 'text-slate-400 hover:bg-white/5 hover:text-white'">
+                    :class="locale === lang.code ? 'bg-primary/10 text-black' : 'text-white hover:bg-white/5 hover:text-white'">
                     <span class="text-lg">{{ lang.flag }}</span>
                     <span>{{ lang.name }}</span>
                     <svg v-if="locale === lang.code" xmlns="http://www.w3.org/2000/svg" width="16" height="16"

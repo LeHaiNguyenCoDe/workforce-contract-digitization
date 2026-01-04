@@ -6,9 +6,9 @@ import ChatBubble from '@/modules/landing/chat/components/ChatBubble.vue'
 </script>
 
 <template>
-    <div class="min-h-screen flex flex-col bg-dark-900">
+    <div class="min-h-screen flex flex-col bg-white">
         <LandingHeader />
-        <main class="flex-1 py-8">
+        <main class="flex-1 pb-8">
             <RouterView v-slot="{ Component }">
                 <transition enter-active-class="transition-all duration-300 ease-out"
                     enter-from-class="opacity-0 translate-y-4" enter-to-class="opacity-100 translate-y-0"

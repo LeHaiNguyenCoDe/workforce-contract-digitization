@@ -21,7 +21,7 @@ class ReviewRepository implements ReviewRepositoryInterface
             ->where('product_id', $productId)
             ->whereNull('parent_id') // Get only top-level reviews
             ->with([
-                'user:id,name', 
+                'user:id,name',
                 'replies' => function ($query) {
                     $query->with('user:id,name');
                 }

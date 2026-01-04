@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores'
@@ -10,6 +10,16 @@ const router = useRouter()
 const authStore = useAuthStore()
 const isMobileMenuOpen = ref(false)
 const isUserMenuOpen = ref(false)
+const searchQuery = ref('')
+const isAtTop = ref(true)
+
+const handleScroll = () => {
+    isAtTop.value = window.scrollY < 8
+}
+
+const setSearch = (value: string) => {
+    searchQuery.value = value
+}
 
 const handleLogout = async () => {
     isUserMenuOpen.value = false
@@ -20,51 +30,72 @@ const handleLogout = async () => {
 const closeUserMenu = () => {
     isUserMenuOpen.value = false
 }
+
+onMounted(() => {
+    handleScroll()
+    window.addEventListener('scroll', handleScroll, { passive: true })
+})
+
+onUnmounted(() => {
+    window.removeEventListener('scroll', handleScroll)
+})
 </script>
 
 <template>
-    <header class="sticky top-0 z-50 glass">
-        <div class="container py-4">
-            <div class="flex items-center justify-between gap-8">
+    <header
+        class="sticky top-0 z-50 glass bg-white transition-shadow"
+        :class="{ 'shadow-md': !isAtTop }"
+    >
+        <div class="container py-2 ">
+            <div class="flex items-center justify-between">
                 <!-- Logo -->
                 <RouterLink to="/" class="text-2xl font-bold font-display gradient-text">
-                    Store
+                    <img src="../../assets/layout/logo.svg" alt="Logo" class="w-28 h-auto" />
                 </RouterLink>
 
                 <!-- Navigation -->
-                <nav class="hidden md:flex items-center gap-6">
+                <nav class="hidden md:flex items-center gap-6 text-md">
                     <RouterLink to="/"
-                        class="px-3 py-2 text-slate-300 font-medium rounded-lg hover:text-white hover:bg-primary/10 transition-all">
+                        class="px-3 py-2 text-black font-poppins hover:text-black transition-all">
                         {{ t('nav.home') }}</RouterLink>
                     <RouterLink to="/products"
-                        class="px-3 py-2 text-slate-300 font-medium rounded-lg hover:text-white hover:bg-primary/10 transition-all">
+                        class="px-3 py-2 text-black font-poppins hover:text-black transition-all">
                         {{ t('nav.products') }}</RouterLink>
                     <RouterLink to="/articles"
-                        class="px-3 py-2 text-slate-300 font-medium rounded-lg hover:text-white hover:bg-primary/10 transition-all">
+                        class="px-3 py-2 text-black font-poppins hover:text-black transition-all">
                         {{ t('nav.articles') }}</RouterLink>
                     <RouterLink to="/promotions"
-                        class="px-3 py-2 text-slate-300 font-medium rounded-lg hover:text-white hover:bg-primary/10 transition-all">
+                        class="px-3 py-2 text-black font-poppins hover:text-black transition-all">
                         {{ t('nav.promotions') }}</RouterLink>
                 </nav>
 
+                <nav>
+                    <div class="flex-1">
+                        <input
+                            v-model="searchQuery"
+                            type="text"
+                            :placeholder="t('common.search') + '...'"
+                            class="form-input h-8 px-3 py-1 text-sm rounded-md border-none text-title bg-[#C4C4C421]"
+                            @input="setSearch(($event.target as HTMLInputElement).value)"
+                        />
+                    </div>
+                </nav>
+
                 <!-- Actions -->
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-3 bg-white">
                     <LanguageSwitcher />
 
                     <!-- Cart -->
                     <RouterLink to="/cart"
                         class="relative p-2 text-slate-400 hover:text-white hover:bg-primary/10 rounded-full transition-all">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2">
-                            <circle cx="8" cy="21" r="1" />
-                            <circle cx="19" cy="21" r="1" />
-                            <path
-                                d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
-                        </svg>
+                        <img src="../../assets/layout/cart.svg" alt="Cart">
                         <span v-if="authStore.cartCount > 0"
                             class="absolute -top-1 -right-1 w-5 h-5 text-xs font-semibold text-white bg-secondary rounded-full flex items-center justify-center">
                             {{ authStore.cartCount }}
-                        </span>
+                        </span> 
+                    </RouterLink>
+                    <RouterLink to="/">
+                        <img src="../../assets/layout/like.svg" alt="User">
                     </RouterLink>
 
                     <!-- User Dropdown -->
@@ -155,8 +186,8 @@ const closeUserMenu = () => {
                         </div>
                     </template>
                     <template v-else>
-                        <RouterLink to="/login" class="btn btn-primary btn-sm">
-                            {{ t('nav.login') }}
+                        <RouterLink to="/login">
+                            <img src="../../assets/layout/user.svg" alt="User">
                         </RouterLink>
                     </template>
 
