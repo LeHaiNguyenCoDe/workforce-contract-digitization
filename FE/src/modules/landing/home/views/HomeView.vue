@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 /**
  * Home View
  * Uses useHome composable for logic separation
@@ -8,6 +8,7 @@ import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import BlogView from './BlogView.vue'
 import ReviewView from './ReviewView.vue'
+import ImageModal from '@/shared/components/ImageModal.vue'
 import { useHome } from '../composables/useHome'
 import { homeConfig } from '../configs'
 import type { Product } from '@/modules/landing/products/types'
@@ -36,8 +37,13 @@ let heroTimer: ReturnType<typeof setInterval> | null = null
 const categorySlideIndex = ref<Record<number, number>>({})
 const showAllCategories = ref(false)
 const categoriesSection = ref<HTMLElement | null>(null)
+
+// Scroll state for showing/hiding scrollbar
+const isPastHero = ref(false)
+const contentSection = ref<HTMLElement | null>(null)
+
 const visibleCategories = computed(() => {
-    const list = Array.isArray(featuredCategories) ? featuredCategories : featuredCategories.value
+    const list = Array.isArray(featuredCategories) ? featuredCategories : (featuredCategories.value || [])
     return showAllCategories.value ? list : list.slice(0, 4)
 })
 
@@ -63,18 +69,64 @@ const stopSlider = () => {
     }
 }
 
-const prevSlide = () => {
-    currentSlide.value = (currentSlide.value - 1 + heroImages.length) % heroImages.length
-    startSlider()
+// Handle scroll to track position for button visibility and scrollbar
+const handleScroll = () => {
+    const heroHeight = window.innerHeight - 80
+    isPastHero.value = window.scrollY > heroHeight * 0.5
+
+    // Toggle scrollbar visibility (using transparent colors, not hiding)
+    if (isPastHero.value) {
+        document.documentElement.classList.remove('hide-scrollbar')
+    } else {
+        document.documentElement.classList.add('hide-scrollbar')
+    }
 }
 
-const nextSlide = () => {
-    currentSlide.value = (currentSlide.value + 1) % heroImages.length
-    startSlider()
+// Custom smooth scroll function with easing
+const smoothScrollTo = (targetY: number, duration: number = 800) => {
+    const startY = window.pageYOffset
+    const difference = targetY - startY
+    const startTime = performance.now()
+
+    const easeInOutCubic = (t: number): number => {
+        return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
+    }
+
+    const animateScroll = (currentTime: number) => {
+        const elapsed = currentTime - startTime
+        const progress = Math.min(elapsed / duration, 1)
+        const easeProgress = easeInOutCubic(progress)
+
+        window.scrollTo(0, startY + difference * easeProgress)
+
+        if (progress < 1) {
+            requestAnimationFrame(animateScroll)
+        }
+    }
+
+    requestAnimationFrame(animateScroll)
 }
 
-onMounted(startSlider)
-onUnmounted(stopSlider)
+// Scroll down to content
+const scrollToContent = () => {
+    const target = document.getElementById('content-section')
+    const headerHeight = 80 // Height of sticky header
+    if (target) {
+        const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - headerHeight
+        smoothScrollTo(targetPosition, 1000) // 1 second smooth scroll
+    }
+}
+
+onMounted(() => {
+    startSlider()
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    handleScroll() // Check initial state
+})
+onUnmounted(() => {
+    stopSlider()
+    window.removeEventListener('scroll', handleScroll)
+})
+
 
 // Format price helper
 const formatPrice = (price: number) => {
@@ -117,11 +169,13 @@ watch(
     productsByCategory,
     (categories) => {
         const initial: Record<number, number> = {}
-        categories.forEach((item) => {
-            if (item?.category?.id != null) {
-                initial[item.category.id] = 0
-            }
-        })
+        if (Array.isArray(categories)) {
+            categories.forEach((item) => {
+                if (item?.category?.id != null) {
+                    initial[item.category.id] = 0
+                }
+            })
+        }
         categorySlideIndex.value = initial
     },
     { immediate: true }
@@ -130,7 +184,6 @@ watch(
 const prevProductSlide = (categoryId: number, totalProducts: number) => {
     if (totalProducts <= 3) return
     const current = categorySlideIndex.value[categoryId] || 0
-    //const maxIndex = totalProducts - 3
     if (current > 0) {
         categorySlideIndex.value = { ...categorySlideIndex.value, [categoryId]: current - 1 }
     }
@@ -154,19 +207,23 @@ const handleRetry = async () => {
         error.value = err.message || 'Failed to fetch data'
     }
 }
+
+// Image Modal State
+const showImageModal = ref(false)
+const modalImages = ref<string[]>([])
+const modalInitialIndex = ref(0)
+
+const openPreview = (imageUrl: string | null) => {
+    if (!imageUrl) return
+    modalImages.value = [imageUrl]
+    modalInitialIndex.value = 0
+    showImageModal.value = true
+}
 </script>
 
 <template>
     <div class="bg-white">
-        <!-- Hero Section -->
-        <div class="container hidden py-4 gap-2 text-sm md:flex">
-            <RouterLink to="/" class="px-2 text-black font-poppins rounded-md hover:text-black transition-all">Phòng tắm</RouterLink>
-            <RouterLink to="/" class="px-2 text-black font-poppins rounded-md hover:text-black transition-all">Phòng ngủ</RouterLink>
-            <RouterLink to="/" class="px-2 text-black font-poppins rounded-md hover:text-black transition-all">Phòng bếp</RouterLink>
-            <RouterLink to="/" class="px-2 text-black font-poppins rounded-md hover:text-black transition-all">Phòng làm việc</RouterLink>
-            <RouterLink to="/" class="px-2 text-black font-poppins rounded-md hover:text-black transition-all">Phòng khách</RouterLink>
-        </div>
-        <section class="relative overflow-hidden min-h-[520px] md:min-h-[680px] flex items-center">
+        <section class="relative overflow-hidden flex items-center" style="height: calc(100vh - 80px);">
             <div class="absolute inset-0">
                 <Transition enter-active-class="duration-700 ease-out" enter-from-class="opacity-0"
                     enter-to-class="opacity-100" leave-active-class="duration-700 ease-in"
@@ -176,32 +233,39 @@ const handleRetry = async () => {
                     </div>
                 </Transition>
             </div>
-            <div
-                class="absolute top-1/2 left-1/2 h-[680px]">
-            </div>
 
-            <div class="container relative z-10 h-full flex flex-col">
-                <div class="max-w-xl mx-auto text-center -mt-72">
-                    <p class="text-4xl font-bold text-slate-200 mb-8 animate-slide-up">
-                        {{ t('home.heroDescription') }}
-                    </p>
+            <div class="container relative z-10 h-full flex flex-col items-center justify-start pt-24">
+                <div class="max-w-2xl mx-auto text-center">
+                    <h1 class="text-3xl md:text-5xl font-bold text-white mb-8 animate-slide-up leading-tight">
+                        Giảm giá 20% toàn bộ<br>
+                        Sofa trong ngày hôm nay
+                    </h1>
                     <div class="flex flex-col sm:flex-row gap-4 justify-center animate-slide-up">
-                        <RouterLink to="/products" class="button rounded-sm border border-white px-2 py-1">
-                            {{ t('common.shopNow') }}
+                        <RouterLink to="/products"
+                            class="px-8 py-3 border-2 border-white text-white rounded-sm hover:bg-white hover:text-[#9F7A5F] transition-all font-medium">
+                            Mua ngay
                         </RouterLink>
                     </div>
                 </div>
             </div>
 
-            <button @click="prevSlide"
-                class="hidden md:inline-flex absolute left-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/80 hover:bg-white shadow-lg border border-white/60 transition-all">
-                <img src="../../../../assets/landing/home/left.svg" alt="Previous" />
-            </button>
-            <button @click="nextSlide"
-                class="hidden md:inline-flex absolute right-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/80 hover:bg-white shadow-lg border border-white/60 transition-all">
-                <img src="../../../../assets/landing/home/right.svg" alt="Next" />
+            <!-- Slide Indicators (Dashes) -->
+            <div class="absolute bottom-20 left-1/2 -translate-x-1/2 flex gap-3">
+                <button v-for="(_, index) in heroImages" :key="index" @click="currentSlide = index; startSlider()"
+                    class="w-8 h-1 rounded-full transition-all duration-300"
+                    :class="currentSlide === index ? 'bg-white' : 'bg-white/40 hover:bg-white/60'"></button>
+            </div>
+
+            <!-- Scroll Down Arrow -->
+            <button v-show="!isPastHero" @click="scrollToContent"
+                class="absolute bottom-6 left-1/2 -translate-x-1/2 w-10 h-10 z-20 rounded-full bg-white/80 hover:bg-white shadow-lg border border-white/60 transition-all animate-bounce flex items-center justify-center cursor-pointer">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="#9F7A5F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 5v14M5 12l7 7 7-7" />
+                </svg>
             </button>
         </section>
+
 
         <!-- Error Message -->
         <div v-if="error" class="container py-8">
@@ -211,15 +275,16 @@ const handleRetry = async () => {
         </div>
 
         <!-- About Section -->
-        <section class="py-8 bg-white">
+        <section id="content-section" class="py-8 bg-white">
             <div class="container flex flex-col justify-center items-center">
-                <h2 class="text-3xl md:text-4xl font-bold text-[#9F7A5F] mb-6">{{ t('home.aboutTitle') || 'Giới thiệu' }}</h2>
+                <h2 class="text-3xl md:text-4xl font-bold text-[#9F7A5F] mb-6">{{ t('home.aboutTitle') || 'Giới thiệu'
+                    }}</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center py-2">
                     <p class="text-slate-700 text-md leading-relaxed md:text-lg h-full">
                         {{ t('home.aboutDescription') }}
                     </p>
                     <div class="relative">
-                        <img src="../../../../assets/landing/home/about.png" alt="Giới thiệu" 
+                        <img src="../../../../assets/landing/home/about.png" alt="Giới thiệu"
                             class="w-full h-auto rounded-sm shadow-lg object-cover" />
                     </div>
                 </div>
@@ -227,11 +292,10 @@ const handleRetry = async () => {
         </section>
 
         <!-- Categories Section -->
-        <section ref="categoriesSection" class="py-16 md:py-24 bg-white">
+        <section ref="categoriesSection" class="py-16 md:py-218 bg-white">
             <div class="container">
                 <div class="flex items-center justify-between mb-12">
                     <h2 class="text-3xl md:text-4xl font-bold text-[#9F7A5F]">{{ t('common.categories') }}</h2>
-    
                 </div>
 
                 <div v-if="isLoading" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -239,23 +303,27 @@ const handleRetry = async () => {
                         class="h-32 bg-dark-700 rounded-2xl animate-pulse"></div>
                 </div>
 
-                <TransitionGroup
-                    v-else-if="featuredCategories.length"
-                    name="droplet"
-                    tag="div"
-                    class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
-                >
-                    <RouterLink
-                        v-for="category in visibleCategories"
-                        :key="category.id"
-                        :to="`/categories/${category.id}`"
-                        class="group"
-                    >
-                        <img
-                            :src="getCategoryImage(category)"
-                            :alt="category.name"
-                            class="w-full h-52 object-cover mb-2 rounded-xl shadow-sm"
-                        />
+                <TransitionGroup v-else-if="featuredCategories.length" name="droplet" tag="div"
+                    class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <RouterLink v-for="category in visibleCategories" :key="category.id"
+                        :to="`/categories/${category.id}`" class="group">
+                        <div class="relative group/img overflow-hidden rounded-xl shadow-sm mb-2">
+                            <img :src="getCategoryImage(category)" :alt="category.name"
+                                class="w-full h-52 object-cover transition-transform duration-500 group-hover:scale-110" />
+                            <div
+                                class="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
+                                <button
+                                    class="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white flex items-center justify-center hover:bg-white/40 transition-all transform translate-y-4 group-hover/img:translate-y-0"
+                                    @click.prevent="openPreview(getCategoryImage(category))">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
                         <div class="text-center">
                             <span class="font-semibold text-black group-hover:text-[#9F7A5F] transition-colors">
                                 {{ category.name }}
@@ -268,31 +336,25 @@ const handleRetry = async () => {
                     {{ t('common.noCategories') }}
                 </div>
                 <div class="flex justify-center mt-4">
-                    <button
-                        v-if="featuredCategories.length > 1"
-                        @click="toggleCategories"
+                    <button v-if="featuredCategories.length > 1" @click="toggleCategories"
                         class="relative flex items-center gap-2 text-[#9F7A5F] font-semibold hover:opacity-80 transition-opacity"
-                        type="button"
-                    >
-                        <img
-                            src="../../../../assets/landing/home/right.svg"
-                            alt="Toggle categories"
+                        type="button">
+                        <img src="../../../../assets/landing/home/right.svg" alt="Toggle categories"
                             class="w-10 h-10 transition-transform rotate-90"
-                            :class="showAllCategories ? '-rotate-90' : ''"
-                        />
+                            :class="showAllCategories ? '-rotate-90' : ''" />
                     </button>
                 </div>
             </div>
         </section>
 
         <!-- Featured Products Section -->
-        <section class="py-16 md:py-24">
+        <section>
             <div class="container">
                 <div class="flex items-center justify-center mb-12">
-                        <h2 class="text-3xl md:text-4xl font-bold text-[#9F7A5F] mb-2">{{ t('common.featuredProducts') }}</h2>
+                    <h2 class="text-3xl md:text-4xl font-bold text-[#9F7A5F] mb-2">{{ t('common.featuredProducts') }}
+                    </h2>
                 </div>
 
-                <!-- Loop through each category with products -->
                 <div v-if="isLoading" class="space-y-16">
                     <div v-for="i in 3" :key="i">
                         <div class="h-8 bg-dark-700 rounded mb-6 w-32 animate-pulse"></div>
@@ -304,7 +366,6 @@ const handleRetry = async () => {
 
                 <div v-else-if="productsByCategory.length" class="space-y-16">
                     <div v-for="categoryItem in productsByCategory" :key="categoryItem.category.id">
-                        <!-- Category Title -->
                         <div class="flex items-center justify-between mb-6">
                             <h3 class="text-2xl font-bold text-black flex items-center gap-2">
                                 {{ categoryItem.category.name }}
@@ -314,39 +375,56 @@ const handleRetry = async () => {
                                     class="w-8 h-8 rounded-full bg-white shadow border border-slate-200 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                                     :disabled="categoryItem.products.length <= 3 || (categorySlideIndex[categoryItem.category.id] || 0) === 0"
                                     @click="prevProductSlide(categoryItem.category.id, categoryItem.products.length)">
-                                    <img src="../../../../assets/landing/home/arrow.svg" alt="Prev products" class="rotate-180 w-5 h-5"/>
+                                    <img src="../../../../assets/landing/home/arrow.svg" alt="Prev products"
+                                        class="rotate-180 w-5 h-5" />
                                 </button>
                                 <button
                                     class="w-8 h-8 rounded-full bg-white shadow border border-slate-200 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                                     :disabled="categoryItem.products.length <= 3 || (categorySlideIndex[categoryItem.category.id] || 0) >= categoryItem.products.length - 3"
                                     @click="nextProductSlide(categoryItem.category.id, categoryItem.products.length)">
-                                    <img src="../../../../assets/landing/home/arrow.svg" alt="Next products" class="w-5 h-5" />
+                                    <img src="../../../../assets/landing/home/arrow.svg" alt="Next products"
+                                        class="w-5 h-5" />
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Products Slider -->
                         <div class="relative">
                             <div class="overflow-hidden">
-                                <div
-                                    class="flex gap-4 sm:gap-6 transition-transform duration-500"
+                                <div class="flex gap-4 sm:gap-6 transition-transform duration-500"
                                     :style="{ transform: `translateX(calc(-${(categorySlideIndex[categoryItem.category.id] || 0)} * (100% / 2 + 1rem)))` }">
                                     <RouterLink v-for="product in categoryItem.products" :key="product.id"
                                         :to="`/products/${product.id}`"
                                         class="min-w-[calc(100%/2-0.5rem)] lg:min-w-[calc(100%/3-1rem)] hover:scale-[1.02] transition-all duration-300">
-                                        <!-- Product Image -->
-                                        <div class="relative aspect-square rounded-sm mb-4 overflow-hidden">
-                                            <img v-if="getProductImage(product)" :src="getProductImage(product)!" :alt="product.name"
+                                        <div class="relative aspect-square rounded-sm mb-4 overflow-hidden group/img">
+                                            <img v-if="getProductImage(product)" :src="getProductImage(product)!"
+                                                :alt="product.name"
                                                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                                            <div v-else class="w-full h-full flex items-center justify-center text-slate-600"></div>
+                                            <div v-else
+                                                class="w-full h-full flex items-center justify-center text-slate-600">
+                                            </div>
+
+                                            <div
+                                                class="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
+                                                <button
+                                                    class="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white flex items-center justify-center hover:bg-white/40 transition-all transform translate-y-4 group-hover/img:translate-y-0"
+                                                    @click.prevent="openPreview(getProductImage(product))">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                                        viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                                        <circle cx="12" cy="12" r="3"></circle>
+                                                    </svg>
+                                                </button>
+                                            </div>
                                         </div>
 
                                         <div class="flex items-start gap-2 justify-between px-2">
-                                            <h3 class="font-semibold text-xs md:text-base text-black group-hover:text-[#9F7A5F]">
+                                            <h3
+                                                class="font-semibold text-xs md:text-base text-black group-hover:text-[#9F7A5F]">
                                                 {{ product.name }}
                                             </h3>
-                                            <span class="text-sm font-bold text-black">{{ formatPrice(product.sale_price ||
-                                                product.price) }}</span>
+                                            <span class="text-sm font-bold text-black">{{ formatPrice(product.sale_price
+                                                || product.price) }}</span>
                                             <span v-if="product.sale_price && product.sale_price < product.price"
                                                 class="text-sm text-slate-500 line-through">
                                                 {{ formatPrice(product.price) }}
@@ -364,13 +442,12 @@ const handleRetry = async () => {
                 </div>
             </div>
         </section>
-        
-        <BlogView />
 
+        <BlogView />
         <ReviewView />
 
         <!-- CTA Section -->
-        <section class="bg-white">
+        <section class="py-8 bg-white">
             <div class="container">
                 <div class="flex justify-between gap-12 py-8">
                     <div class="w-1/2">
@@ -378,12 +455,11 @@ const handleRetry = async () => {
                         <p class="text-black mb-6 text-md tracking-wide">{{ t('home.subscribeDesc') }}</p>
                     </div>
                     <div class="flex w-1/2 sm:flex-row gap-3 justify-center items-center">
-                        <input type="email" :placeholder="t('home.yourEmail')" class="form-input flex-1 h-10 rounded-none border-2 border-[#9F7A5F] bg-white active:border-[#9F7A5F]" />
-                        <button class="px-2 whitespace-nowrap h-10 rounded-sm bg-[#9F7A5F]">{{ t('common.subscribe') }}</button>
+                        <input type="email" :placeholder="t('home.yourEmail')"
+                            class="form-input flex-1 h-10 rounded-none border-2 border-[#9F7A5F] bg-white active:border-[#9F7A5F]" />
+                        <button class="px-2 whitespace-nowrap h-10 rounded-sm bg-[#9F7A5F]">{{ t('common.subscribe')
+                            }}</button>
                     </div>
-                </div>
-                <div class="py-4">
-                    
                 </div>
             </div>
         </section>
@@ -396,13 +472,19 @@ const handleRetry = async () => {
                             <img :src="feature.icon" :alt="feature.title" class="w-16 h-16" />
                         </div>
                         <div class="flex flex-col items-start justify-center">
-                            <h3 class="text-lg font-semibold text-slate-800">{{ t(feature.titleKey) || feature.title }}</h3>
-                            <a href="#" class="text-sm text-primary hover:underline">{{ t('common.viewMore') || 'Xem thêm' }}</a>
+                            <h3 class="text-lg font-semibold text-slate-800">{{ t(feature.titleKey) || feature.title }}
+                            </h3>
+                            <a href="#" class="text-sm text-primary hover:underline">
+                                {{ t('common.viewMore') || 'Xem thêm' }}
+                            </a>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
+
+        <!-- Image Modal -->
+        <ImageModal v-model="showImageModal" :images="modalImages" :currentIndex="modalInitialIndex" />
     </div>
 </template>
 
@@ -419,46 +501,29 @@ const handleRetry = async () => {
     filter: drop-shadow(0 18px 24px rgba(159, 122, 95, 0.12));
     clip-path: ellipse(55% 65% at 50% 32%);
 }
+</style>
 
-.droplet-indicator {
-    width: 28px;
-    height: 36px;
-    border-radius: 55% 55% 65% 65%;
-    background: linear-gradient(165deg, #f5ede7 0%, #e7d4c7 35%, #c7a78c 72%, #9f7a5f 100%);
-    box-shadow: 0 10px 24px rgba(159, 122, 95, 0.35);
-    position: relative;
-    isolation: isolate;
-    transition: transform 260ms ease, filter 260ms ease;
+<style>
+/* Global style for smooth scrolling */
+html {
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE/Edge */
 }
 
-.droplet-indicator::after {
-    content: '';
-    position: absolute;
-    inset: 4px 6px auto 6px;
-    height: 14px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.5);
-    filter: blur(1px);
+/* Hide scrollbar but allow scrolling - Chrome/Safari/Opera */
+html::-webkit-scrollbar {
+    display: none;
 }
 
-.droplet-indicator--up {
-    transform: rotate(180deg) translateY(-2px);
-    filter: drop-shadow(0 -10px 20px rgba(159, 122, 95, 0.25));
+body {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
 }
 
-button:active .droplet-indicator {
-    animation: droplet-bounce 480ms ease;
-}
-
-@keyframes droplet-bounce {
-    0% {
-        transform: translateY(-2px) scale(0.96);
-    }
-    45% {
-        transform: translateY(6px) scale(1.04);
-    }
-    100% {
-        transform: translateY(0) scale(1);
-    }
+body::-webkit-scrollbar {
+    display: none;
 }
 </style>

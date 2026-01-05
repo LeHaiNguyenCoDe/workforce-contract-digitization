@@ -56,6 +56,7 @@ class ReviewService
             'user_id' => $userId,
             'rating' => $data['rating'],
             'content' => $data['content'] ?? null,
+            'parent_id' => $data['parent_id'] ?? null,
         ]);
 
         // Auto reply logic
@@ -137,6 +138,17 @@ class ReviewService
         }
 
         return $review->toArray();
+    }
+
+    /**
+     * Get featured reviews (rating >= 4) with product info
+     *
+     * @param  int  $limit
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getFeaturedReviews(int $limit = 10)
+    {
+        return $this->reviewRepository->getFeaturedReviews($limit);
     }
 }
 

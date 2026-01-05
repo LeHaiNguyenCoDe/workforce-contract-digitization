@@ -3,6 +3,8 @@ import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import type { Product } from '@/plugins/api'
+import ImageModal from '@/shared/components/ImageModal.vue'
+import { ref } from 'vue'
 
 const { t } = useI18n()
 
@@ -23,6 +25,11 @@ const ratingStars = computed(() => {
     const rating = props.product.rating?.avg || 0
     return Array.from({ length: 5 }, (_, i) => i < Math.round(rating))
 })
+
+const showImageModal = ref(false)
+const openPreview = () => {
+    showImageModal.value = true
+}
 </script>
 
 <template>
@@ -31,7 +38,7 @@ const ratingStars = computed(() => {
             <img :src="product.thumbnail || 'https://placehold.co/300x300/1e293b/64748b?text=No+Image'"
                 :alt="product.name" loading="lazy" />
             <div class="product-overlay">
-                <button class="quick-view-btn" @click.prevent :title="t('product.detail')">
+                <button class="quick-view-btn" @click.prevent="openPreview" :title="t('product.detail')">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2">
                         <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
@@ -68,6 +75,10 @@ const ratingStars = computed(() => {
             </div>
         </div>
     </RouterLink>
+
+    <!-- Image Modal -->
+    <ImageModal v-model="showImageModal"
+        :images="[product.thumbnail || 'https://placehold.co/300x300/1e293b/64748b?text=No+Image']" />
 </template>
 
 <style scoped>

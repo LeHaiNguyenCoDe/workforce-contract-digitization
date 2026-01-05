@@ -26,6 +26,7 @@ class ReviewRequest extends FormRequest
         return [
             'rating' => ['required', 'integer', 'min:1', 'max:5'],
             'content' => ['nullable', 'string'],
+            'parent_id' => ['nullable', 'integer', 'exists:reviews,id'],
         ];
     }
 

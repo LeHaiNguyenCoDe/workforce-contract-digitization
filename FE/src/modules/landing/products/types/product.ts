@@ -28,6 +28,7 @@ export interface Product {
 export interface ProductImage {
   id: number
   url: string
+  image_url?: string
   alt?: string
   is_primary?: boolean
 }

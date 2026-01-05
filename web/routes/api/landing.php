@@ -41,9 +41,11 @@ Route::get('categories/{category}', [CategoryController::class, 'show']);
 Route::get('products', [ProductController::class, 'index']);
 Route::get('products/{product}', [ProductController::class, 'show']);
 Route::get('categories/{category}/products', [ProductController::class, 'byCategory']);
+Route::get('home-data', [ProductController::class, 'getHomeData']);
 
 // Reviews (Public - view only)
 Route::get('products/{product}/reviews', [ReviewController::class, 'index']);
+Route::get('featured-reviews', [ReviewController::class, 'getFeaturedReviews']);
 
 // Articles/Blog (Public)
 Route::get('articles', [ArticleController::class, 'index']);

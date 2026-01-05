@@ -32,14 +32,70 @@ class ProductController extends Controller
     {
         try {
             $perPage = $request->query('per_page', 12);
-            $search = $request->query('search');
-            $categoryId = $request->query('category_id');
-            // For admin products page: only show products with stock
-            $onlyWithStock = (bool) $request->query('only_with_stock', false);
+            
+            $filters = [
+                'search' => $request->query('search'),
+                'category_id' => $request->query('category_id'),
+                'category_ids' => $request->query('category_ids'),
+                'brands' => $request->query('brands'),
+                'dimensions' => $request->query('dimensions'),
+                'color' => $request->query('color'),
+                'sort_by' => $request->query('sort_by', 'latest'),
+                'only_with_stock' => (bool) $request->query('only_with_stock', false),
+            ];
 
-            $products = $this->productService->getAll($perPage, $search, $categoryId, $onlyWithStock);
+            $products = $this->productService->getAll($perPage, $filters);
 
             return $this->paginatedResponse($products);
+        } catch (\Exception $ex) {
+            return $this->serverErrorResponse('error', $ex);
+        }
+    }
+    /**
+     * Get home page data - categories with featured products
+     * Optimized single query - no N+1 problem
+     */
+    public function getHomeData(Request $request): JsonResponse
+    {
+        try {
+            $categoriesLimit = (int) $request->query('categories_limit', 6);
+            $productsPerCategory = (int) $request->query('products_per_category', 4);
+
+            $categories = \App\Models\Category::with(['products' => function ($query) use ($productsPerCategory) {
+                $query->with(['images' => function ($q) {
+                    $q->select('id', 'product_id', 'image_url', 'is_main')
+                        ->orderByDesc('is_main');
+                }])
+                ->select('id', 'name', 'slug', 'price', 'thumbnail', 'category_id')
+                ->limit($productsPerCategory);
+            }])
+            ->select('id', 'name', 'slug')
+            ->limit($categoriesLimit)
+            ->get();
+
+            $result = $categories->filter(function ($category) {
+                return $category->products->count() > 0;
+            })->map(function ($category) {
+                return [
+                    'category' => [
+                        'id' => $category->id,
+                        'name' => $category->name,
+                        'slug' => $category->slug,
+                    ],
+                    'products' => $category->products->map(function ($product) {
+                        return [
+                            'id' => $product->id,
+                            'name' => $product->name,
+                            'slug' => $product->slug,
+                            'price' => $product->price,
+                            'thumbnail' => $product->thumbnail,
+                            'images' => $product->images,
+                        ];
+                    })->values(),
+                ];
+            })->values();
+
+            return $this->successResponse($result);
         } catch (\Exception $ex) {
             return $this->serverErrorResponse('error', $ex);
         }

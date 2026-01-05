@@ -58,6 +58,22 @@ class ReviewController extends Controller
         }
     }
 
+    /**
+     * Get featured reviews (rating >= 4) with product info
+     * Optimized single query - no N+1 problem
+     */
+    public function getFeaturedReviews(Request $request): JsonResponse
+    {
+        try {
+            $limit = (int) $request->query('limit', 10);
+            $reviews = $this->reviewService->getFeaturedReviews($limit);
+
+            return $this->successResponse($reviews);
+        } catch (\Exception $ex) {
+            return $this->serverErrorResponse('error', $ex);
+        }
+    }
+
     public function getAllReviews(Request $request): JsonResponse
     {
         try {

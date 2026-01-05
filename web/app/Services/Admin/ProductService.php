@@ -27,9 +27,9 @@ class ProductService
      * @param  bool  $onlyWithStock  Only show products with stock > 0 (for admin)
      * @return LengthAwarePaginator
      */
-    public function getAll(int $perPage = 12, ?string $search = null, ?int $categoryId = null, bool $onlyWithStock = false): LengthAwarePaginator
+    public function getAll(int $perPage = 12, array $filters = []): LengthAwarePaginator
     {
-        return $this->productRepository->getAll($perPage, $search, $categoryId, $onlyWithStock);
+        return $this->productRepository->getAll($perPage, $filters);
     }
 
     /**
@@ -76,6 +76,7 @@ class ProductService
             'name' => $product->name,
             'slug' => $product->slug,
             'price' => $product->price,
+            'category_id' => $product->category_id,
             'short_description' => $product->short_description,
             'description' => $product->description,
             'thumbnail' => $product->thumbnail,

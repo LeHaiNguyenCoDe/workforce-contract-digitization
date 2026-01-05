@@ -194,8 +194,6 @@ const fetchProduct = async () => {
             }
         }
     } catch (error) {
-        console.error('Failed to fetch product:', error)
-        alert('Không tìm thấy sản phẩm!')
         router.push('/admin/products')
     } finally {
         isLoading.value = false

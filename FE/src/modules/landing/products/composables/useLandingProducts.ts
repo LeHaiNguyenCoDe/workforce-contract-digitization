@@ -16,6 +16,13 @@ export function useLandingProducts() {
   const totalPages = ref(1)
   const searchQuery = ref('')
   const selectedCategory = ref<number | null>(null)
+  
+  // Advanced filters from mockup
+  const selectedCategories = ref<number[]>([])
+  const selectedBrands = ref<string[]>([])
+  const selectedDimensions = ref<string[]>([])
+  const selectedColor = ref<string | null>(null)
+  
   const sortBy = ref<'newest' | 'price_asc' | 'price_desc' | 'popular'>('newest')
 
   // Methods
@@ -29,8 +36,41 @@ export function useLandingProducts() {
     fetchProducts()
   }
 
-  function setCategory(categoryId: number | null) {
-    selectedCategory.value = categoryId
+  function toggleCategory(categoryId: number) {
+    const index = selectedCategories.value.indexOf(categoryId)
+    if (index === -1) {
+      selectedCategories.value.push(categoryId)
+    } else {
+      selectedCategories.value.splice(index, 1)
+    }
+    currentPage.value = 1
+    fetchProducts()
+  }
+
+  function toggleBrand(brand: string) {
+    const index = selectedBrands.value.indexOf(brand)
+    if (index === -1) {
+      selectedBrands.value.push(brand)
+    } else {
+      selectedBrands.value.splice(index, 1)
+    }
+    currentPage.value = 1
+    fetchProducts()
+  }
+
+  function toggleDimension(dim: string) {
+    const index = selectedDimensions.value.indexOf(dim)
+    if (index === -1) {
+      selectedDimensions.value.push(dim)
+    } else {
+      selectedDimensions.value.splice(index, 1)
+    }
+    currentPage.value = 1
+    fetchProducts()
+  }
+
+  function setColor(color: string | null) {
+    selectedColor.value = color
     currentPage.value = 1
     fetchProducts()
   }
@@ -43,24 +83,34 @@ export function useLandingProducts() {
   async function fetchProducts(params?: ProductFilters & { page?: number }) {
     isLoading.value = true
     try {
-      const queryParams: Record<string, unknown> = {
+      const queryParams: Record<string, any> = {
         page: params?.page || currentPage.value,
         per_page: 12
       }
 
       if (searchQuery.value) queryParams.search = searchQuery.value
-      if (selectedCategory.value) queryParams.category_id = selectedCategory.value
+      
+      // Multiple categories support
+      if (selectedCategories.value.length > 0) {
+        queryParams.category_ids = selectedCategories.value
+      } else if (selectedCategory.value) {
+        queryParams.category_id = selectedCategory.value
+      }
+      
+      // Other filters (future backend support)
+      if (selectedBrands.value.length > 0) queryParams.brands = selectedBrands.value
+      if (selectedColor.value) queryParams.color = selectedColor.value
+      if (selectedDimensions.value.length > 0) queryParams.dimensions = selectedDimensions.value
       
       // Sort handling
       if (sortBy.value === 'price_asc') {
-        queryParams.sort_by = 'price'
-        queryParams.sort_order = 'asc'
+        queryParams.sort_by = 'price_asc'
       } else if (sortBy.value === 'price_desc') {
-        queryParams.sort_by = 'price'
-        queryParams.sort_order = 'desc'
+        queryParams.sort_by = 'price_desc'
       } else if (sortBy.value === 'newest') {
-        queryParams.sort_by = 'created_at'
-        queryParams.sort_order = 'desc'
+        queryParams.sort_by = 'latest'
+      } else if (sortBy.value === 'popular') {
+        queryParams.sort_by = 'latest' // Fallback for now
       }
 
       const response = await httpClient.get('/frontend/products', { params: queryParams })
@@ -90,7 +140,7 @@ export function useLandingProducts() {
 
   async function fetchCategories() {
     try {
-      const response = await httpClient.get('/frontend/categories', { params: { per_page: 20 } })
+      const response = await httpClient.get('/frontend/categories', { params: { per_page: 50 } })
       const data = response.data as any
       categories.value = Array.isArray(data?.data) ? data.data : []
     } catch (error) {
@@ -118,11 +168,18 @@ export function useLandingProducts() {
     totalPages,
     searchQuery,
     selectedCategory,
+    selectedCategories,
+    selectedBrands,
+    selectedDimensions,
+    selectedColor,
     sortBy,
     // Methods
     formatPrice,
     setSearch,
-    setCategory,
+    toggleCategory,
+    toggleBrand,
+    toggleDimension,
+    setColor,
     setSortBy,
     changePage,
     fetchProducts,

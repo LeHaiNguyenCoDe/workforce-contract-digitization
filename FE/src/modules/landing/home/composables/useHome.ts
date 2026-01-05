@@ -18,39 +18,20 @@ export function useHome() {
   // Methods
   async function fetchFeaturedProducts() {
     try {
-      const categoriesResponse = await httpClient.get('/frontend/categories', { params: { per_page: 6 } })
-      const categories = (categoriesResponse as any).data?.data || []
+      // Single optimized API call - replaces N+1 queries
+      const response = await httpClient.get('/frontend/home-data', {
+        params: { categories_limit: 6, products_per_category: 4 }
+      })
+      const data = response.data as any
       
-      const categoryProducts: Array<{ category: any; products: any[] }> = []
-      for (const category of categories) {
-        const response = await httpClient.get('/frontend/products', { 
-          params: { 
-            category_id: category.id,
-            per_page: 4 
-          } 
-        })
-        const data = response.data as any
-        
-        let products = []
-        if (data?.data?.items && Array.isArray(data.data.items)) {
-          products = data.data.items
-        } else if (data?.data?.data && Array.isArray(data.data.data)) {
-          products = data.data.data
-        } else if (Array.isArray(data?.data)) {
-          products = data.data
-        }
-        
-        if (products.length > 0) {
-          categoryProducts.push({
-            category,
-            products
-          })
-        }
+      if (data?.status === 'success' && Array.isArray(data?.data)) {
+        productsByCategory.value = data.data
+      } else {
+        productsByCategory.value = []
       }
-      
-      productsByCategory.value = categoryProducts
     } catch (error) {
       console.error('Failed to fetch featured products:', error)
+      productsByCategory.value = []
     }
   }
 

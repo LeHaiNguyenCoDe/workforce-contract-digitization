@@ -32,6 +32,11 @@
   "backToStore": "Quay lại cửa hàng",
   "exploreThousands": "Khám phá hàng ngàn sản phẩm chất lượng cao",
   "notFound": "Không tìm thấy sản phẩm",
-  "tryDifferentSearch": "Hãy thử tìm kiếm với từ khóa khác"
+  "tryDifferentSearch": "Hãy thử tìm kiếm với từ khóa khác",
+  "brand": "Thương hiệu",
+  "dimension": "Đường kính / Chiều cao tối đa",
+  "color": "Màu sắc",
+  "productType": "Loại sản phẩm",
+  "allProducts": "Tất cả sản phẩm"
 }
 

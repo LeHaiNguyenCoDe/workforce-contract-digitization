@@ -170,7 +170,7 @@ declare global {
   const useUserStatusLabel: typeof import('./shared/helpers/statusHelpers').useUserStatusLabel
   const useUserStore: typeof import('./modules/admin/users/store/store').useUserStore
   const useUsers: typeof import('./modules/admin/users/composables/useUsers').useUsers
-  const useVoiceRecorder: typeof import('./modules/landing/chat/composables/useVoiceRecorder').useVoiceRecorder
+  const useVoiceRecorder: typeof import('./modules/admin/chat/composables/useVoiceRecorder').useVoiceRecorder
   const useWarehouseProducts: typeof import('./modules/admin/warehouses/composables/useWarehouseProducts').useWarehouseProducts
   const useWarehouseStore: typeof import('./modules/admin/warehouses/store/store').useWarehouseStore
   const useWishlist: typeof import('./modules/landing/wishlist/composables/useWishlist').useWishlist
@@ -190,11 +190,11 @@ declare global {
   export type { Component, Slot, Slots, ComponentPublicInstance, ComputedRef, DirectiveBinding, ExtractDefaultPropTypes, ExtractPropTypes, ExtractPublicPropTypes, InjectionKey, PropType, Ref, ShallowRef, MaybeRef, MaybeRefOrGetter, VNode, WritableComputedRef } from 'vue'
   import('vue')
   // @ts-ignore
+  export type { VoiceRecorderState } from './modules/admin/chat/composables/useVoiceRecorder'
+  import('./modules/admin/chat/composables/useVoiceRecorder')
+  // @ts-ignore
   export type { CartItem, Cart } from './modules/landing/cart/composables/useCart'
   import('./modules/landing/cart/composables/useCart')
-  // @ts-ignore
-  export type { VoiceRecorderState } from './modules/landing/chat/composables/useVoiceRecorder'
-  import('./modules/landing/chat/composables/useVoiceRecorder')
   // @ts-ignore
   export type { ShippingAddress, CheckoutForm, PaymentMethod } from './modules/landing/orders/composables/useCheckout'
   import('./modules/landing/orders/composables/useCheckout')
@@ -377,7 +377,7 @@ declare module 'vue' {
     readonly useUserStatusLabel: UnwrapRef<typeof import('./shared/helpers/statusHelpers')['useUserStatusLabel']>
     readonly useUserStore: UnwrapRef<typeof import('./modules/admin/users/store/store')['useUserStore']>
     readonly useUsers: UnwrapRef<typeof import('./modules/admin/users/composables/useUsers')['useUsers']>
-    readonly useVoiceRecorder: UnwrapRef<typeof import('./modules/landing/chat/composables/useVoiceRecorder')['useVoiceRecorder']>
+    readonly useVoiceRecorder: UnwrapRef<typeof import('./modules/admin/chat/composables/useVoiceRecorder')['useVoiceRecorder']>
     readonly useWarehouseProducts: UnwrapRef<typeof import('./modules/admin/warehouses/composables/useWarehouseProducts')['useWarehouseProducts']>
     readonly useWarehouseStore: UnwrapRef<typeof import('./modules/admin/warehouses/store/store')['useWarehouseStore']>
     readonly useWishlist: UnwrapRef<typeof import('./modules/landing/wishlist/composables/useWishlist')['useWishlist']>

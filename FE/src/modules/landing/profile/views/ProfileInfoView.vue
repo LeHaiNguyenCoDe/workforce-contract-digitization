@@ -1,7 +1,6 @@
 <script setup lang="ts">
 /**
- * Profile Info View
- * Uses useProfile composable for personal info and password updates
+ * Profile Info View - Redesigned to match minimalist mockup
  */
 import { ref, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -22,7 +21,7 @@ const profileForm = ref({
     name: '',
     phone: '',
     email: '',
-    gender: '',
+    gender: 'male',
     birthday: ''
 })
 
@@ -40,7 +39,7 @@ const syncForm = () => {
         profileForm.value.name = user.value.name || ''
         profileForm.value.email = user.value.email || ''
         profileForm.value.phone = (user.value as any).phone || ''
-        profileForm.value.gender = (user.value as any).gender || ''
+        profileForm.value.gender = (user.value as any).gender || 'male'
         profileForm.value.birthday = (user.value as any).birthday || ''
     }
 }
@@ -52,7 +51,7 @@ const handleUpdateProfile = async () => {
     try {
         await updateProfile(profileForm.value)
     } catch (err) {
-        // Error handled in composable/message
+        // Error handled in composable
     }
 }
 
@@ -73,103 +72,139 @@ const handleUpdatePassword = async () => {
 </script>
 
 <template>
-    <div class="space-y-12">
-        <section>
-            <h2 class="text-xl font-bold text-white mb-8 border-b border-white/5 pb-4">{{ t('common.personalInfo') }}</h2>
+    <div class="profile-info-container max-w-[800px] mx-auto pb-10">
+        <!-- Title -->
+        <h1 class="text-3xl font-medium text-[#9F7A5F] text-center mb-10">
+            Thông tin của tôi
+        </h1>
 
-            <!-- Avatar Section -->
-            <div class="flex flex-col items-center gap-4 mb-8">
-                <div class="w-24 h-24 rounded-full bg-gradient-primary flex items-center justify-center text-3xl font-bold text-white shadow-xl shadow-primary/20">
-                    <span>{{ user?.name?.charAt(0)?.toUpperCase() || 'U' }}</span>
+        <!-- Avatar Section -->
+        <div class="flex flex-col items-center gap-6 mb-12">
+            <div class="relative group">
+                <div
+                    class="w-32 h-32 rounded-full bg-[#FEFBF2] flex items-center justify-center text-4xl font-bold text-[#9F7A5F] border-2 border-[#D9D9D9] overflow-hidden shadow-sm">
+                    <img v-if="(user as any)?.avatar" :src="(user as any).avatar" class="w-full h-full object-cover" />
+                    <span v-else>{{ user?.name?.charAt(0)?.toUpperCase() || 'U' }}</span>
                 </div>
-                <button class="text-sm text-primary hover:text-primary-light font-medium transition-colors">{{ t('common.changeAvatar') }}</button>
+                <div
+                    class="absolute bottom-0 right-0 w-8 h-8 bg-white border border-[#D9D9D9] rounded-full flex items-center justify-center cursor-pointer shadow-sm hover:bg-gray-50">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9F7A5F" stroke-width="2">
+                        <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                    </svg>
+                </div>
+            </div>
+            <button
+                class="px-8 py-2 bg-[#9F7A5F] text-white rounded-lg font-medium hover:bg-[#8A6A52] transition-colors">
+                Thay ảnh đại diện
+            </button>
+        </div>
+
+        <!-- Personal Info Form -->
+        <form @submit.prevent="handleUpdateProfile" class="space-y-8 mb-16">
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="space-y-2">
+                    <label class="block text-xl font-bold text-black">Họ và tên</label>
+                    <input v-model="profileForm.name" type="text"
+                        class="w-full px-4 py-3 bg-white border border-[#D9D9D9] rounded-lg focus:outline-none focus:border-[#9F7A5F]"
+                        placeholder="Lê Văn Trung" />
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-xl font-bold text-black">Email</label>
+                    <input v-model="profileForm.email" type="email"
+                        class="w-full px-4 py-3 bg-white border border-[#D9D9D9] rounded-lg focus:outline-none focus:border-[#9F7A5F] opacity-70 cursor-not-allowed"
+                        disabled />
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-xl font-bold text-black">SĐT</label>
+                    <input v-model="profileForm.phone" type="tel"
+                        class="w-full px-4 py-3 bg-white border border-[#D9D9D9] rounded-lg focus:outline-none focus:border-[#9F7A5F]"
+                        placeholder="0947225188" />
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-xl font-bold text-black">Ngày sinh</label>
+                    <input v-model="profileForm.birthday" type="date"
+                        class="w-full px-4 py-3 bg-white border border-[#D9D9D9] rounded-lg focus:outline-none focus:border-[#9F7A5F]" />
+                </div>
             </div>
 
-            <!-- Profile Form -->
-            <form @submit.prevent="handleUpdateProfile" class="max-w-2xl mx-auto space-y-6">
-                <div class="grid md:grid-cols-2 gap-6">
-                    <div class="form-group md:col-span-2">
-                        <label class="form-label">{{ t('common.phoneNumber') }}</label>
-                        <input v-model="profileForm.phone" type="tel" class="form-input" placeholder="0901234567" />
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">{{ t('common.fullName') }}</label>
-                        <input v-model="profileForm.name" type="text" class="form-input" placeholder="Nguyễn Văn A" />
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Email</label>
-                        <input v-model="profileForm.email" type="email" class="form-input" placeholder="email@example.com" disabled />
-                        <p class="text-[10px] text-slate-500 mt-1 italic">{{ t('common.emailCannotChange') }}</p>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">{{ t('common.gender') }}</label>
-                        <div class="flex gap-6 mt-2">
-                            <label class="flex items-center gap-2 cursor-pointer group text-slate-300">
-                                <input type="radio" v-model="profileForm.gender" value="male" class="text-primary focus:ring-primary bg-dark-700" />
-                                <span class="group-hover:text-white transition-colors">{{ t('common.male') }}</span>
-                            </label>
-                            <label class="flex items-center gap-2 cursor-pointer group text-slate-300">
-                                <input type="radio" v-model="profileForm.gender" value="female" class="text-primary focus:ring-primary bg-dark-700" />
-                                <span class="group-hover:text-white transition-colors">{{ t('common.female') }}</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">{{ t('common.birthday') }}</label>
-                        <input v-model="profileForm.birthday" type="date" class="form-input" />
-                    </div>
+            <!-- Gender -->
+            <div class="space-y-2">
+                <label class="block text-xl font-bold text-black">Giới tính</label>
+                <div class="flex gap-8 mt-4">
+                    <label class="flex items-center gap-3 cursor-pointer group">
+                        <input type="radio" v-model="profileForm.gender" value="male"
+                            class="w-5 h-5 accent-[#9F7A5F]" />
+                        <span class="text-lg font-medium">Nam</span>
+                    </label>
+                    <label class="flex items-center gap-3 cursor-pointer group">
+                        <input type="radio" v-model="profileForm.gender" value="female"
+                            class="w-5 h-5 accent-[#9F7A5F]" />
+                        <span class="text-lg font-medium">Nữ</span>
+                    </label>
                 </div>
+            </div>
 
-                <div v-if="message" class="p-4 rounded-xl text-center text-sm" 
-                    :class="message.includes('thành công') ? 'bg-success/10 text-success' : 'bg-error/10 text-error'">
-                    {{ message }}
-                </div>
+            <!-- Message -->
+            <div v-if="message" class="p-4 rounded-lg text-center"
+                :class="message.includes('thành công') ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'">
+                {{ message }}
+            </div>
 
-                <div class="flex justify-center pt-4">
-                    <button type="submit" class="btn btn-primary px-12 py-3 font-bold" :disabled="isUpdating">
-                        <span v-if="isUpdating" class="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin mr-2"></span>
-                        {{ isUpdating ? t('common.updating') : t('common.saveInfo') }}
-                    </button>
-                </div>
-            </form>
-        </section>
+            <div class="flex justify-center pt-6">
+                <button type="submit"
+                    class="px-16 py-3 bg-[#9F7A5F] text-white rounded-lg text-2xl font-medium hover:bg-[#8A6A52] transition-colors shadow-sm disabled:opacity-70"
+                    :disabled="isUpdating">
+                    <span v-if="isUpdating"
+                        class="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block mr-2"></span>
+                    {{ isUpdating ? 'Đang lưu...' : 'Lưu thông tin' }}
+                </button>
+            </div>
+        </form>
+
+        <!-- Divider -->
+        <hr class="border-[#D9D9D9] mb-16" />
 
         <!-- Password Section -->
-        <section class="pt-12 border-t border-white/5">
-            <h3 class="text-lg font-bold text-white mb-8 text-center">🔐 {{ t('common.changePassword') }}</h3>
+        <div class="space-y-10">
+            <h2 class="text-3xl font-medium text-[#9F7A5F] text-center">Đổi mật khẩu</h2>
 
-            <form @submit.prevent="handleUpdatePassword" class="max-w-xl mx-auto space-y-6">
-                <div class="form-group">
-                    <label class="form-label">{{ t('common.currentPassword') }}</label>
-                    <input v-model="passwordForm.current_password" type="password" class="form-input" />
+            <form @submit.prevent="handleUpdatePassword" class="space-y-8 max-w-[600px] mx-auto">
+                <div class="space-y-2">
+                    <label class="block text-xl font-bold text-black">Mật khẩu cũ</label>
+                    <input v-model="passwordForm.current_password" type="password"
+                        class="w-full px-4 py-3 bg-white border border-[#D9D9D9] rounded-lg focus:outline-none focus:border-[#9F7A5F]" />
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-xl font-bold text-black">Mật khẩu mới</label>
+                    <input v-model="passwordForm.new_password" type="password"
+                        class="w-full px-4 py-3 bg-white border border-[#D9D9D9] rounded-lg focus:outline-none focus:border-[#9F7A5F]" />
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-xl font-bold text-black">Xác nhận mật khẩu</label>
+                    <input v-model="passwordForm.confirm_password" type="password"
+                        class="w-full px-4 py-3 bg-white border border-[#D9D9D9] rounded-lg focus:outline-none focus:border-[#9F7A5F]" />
                 </div>
 
-                <div class="grid md:grid-cols-2 gap-6">
-                    <div class="form-group">
-                        <label class="form-label">{{ t('common.newPassword') }}</label>
-                        <input v-model="passwordForm.new_password" type="password" class="form-input" />
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">{{ t('auth.confirmPassword') }}</label>
-                        <input v-model="passwordForm.confirm_password" type="password" class="form-input" />
-                    </div>
-                </div>
-
-                <div v-if="passwordMessage" class="p-4 rounded-xl text-center text-sm"
-                    :class="passwordMessage.includes('thành công') ? 'bg-success/10 text-success' : 'bg-error/10 text-error'">
+                <div v-if="passwordMessage" class="p-4 rounded-lg text-center"
+                    :class="passwordMessage.includes('thành công') ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'">
                     {{ passwordMessage }}
                 </div>
 
                 <div class="flex justify-center">
-                    <button type="submit" class="btn btn-secondary border border-white/10 px-8 py-3 font-bold" :disabled="isUpdating">
-                        {{ t('common.changePassword') }}
+                    <button type="submit"
+                        class="px-16 py-3 bg-[#9F7A5F] text-white rounded-lg text-2xl font-medium hover:bg-[#8A6A52] transition-colors shadow-sm disabled:opacity-70"
+                        :disabled="isUpdating">
+                        Đổi mật khẩu
                     </button>
                 </div>
             </form>
-        </section>
+        </div>
     </div>
 </template>
+
+<style scoped>
+/* Optional: specific styling for the date input to match the theme better */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(53%) sepia(16%) saturate(692%) hue-rotate(341deg) brightness(92%) contrast(87%);
+}
+</style>

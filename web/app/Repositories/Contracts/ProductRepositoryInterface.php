@@ -17,7 +17,7 @@ interface ProductRepositoryInterface
      * @param  bool  $onlyWithStock  Only show products with stock > 0 (for admin)
      * @return LengthAwarePaginator
      */
-    public function getAll(int $perPage = 12, ?string $search = null, ?int $categoryId = null, bool $onlyWithStock = false): LengthAwarePaginator;
+    public function getAll(int $perPage = 12, array $filters = []): LengthAwarePaginator;
 
     /**
      * Get products by category

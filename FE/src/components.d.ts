@@ -27,6 +27,7 @@ declare module 'vue' {
     DSelect: typeof import('./components/UI/DSelect.vue')['default']
     DTable: typeof import('./components/data/DTable.vue')['default']
     DTextarea: typeof import('./components/UI/DTextarea.vue')['default']
+    ImageModal: typeof import('./shared/components/ImageModal.vue')['default']
     LandingFooter: typeof import('./components/layouts/LandingFooter.vue')['default']
     LandingHeader: typeof import('./components/layouts/LandingHeader.vue')['default']
     LanguageSwitcher: typeof import('./shared/components/LanguageSwitcher.vue')['default']

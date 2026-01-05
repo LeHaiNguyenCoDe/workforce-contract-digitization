@@ -42,10 +42,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <header
-        class="sticky top-0 z-50 glass bg-white transition-shadow"
-        :class="{ 'shadow-md': !isAtTop }"
-    >
+    <header class="sticky top-0 z-50 glass bg-white transition-shadow" :class="{ 'shadow-md': !isAtTop }">
         <div class="container py-2 ">
             <div class="flex items-center justify-between">
                 <!-- Logo -->
@@ -55,29 +52,26 @@ onUnmounted(() => {
 
                 <!-- Navigation -->
                 <nav class="hidden md:flex items-center gap-6 text-md">
-                    <RouterLink to="/"
-                        class="px-3 py-2 text-black font-poppins hover:text-black transition-all">
+                    <RouterLink to="/" class="px-3 py-2 text-black font-poppins hover:text-black transition-all">
                         {{ t('nav.home') }}</RouterLink>
-                    <RouterLink to="/products"
-                        class="px-3 py-2 text-black font-poppins hover:text-black transition-all">
-                        {{ t('nav.products') }}</RouterLink>
                     <RouterLink to="/articles"
                         class="px-3 py-2 text-black font-poppins hover:text-black transition-all">
                         {{ t('nav.articles') }}</RouterLink>
-                    <RouterLink to="/promotions"
+                    <RouterLink to="/products"
                         class="px-3 py-2 text-black font-poppins hover:text-black transition-all">
-                        {{ t('nav.promotions') }}</RouterLink>
+                        {{ t('nav.products') }}</RouterLink>
+
+                    <RouterLink to="#" class="px-3 py-2 text-black font-poppins hover:text-black transition-all">
+                        {{ t('nav.advice') }}</RouterLink>
+                    <RouterLink to="#" class="px-3 py-2 text-black font-poppins hover:text-black transition-all">
+                        {{ t('nav.contact') }}</RouterLink>
                 </nav>
 
                 <nav>
                     <div class="flex-1">
-                        <input
-                            v-model="searchQuery"
-                            type="text"
-                            :placeholder="t('common.search') + '...'"
+                        <input v-model="searchQuery" type="text" :placeholder="t('common.search') + '...'"
                             class="form-input h-8 px-3 py-1 text-sm rounded-md border-none text-title bg-[#C4C4C421]"
-                            @input="setSearch(($event.target as HTMLInputElement).value)"
-                        />
+                            @input="setSearch(($event.target as HTMLInputElement).value)" />
                     </div>
                 </nav>
 
@@ -86,13 +80,13 @@ onUnmounted(() => {
                     <LanguageSwitcher />
 
                     <!-- Cart -->
-                    <RouterLink to="/cart"
+                    <RouterLink to="/profile/cart"
                         class="relative p-2 text-slate-400 hover:text-white hover:bg-primary/10 rounded-full transition-all">
                         <img src="../../assets/layout/cart.svg" alt="Cart">
                         <span v-if="authStore.cartCount > 0"
                             class="absolute -top-1 -right-1 w-5 h-5 text-xs font-semibold text-white bg-secondary rounded-full flex items-center justify-center">
                             {{ authStore.cartCount }}
-                        </span> 
+                        </span>
                     </RouterLink>
                     <RouterLink to="/">
                         <img src="../../assets/layout/like.svg" alt="User">
@@ -213,7 +207,7 @@ onUnmounted(() => {
             <nav v-if="isMobileMenuOpen" class="md:hidden mt-4 pt-4 border-t border-white/10 flex flex-col gap-2">
                 <RouterLink to="/" class="px-3 py-2 text-slate-300 hover:text-white hover:bg-primary/10 rounded-lg">{{
                     t('nav.home')
-                    }}</RouterLink>
+                }}</RouterLink>
                 <RouterLink to="/products"
                     class="px-3 py-2 text-slate-300 hover:text-white hover:bg-primary/10 rounded-lg">{{
                         t('nav.products') }}</RouterLink>
