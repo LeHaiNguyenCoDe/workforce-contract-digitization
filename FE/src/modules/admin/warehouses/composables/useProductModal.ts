@@ -4,7 +4,7 @@
  */
 
 import { ref } from 'vue'
-import { useSwal } from '@/shared/utils'
+import { useSwal } from '@/utils'
 import { adminProductService } from '@/plugins/api/services/ProductService'
 import { warehouseService } from '@/plugins/api/services/WarehouseService'
 import type { WarehouseProduct } from '../store/store'

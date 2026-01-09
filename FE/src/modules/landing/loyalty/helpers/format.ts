@@ -1,4 +1,4 @@
-import { formatNumber } from '@/shared/utils'
+import { formatNumber } from '@/utils'
 import type { LoyaltyTransaction } from '../types'
 
 export function formatPoints(points: number): string {

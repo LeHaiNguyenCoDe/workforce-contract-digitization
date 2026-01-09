@@ -2,9 +2,9 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import httpClient from '@/plugins/api/httpClient'
 import type { HomeBanner } from './types'
-import type { Product } from '../products/types'
-import type { CategoryWithProducts } from '../categories/types'
-import type { Promotion } from '../promotions/types'
+import type { Product } from '../products/store/types'
+import type { CategoryWithProducts } from '../categories/store/types'
+import type { Promotion } from '../promotions/store/types'
 
 export const useHomeStore = defineStore('landing-home', () => {
   // State

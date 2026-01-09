@@ -94,20 +94,3 @@ onUnmounted(() => { document.body.style.overflow = '' })
     </Transition>
   </Teleport>
 </template>
-
-<style scoped>
-@keyframes modal-enter {
-  from {
-    opacity: 0;
-    transform: scale(0.95) translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-.animate-modal-enter {
-  animation: modal-enter 0.15s ease-out;
-}
-</style>

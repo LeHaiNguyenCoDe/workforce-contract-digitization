@@ -8,7 +8,7 @@ import { useRoute, RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores'
 import httpClient from '@/plugins/api/httpClient'
-import ImageModal from '@/shared/components/ImageModal.vue'
+import ImageModal from '@/components/ImageModal.vue'
 import { useLandingProducts } from '../composables/useLandingProducts'
 
 const { t } = useI18n()

@@ -51,17 +51,3 @@ defineProps<{
 
 const isOpen = ref(false)
 </script>
-
-<style scoped>
-.expand-enter-active,
-.expand-leave-active {
-    transition: all 0.3s ease-out;
-    max-height: 500px;
-}
-
-.expand-enter-from,
-.expand-leave-to {
-    max-height: 0;
-    opacity: 0;
-}
-</style>

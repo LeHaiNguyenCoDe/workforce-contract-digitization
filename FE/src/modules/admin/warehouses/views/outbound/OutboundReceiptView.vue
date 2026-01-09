@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, reactive } from 'vue'
-import BaseModal from '@/shared/components/BaseModal.vue'
+import BaseModal from '@/components/BaseModal.vue'
 
 // Store
 const store = useWarehouseStore()

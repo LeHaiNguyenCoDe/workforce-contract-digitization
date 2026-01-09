@@ -51,11 +51,7 @@ onMounted(fetchStats)
             <!-- Orders -->
             <div class="card flex items-center gap-4">
                 <div class="w-14 h-14 flex items-center justify-center rounded-xl bg-primary/20 text-primary">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2">
-                        <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
-                        <path d="M3 6h18" />
-                    </svg>
+                    <BaseIcon name="orders" :size="28" />
                 </div>
                 <div>
                     <div class="text-2xl font-bold text-white">{{ isLoading ? '...' : formatNumber(stats.orders) }}
@@ -67,12 +63,7 @@ onMounted(fetchStats)
             <!-- Products -->
             <div class="card flex items-center gap-4">
                 <div class="w-14 h-14 flex items-center justify-center rounded-xl bg-success/20 text-success">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2">
-                        <path d="m7.5 4.27 9 5.15" />
-                        <path
-                            d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
-                    </svg>
+                    <BaseIcon name="products" :size="28" />
                 </div>
                 <div>
                     <div class="text-2xl font-bold text-white">{{ isLoading ? '...' : formatNumber(stats.products) }}
@@ -84,11 +75,7 @@ onMounted(fetchStats)
             <!-- Users -->
             <div class="card flex items-center gap-4">
                 <div class="w-14 h-14 flex items-center justify-center rounded-xl bg-secondary/20 text-secondary">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2">
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                        <circle cx="9" cy="7" r="4" />
-                    </svg>
+                    <BaseIcon name="users" :size="28" />
                 </div>
                 <div>
                     <div class="text-2xl font-bold text-white">{{ isLoading ? '...' : formatNumber(stats.users) }}</div>
@@ -99,11 +86,7 @@ onMounted(fetchStats)
             <!-- Revenue -->
             <div class="card flex items-center gap-4">
                 <div class="w-14 h-14 flex items-center justify-center rounded-xl bg-warning/20 text-warning">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2">
-                        <line x1="12" x2="12" y1="2" y2="22" />
-                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                    </svg>
+                    <BaseIcon name="revenue" :size="28" />
                 </div>
                 <div>
                     <div class="text-2xl font-bold text-white">{{ isLoading ? '...' : formatCurrency(stats.revenue) }}

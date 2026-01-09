@@ -155,15 +155,3 @@ function handleRemoveItem(itemId: number) {
         </div>
     </div>
 </template>
-
-<style scoped>
-.cart-container {
-    padding-top: 1rem;
-}
-
-@media (max-width: 768px) {
-    .cart-container {
-        padding-top: 0;
-    }
-}
-</style>

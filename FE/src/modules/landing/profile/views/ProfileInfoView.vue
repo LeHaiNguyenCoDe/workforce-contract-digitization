@@ -202,9 +202,3 @@ const handleUpdatePassword = async () => {
     </div>
 </template>
 
-<style scoped>
-/* Optional: specific styling for the date input to match the theme better */
-input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: invert(53%) sepia(16%) saturate(692%) hue-rotate(341deg) brightness(92%) contrast(87%);
-}
-</style>

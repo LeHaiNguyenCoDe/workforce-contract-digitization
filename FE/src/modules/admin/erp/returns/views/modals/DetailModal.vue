@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { formatPrice, formatDateTime } from '@/shared/helpers'
+import { formatPrice, formatDateTime } from '@/utils'
 import { returnStatusLabels, returnStatusClasses } from '../../configs/columns'
 import type { Return } from '../../models/return'
 

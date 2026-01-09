@@ -1,4 +1,4 @@
-import { formatPrice, formatDate } from '@/shared/utils'
+import { formatPrice, formatDate } from '@/utils'
 import type { Promotion } from '../types'
 
 export function formatPromotionDiscount(promotion: Promotion): string {

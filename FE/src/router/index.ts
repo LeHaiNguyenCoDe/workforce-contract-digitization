@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import { getAdminRoutes, getLandingRoutes } from './autoRoutes'
+import { useAuthStore } from '@/stores'
 
 // Define routes using auto-loading
 const routes: RouteRecordRaw[] = [
@@ -13,7 +14,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: ':pathMatch(.*)*',
         name: 'not-found',
-        component: () => import('@/shared/components/NotFound.vue')
+        component: () => import('@/components/NotFound.vue')
       }
     ]
   },
@@ -45,7 +46,6 @@ const router = createRouter({
 
 // Navigation guards
 router.beforeEach(async (to, _from, next) => {
-  const { useAuthStore } = await import('@/stores')
   const authStore = useAuthStore()
   
   // Ensure auth is initialized before any routing decisions

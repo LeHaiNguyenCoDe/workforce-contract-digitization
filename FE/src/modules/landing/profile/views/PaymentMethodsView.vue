@@ -116,7 +116,3 @@ const updatePaymentMethod = async () => {
         </div>
     </div>
 </template>
-
-<style scoped>
-/* Optional styling */
-</style>

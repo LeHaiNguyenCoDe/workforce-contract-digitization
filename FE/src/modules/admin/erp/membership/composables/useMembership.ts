@@ -2,7 +2,7 @@
  * useMembership Composable
  */
 import { ref, onMounted } from 'vue'
-import { useSwal } from '@/shared/utils'
+import { useSwal } from '@/utils'
 import tierService from '../services/tierService'
 import type { MembershipTier, CreateTierPayload } from '../models/tier'
 

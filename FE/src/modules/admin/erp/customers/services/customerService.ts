@@ -8,12 +8,14 @@ export const customerService = {
     async getAll(params?: Record<string, any>) {
         const response = await adminUserService.getAll(params)
         // Filter only customers
-        const customers = (response.data || response).filter((u: any) => u.role === 'customer' || !u.role)
+        const rawData = response.items || (Array.isArray(response) ? response : [])
+        const customers = rawData.filter((u: any) => u.role === 'customer' || !u.role)
+        
         return {
             data: customers as Customer[],
-            current_page: response.current_page || 1,
-            last_page: response.last_page || 1,
-            total: customers.length
+            current_page: response.meta?.current_page || 1,
+            last_page: response.meta?.last_page || 1,
+            total: response.meta?.total || customers.length
         }
     },
 

@@ -384,19 +384,3 @@ const timeline = computed(() => {
   </Teleport>
 </template>
 
-<style scoped>
-.modal-enter-active,
-.modal-leave-active {
-  transition: all 0.3s ease;
-}
-
-.modal-enter-from,
-.modal-leave-to {
-  opacity: 0;
-}
-
-.modal-enter-from .relative,
-.modal-leave-to .relative {
-  transform: scale(0.95) translateY(10px);
-}
-</style>

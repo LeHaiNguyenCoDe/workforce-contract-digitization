@@ -15,7 +15,8 @@ export default defineConfig(({ mode }) => {
         // Auto import functions from Vue, Vue Router, Pinia
         dirs: [
           'src/composables/**',
-          'src/shared/helpers/**',
+          'src/helpers/**',
+          'src/utils/**',
           'src/modules/**/composables/**',
           'src/modules/**/store.ts',
           'src/modules/**/store/store.ts',
@@ -58,7 +59,7 @@ export default defineConfig(({ mode }) => {
       }),
       Components({
         // Folders to scan for components
-        dirs: ['src/components', 'src/shared/components'],
+        dirs: ['src/components', 'src/shared/components', 'src/modules/landing/components', 'src/modules/admin/components'],
         // Enable auto-import for Vue components
         extensions: ['vue'],
         // Generate TypeScript declarations
@@ -110,6 +111,13 @@ export default defineConfig(({ mode }) => {
           target: env.VITE_API_BASE_URL || "http://127.0.0.1:8000",
           changeOrigin: true,
           secure: false,
+        },
+      },
+    },
+    css: {
+      preprocessorOptions: {
+        scss: {
+          api: 'modern-compiler',
         },
       },
     },

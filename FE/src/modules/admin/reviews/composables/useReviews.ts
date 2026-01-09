@@ -4,7 +4,7 @@
  */
 
 import { computed } from 'vue'
-import { useSwal } from '@/shared/utils'
+import { useSwal } from '@/utils'
 import type { Review } from '@/plugins/api/services/ReviewService'
 
 export function useReviews() {

@@ -4,7 +4,7 @@
  */
 
 import { ref, computed } from 'vue'
-import { useSwal } from '@/shared/utils'
+import { useSwal } from '@/utils'
 import { useAuthStore } from '@/stores'
 import type { Order } from '../store/store'
 

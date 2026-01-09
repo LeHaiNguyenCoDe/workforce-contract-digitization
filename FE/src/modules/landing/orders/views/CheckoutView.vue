@@ -133,9 +133,3 @@ async function handleSubmit() {
         </div>
     </div>
 </template>
-
-<style scoped>
-.checkout-container {
-    padding-bottom: 4rem;
-}
-</style>

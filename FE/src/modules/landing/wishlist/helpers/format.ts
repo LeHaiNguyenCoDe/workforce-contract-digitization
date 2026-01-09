@@ -2,7 +2,7 @@
  * Wishlist Format Helpers
  */
 
-import { formatPrice } from '@/shared/utils'
+import { formatPrice } from '@/utils'
 import type { WishlistItem } from '../types'
 
 export function formatWishlistItemPrice(item: WishlistItem): { original: string; sale?: string } {

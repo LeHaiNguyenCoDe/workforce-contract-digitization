@@ -3,7 +3,7 @@ import { ref, onMounted, watch, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import httpClient from '@/plugins/api/httpClient'
-import { useAutoTranslate } from '@/shared/composables/useAutoTranslate'
+import { useAutoTranslate } from '@/composables/useAutoTranslate'
 
 const { t } = useI18n()
 const route = useRoute()

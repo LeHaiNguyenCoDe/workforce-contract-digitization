@@ -2,7 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import httpClient from '@/plugins/api/httpClient'
 import { warehouseService } from '@/plugins/api/services/WarehouseService'
-import { useSwal } from '@/shared/utils'
+import { useSwal } from '@/utils'
 import type { InventoryLog } from '@/plugins/api/services/WarehouseService'
 
 const swal = useSwal()

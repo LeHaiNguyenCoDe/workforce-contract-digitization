@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { adminUserService } from '@/plugins/api/services'
-import BaseModal from '@/shared/components/BaseModal.vue'
+import BaseModal from '@/components/BaseModal.vue'
 
 interface Customer {
   id: number

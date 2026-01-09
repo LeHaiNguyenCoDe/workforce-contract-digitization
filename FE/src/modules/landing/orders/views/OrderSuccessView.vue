@@ -134,7 +134,7 @@ onMounted(fetchOrder)
                 <p class="text-2xl text-black mb-2">Chúc mừng bạn đã đặt hàng thành công {{ order.items?.length || 0 }}
                     sản phẩm
                     của chúng tôi</p>
-                <p class="text-2xl text-black">House sẽ sớm liên hệ với bạn để bàn giao sản phẩm nhanh nhất</p>
+                <p class="text-2xl text-black">House sẽ sớm liên hệ with bạn để bàn giao sản phẩm nhanh nhất</p>
             </div>
 
             <!-- Detail Grid -->
@@ -207,9 +207,3 @@ onMounted(fetchOrder)
         </div>
     </div>
 </template>
-
-<style scoped>
-.order-success-container {
-    background-color: transparent;
-}
-</style>

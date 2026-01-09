@@ -79,7 +79,7 @@ const isActiveTab = (path: string) => {
             </div>
 
             <!-- Content Container -->
-            <div class="profile-content border border-[#D9D9D9] rounded-lg p-8 min-h-[500px]">
+            <div class="profile-content border border-[#D9D9D9] rounded-lg p-8 min-h-[500px] md:p-8 p-6">
                 <RouterView v-slot="{ Component }">
                     <transition name="fade" mode="out-in">
                         <component :is="Component" />
@@ -89,21 +89,3 @@ const isActiveTab = (path: string) => {
         </div>
     </div>
 </template>
-
-<style scoped>
-.fade-enter-active,
-.fade-leave-active {
-    transition: opacity 0.2s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-    opacity: 0;
-}
-
-@media (max-width: 768px) {
-    .profile-content {
-        padding: 1.5rem;
-    }
-}
-</style>

@@ -4,9 +4,9 @@
  */
 
 import { ref } from 'vue'
-import { useSwal } from '@/shared/utils'
+import { useSwal } from '@/utils'
 import { adminCategoryService } from '@/plugins/api/services/CategoryService'
-import { useAutoTranslate } from '@/shared/composables/useAutoTranslate'
+import { useAutoTranslate } from '@/composables/useAutoTranslate'
 import type { Category } from '../store/store'
 
 export function useAdminCategories() {

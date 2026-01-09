@@ -7,7 +7,7 @@ import { ref, computed } from 'vue'
 import { adminProductService } from '@/plugins/api/services/ProductService'
 import httpClient from '@/plugins/api/httpClient'
 import type { Product, ProductFilters } from '../types'
-import type { Category } from '@/shared/types'
+import type { Category } from '@/types'
 
 export const useAdminProductStore = defineStore('admin-products', () => {
   // State

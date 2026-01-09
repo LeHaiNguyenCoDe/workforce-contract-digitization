@@ -2,7 +2,7 @@
  * Product Entity Type
  */
 
-import type { Category } from '@/shared/types'
+import type { Category } from '@/types'
 
 export interface Product {
   id: number

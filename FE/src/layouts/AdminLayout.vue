@@ -3,8 +3,8 @@ import { ref, computed } from 'vue'
 import { RouterView, RouterLink, useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores'
-import LanguageSwitcher from '@/shared/components/LanguageSwitcher.vue'
-import NotificationBell from '@/shared/components/admin/NotificationBell.vue'
+import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
+import NotificationBell from '@/modules/admin/components/NotificationBell.vue'
 import { useAutoConnect } from '@/modules/admin/chat/composables/useRealtime'
 
 // Initialize real-time connection for notifications across all admin pages

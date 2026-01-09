@@ -2,9 +2,9 @@
 import { ref, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import httpClient from '@/plugins/api/httpClient'
-import BaseModal from '@/shared/components/BaseModal.vue'
-import { useSwal } from '@/shared/utils'
-import { useAutoTranslate } from '@/shared/composables/useAutoTranslate'
+import BaseModal from '@/components/BaseModal.vue'
+import { useSwal } from '@/utils'
+import { useAutoTranslate } from '@/composables/useAutoTranslate'
 
 const { t } = useI18n()
 

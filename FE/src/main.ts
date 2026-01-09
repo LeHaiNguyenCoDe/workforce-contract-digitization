@@ -1,6 +1,6 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-import { initConsoleSanitizer } from './shared/helpers/consoleSanitizer'
+import { initConsoleSanitizer } from './helpers/consoleSanitizer'
 
 // Initialize log optimization
 initConsoleSanitizer()
@@ -8,9 +8,9 @@ initConsoleSanitizer()
 import App from './App.vue'
 import router from './router'
 import i18n, { loadLocaleMessages, getLocale } from './plugins/i18n'
-import { vClickOutside } from './shared/directives'
+import { vClickOutside } from './directives'
 
-import './shared/styles/main.css'
+import './assets/scss/main.scss'
 import 'sweetalert2/dist/sweetalert2.min.css'
 
 const app = createApp(App)

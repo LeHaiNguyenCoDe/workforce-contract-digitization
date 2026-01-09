@@ -436,23 +436,3 @@ if (typeof window !== 'undefined') {
     })
 }
 </script>
-
-<style scoped>
-/* Highlight effect for scrolled-to message */
-.message-row.message-highlight {
-    animation: message-highlight-pulse 2s ease-out;
-}
-
-@keyframes message-highlight-pulse {
-
-    0%,
-    50% {
-        background-color: rgba(20, 184, 166, 0.2);
-        border-radius: 12px;
-    }
-
-    100% {
-        background-color: transparent;
-    }
-}
-</style>

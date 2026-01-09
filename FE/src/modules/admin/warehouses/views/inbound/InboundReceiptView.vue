@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import BaseModal from '@/shared/components/BaseModal.vue'
-import { useSwal } from '@/shared/utils'
+import BaseModal from '@/components/BaseModal.vue'
+import { useSwal } from '@/utils'
 
 // Store & Router
 const store = useWarehouseStore()

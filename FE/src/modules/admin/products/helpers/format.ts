@@ -1,4 +1,4 @@
-import { formatPrice as sharedFormatPrice } from '@/shared/utils'
+import { formatPrice as sharedFormatPrice } from '@/utils'
 import type { Product } from '../types'
 
 export function formatProductPrice(product: Product): string {

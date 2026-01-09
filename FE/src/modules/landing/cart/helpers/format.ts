@@ -2,7 +2,7 @@
  * Cart Format Helpers
  */
 
-import { formatPrice } from '@/shared/utils'
+import { formatPrice } from '@/utils'
 import type { Cart, CartItem } from '../types'
 
 /**

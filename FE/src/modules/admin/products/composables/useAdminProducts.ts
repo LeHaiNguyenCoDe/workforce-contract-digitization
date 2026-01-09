@@ -4,7 +4,7 @@
  */
 
 import { ref, computed } from 'vue'
-import { useSwal } from '@/shared/utils'
+import { useSwal } from '@/utils'
 import type { Product } from '../types'
 
 export function useAdminProducts() {

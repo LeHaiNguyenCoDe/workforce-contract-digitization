@@ -1,4 +1,4 @@
-import type { Category } from '@/shared/types'
+import type { Category } from '@/types'
 
 export interface CategoryWithProducts extends Category {
   products_count?: number

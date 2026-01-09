@@ -2,7 +2,7 @@
  * Order Format Helpers
  */
 
-import { formatPrice, formatDate } from '@/shared/utils'
+import { formatPrice, formatDate } from '@/utils'
 import type { Order } from '../types'
 
 /**

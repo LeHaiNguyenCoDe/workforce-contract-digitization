@@ -2,7 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { debtService, type AccountReceivable } from '../services/debtService'
 import { financeService, type Fund } from '../services/financeService'
-import { useSwal } from '@/shared/utils'
+import { useSwal } from '@/utils'
 
 const swal = useSwal()
 

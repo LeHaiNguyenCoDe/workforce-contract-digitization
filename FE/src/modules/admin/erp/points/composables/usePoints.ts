@@ -2,7 +2,7 @@
  * usePoints Composable
  */
 import { ref } from 'vue'
-import { useSwal } from '@/shared/utils'
+import { useSwal } from '@/utils'
 import pointsService from '../services/pointsService'
 import type { PointTransaction, CustomerPoints } from '../models/point'
 

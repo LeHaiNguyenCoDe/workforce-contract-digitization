@@ -1,4 +1,4 @@
-import { generateSlug } from '@/shared/utils'
+import { generateSlug } from '@/utils'
 import type { ProductFormData, Product } from '../types'
 
 export function validateProductForm(data: ProductFormData): Record<string, string> | null {

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import BaseModal from '@/shared/components/BaseModal.vue'
+import BaseModal from '@/components/BaseModal.vue'
 
 // Store
 const store = useWarehouseStore()

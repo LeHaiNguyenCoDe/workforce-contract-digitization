@@ -2,7 +2,7 @@
  * useAutomations Composable
  */
 import { ref, onMounted } from 'vue'
-import { useSwal } from '@/shared/utils'
+import { useSwal } from '@/utils'
 import type { Automation } from '../models/automation'
 
 const getMockAutomations = (): Automation[] => [

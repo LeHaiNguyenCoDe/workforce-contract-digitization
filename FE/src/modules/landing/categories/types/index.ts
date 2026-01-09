@@ -1,2 +1,2 @@
 export type { CategoryWithProducts } from './category'
-export type { Category } from '@/shared/types'
+export type { Category } from '@/types'

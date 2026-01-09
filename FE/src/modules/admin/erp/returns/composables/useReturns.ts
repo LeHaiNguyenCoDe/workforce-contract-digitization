@@ -2,7 +2,7 @@
  * useReturns Composable - Business logic
  */
 import { ref, computed, onMounted, watch } from 'vue'
-import { useSwal } from '@/shared/utils'
+import { useSwal } from '@/utils'
 import { erpReturnService } from '../services/returnService'
 import { adminOrderService } from '@/plugins/api/services/OrderService'
 import type { Return, ReturnStatus } from '../models/return'

@@ -1,4 +1,4 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 /**
  * Home View
  * Uses useHome composable for logic separation
@@ -8,7 +8,8 @@ import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import BlogView from './BlogView.vue'
 import ReviewView from './ReviewView.vue'
-import ImageModal from '@/shared/components/ImageModal.vue'
+import ImageModal from '@/components/ImageModal.vue'
+import ProductCard from '@/modules/landing/products/components/ProductCard.vue'
 import { useHome } from '../composables/useHome'
 import { homeConfig } from '../configs'
 import type { Product } from '@/modules/landing/products/types'
@@ -259,10 +260,7 @@ const openPreview = (imageUrl: string | null) => {
             <!-- Scroll Down Arrow -->
             <button v-show="!isPastHero" @click="scrollToContent"
                 class="absolute bottom-6 left-1/2 -translate-x-1/2 w-10 h-10 z-20 rounded-full bg-white/80 hover:bg-white shadow-lg border border-white/60 transition-all animate-bounce flex items-center justify-center cursor-pointer">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                    stroke="#9F7A5F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 5v14M5 12l7 7 7-7" />
-                </svg>
+                <BaseIcon name="arrow-down" color="#9F7A5F" :size="20" />
             </button>
         </section>
 
@@ -315,12 +313,7 @@ const openPreview = (imageUrl: string | null) => {
                                 <button
                                     class="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white flex items-center justify-center hover:bg-white/40 transition-all transform translate-y-4 group-hover/img:translate-y-0"
                                     @click.prevent="openPreview(getCategoryImage(category))">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round">
-                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                        <circle cx="12" cy="12" r="3"></circle>
-                                    </svg>
+                                    <BaseIcon name="eye" :size="24" />
                                 </button>
                             </div>
                         </div>
@@ -392,45 +385,10 @@ const openPreview = (imageUrl: string | null) => {
                             <div class="overflow-hidden">
                                 <div class="flex gap-4 sm:gap-6 transition-transform duration-500"
                                     :style="{ transform: `translateX(calc(-${(categorySlideIndex[categoryItem.category.id] || 0)} * (100% / 2 + 1rem)))` }">
-                                    <RouterLink v-for="product in categoryItem.products" :key="product.id"
-                                        :to="`/products/${product.id}`"
-                                        class="min-w-[calc(100%/2-0.5rem)] lg:min-w-[calc(100%/3-1rem)] hover:scale-[1.02] transition-all duration-300">
-                                        <div class="relative aspect-square rounded-sm mb-4 overflow-hidden group/img">
-                                            <img v-if="getProductImage(product)" :src="getProductImage(product)!"
-                                                :alt="product.name"
-                                                class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                                            <div v-else
-                                                class="w-full h-full flex items-center justify-center text-slate-600">
-                                            </div>
-
-                                            <div
-                                                class="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
-                                                <button
-                                                    class="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white flex items-center justify-center hover:bg-white/40 transition-all transform translate-y-4 group-hover/img:translate-y-0"
-                                                    @click.prevent="openPreview(getProductImage(product))">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                                        viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                                        <circle cx="12" cy="12" r="3"></circle>
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        <div class="flex items-start gap-2 justify-between px-2">
-                                            <h3
-                                                class="font-semibold text-xs md:text-base text-black group-hover:text-[#9F7A5F]">
-                                                {{ product.name }}
-                                            </h3>
-                                            <span class="text-sm font-bold text-black">{{ formatPrice(product.sale_price
-                                                || product.price) }}</span>
-                                            <span v-if="product.sale_price && product.sale_price < product.price"
-                                                class="text-sm text-slate-500 line-through">
-                                                {{ formatPrice(product.price) }}
-                                            </span>
-                                        </div>
-                                    </RouterLink>
+                                    <div v-for="product in categoryItem.products" :key="product.id"
+                                        class="min-w-[calc(100%/2-0.5rem)] lg:min-w-[calc(100%/3-1rem)]">
+                                        <ProductCard :product="product as any" />
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -487,43 +445,3 @@ const openPreview = (imageUrl: string | null) => {
         <ImageModal v-model="showImageModal" :images="modalImages" :currentIndex="modalInitialIndex" />
     </div>
 </template>
-
-<style scoped>
-.droplet-enter-active,
-.droplet-leave-active {
-    transition: all 320ms ease;
-}
-
-.droplet-enter-from,
-.droplet-leave-to {
-    opacity: 0;
-    transform: translateY(-16px) scale(0.94);
-    filter: drop-shadow(0 18px 24px rgba(159, 122, 95, 0.12));
-    clip-path: ellipse(55% 65% at 50% 32%);
-}
-</style>
-
-<style>
-/* Global style for smooth scrolling */
-html {
-    scroll-behavior: smooth;
-    scrollbar-width: none;
-    /* Firefox */
-    -ms-overflow-style: none;
-    /* IE/Edge */
-}
-
-/* Hide scrollbar but allow scrolling - Chrome/Safari/Opera */
-html::-webkit-scrollbar {
-    display: none;
-}
-
-body {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-}
-
-body::-webkit-scrollbar {
-    display: none;
-}
-</style>

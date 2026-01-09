@@ -5,7 +5,7 @@
 
 import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { useSwal } from '@/shared/utils'
+import { useSwal } from '@/utils'
 import { warehouseService } from '@/plugins/api/services/WarehouseService'
 import type { WarehouseProduct } from '../store/store'
 

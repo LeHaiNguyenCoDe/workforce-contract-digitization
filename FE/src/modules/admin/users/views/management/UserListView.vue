@@ -2,7 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { User } from '../../store/store'
-import { useSwal } from '@/shared/utils'
+import { useSwal } from '@/utils'
 import { userColumns } from '../../configs/columns'
 
 const { t } = useI18n()

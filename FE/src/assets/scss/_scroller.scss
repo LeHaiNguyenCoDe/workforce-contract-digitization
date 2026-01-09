@@ -1,0 +1,35 @@
+/* Scrollbar utilities */
+html {
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(159, 122, 95, 0.3) transparent;
+}
+
+/* Hide scrollbar utility */
+.hide-scrollbar {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+    
+    &::-webkit-scrollbar {
+        display: none; /* Chrome/Safari/Opera */
+    }
+}
+
+/* Modern scrollbar styling for webkit */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: rgba(159, 122, 95, 0.2);
+    border-radius: 10px;
+    
+    &:hover {
+        background-color: rgba(159, 122, 95, 0.4);
+    }
+}

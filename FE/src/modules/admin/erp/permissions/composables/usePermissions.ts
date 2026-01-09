@@ -2,7 +2,7 @@
  * usePermissions Composable
  */
 import { ref, onMounted } from 'vue'
-import { useSwal } from '@/shared/utils'
+import { useSwal } from '@/utils'
 import type { Role } from '../models/permission'
 import { permissionGroups } from '../models/permission'
 

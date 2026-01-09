@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import httpClient from '@/plugins/api/httpClient'
-import BaseModal from '@/shared/components/BaseModal.vue'
-import { useSwal } from '@/shared/utils'
+import BaseModal from '@/components/BaseModal.vue'
+import { useSwal } from '@/utils'
 
 interface Supplier {
     id: number

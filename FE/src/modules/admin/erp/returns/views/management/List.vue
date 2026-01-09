@@ -5,7 +5,7 @@ import { useReturnConfigs } from '../../configs/columns'
 import DetailModal from '../modals/DetailModal.vue'
 import { useReturns } from '../../composables/useReturns'
 import DSelect from '@/components/UI/DSelect.vue'
-import { formatPrice, formatDateTime } from '@/shared/utils'
+import { formatPrice, formatDateTime } from '@/utils'
 
 const { t } = useI18n()
 const { columns, statusOptions, reasonOptions, statusLabels } = useReturnConfigs()

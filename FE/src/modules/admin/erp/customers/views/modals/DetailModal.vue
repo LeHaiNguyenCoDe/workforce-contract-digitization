@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { formatPrice, formatDate } from '@/shared/helpers'
+import { formatPrice, formatDate } from '@/utils'
 import type { Customer } from '../../models/customer'
 
 interface Props {

@@ -8,6 +8,7 @@ import { useI18n } from 'vue-i18n'
 import { useLandingProducts } from '../composables/useLandingProducts'
 import { useSortOptions } from '../configs'
 import type { Product } from '../types'
+import ProductCard from '../components/ProductCard.vue'
 
 const { t } = useI18n()
 
@@ -62,7 +63,7 @@ const getProductImage = (product: Product) => {
 </script>
 
 <template>
-    <div class="bg-white min-h-screen">
+    <div class="product-list-view bg-white min-h-screen">
         <div class="container mx-auto px-4 py-6">
             <!-- Breadcrumbs -->
             <nav class="flex text-sm text-gray-500 mb-6">
@@ -190,16 +191,7 @@ const getProductImage = (product: Product) => {
                     <div v-else-if="products.length"
                         class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-12">
                         <div v-for="product in products" :key="product.id">
-                            <RouterLink :to="`/products/${product.id}`" class="group block">
-                                <div
-                                    class="aspect-square rounded flex items-center justify-center relative overflow-hidden">
-                                    <img :src="getProductImage(product) || ''" :alt="product.name"
-                                        class="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-500" />
-                                </div>
-                                <h3 class="text-xs text-gray-700 leading-tight mb-2 h-8 line-clamp-2">{{ product.name }}
-                                </h3>
-                                <div class="text-sm font-bold text-[#E63946]">{{ formatPrice(product.price) }}</div>
-                            </RouterLink>
+                            <ProductCard :product="product as any" />
                         </div>
                     </div>
 
@@ -230,18 +222,3 @@ const getProductImage = (product: Product) => {
         </div>
     </div>
 </template>
-
-<style scoped>
-/* Custom styled checkboxes */
-input[type="checkbox"] {
-    cursor: pointer;
-}
-
-input[type="checkbox"]:focus {
-    box-shadow: none;
-}
-
-.container {
-    max-width: 1200px;
-}
-</style>

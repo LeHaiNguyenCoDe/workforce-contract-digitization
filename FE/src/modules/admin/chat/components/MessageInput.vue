@@ -57,7 +57,7 @@
             :audioLevels="voiceRecorder.audioLevels.value" @cancel="cancelVoiceRecording" @send="sendVoiceMessage" />
 
         <!-- Normal Input Row -->
-        <div v-else class="flex items-end gap-2 sm:gap-3">
+        <div v-else class="flex items-end gap-2 sm:gap-3 input-row">
             <!-- Action Bar (Left Side) -->
             <div class="flex items-center gap-1">
                 <!-- Voice Recording Button -->
@@ -287,54 +287,3 @@ watch(() => props.replyTo, (val) => {
     }
 })
 </script>
-
-<style scoped>
-.action-btn {
-    flex-shrink: 0;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: #f3f4f6;
-    border: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #6b7280;
-    transition: all 0.2s;
-    position: relative;
-}
-
-.action-btn:hover {
-    background: #e5e7eb;
-    color: #374151;
-}
-
-.action-btn:active {
-    transform: scale(0.95);
-}
-
-.emoji-picker-overlay,
-.picker-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 9999;
-}
-
-.emoji-picker-container,
-.picker-container {
-    z-index: 10000;
-}
-
-.gif-badge {
-    position: absolute;
-    bottom: 2px;
-    right: 2px;
-    background: #14b8a6;
-    color: white;
-    font-size: 7px;
-    font-weight: bold;
-    padding: 1px 2px;
-    border-radius: 4px;
-    line-height: 1;
-}
-</style>

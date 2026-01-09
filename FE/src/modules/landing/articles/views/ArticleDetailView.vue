@@ -7,7 +7,7 @@ import { onMounted, computed } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useArticles } from '../composables/useArticles'
-import { sanitizeHtml } from '@/shared/utils/sanitize'
+import { sanitizeHtml } from '@/utils/sanitize'
 
 const { t } = useI18n()
 const route = useRoute()

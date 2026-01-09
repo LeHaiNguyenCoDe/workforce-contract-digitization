@@ -1,4 +1,4 @@
-import { formatDate, truncate } from '@/shared/utils'
+import { formatDate, truncate } from '@/utils'
 import type { Article } from '../types'
 
 export function formatArticleDate(article: Article): string {

@@ -6,7 +6,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import httpClient from '@/plugins/api/httpClient'
 import type { Product, ProductFilters } from './types'
-import type { Category } from '@/shared/types'
+import type { Category } from '@/types'
 
 export const useLandingProductStore = defineStore('landing-products', () => {
   // State

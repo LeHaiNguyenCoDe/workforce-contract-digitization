@@ -2,7 +2,7 @@
  * useExpenses Composable
  */
 import { ref, computed, onMounted } from 'vue'
-import { useSwal } from '@/shared/utils'
+import { useSwal } from '@/utils'
 import expenseService from '../services/expenseService'
 import type { Expense, Category, Summary, CreateExpensePayload } from '../models/expense'
 

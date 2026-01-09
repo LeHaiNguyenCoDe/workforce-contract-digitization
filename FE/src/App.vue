@@ -15,5 +15,5 @@ onMounted(async () => {
 </template>
 
 <style>
-/* Global styles are in shared/styles/main.css */
+/* Global styles are in assets/scss/main.scss */
 </style>

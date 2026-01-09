@@ -2,7 +2,7 @@
  * Product Format Helpers
  */
 
-import { formatPrice as sharedFormatPrice } from '@/shared/utils'
+import { formatPrice as sharedFormatPrice } from '@/utils'
 import type { Product } from '../types'
 
 /**

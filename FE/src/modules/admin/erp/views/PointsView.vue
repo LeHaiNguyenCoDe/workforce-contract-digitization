@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { membershipService, type CustomerMembership, type PointTransaction, type MembershipTier } from '@/plugins/api/services'
-import BaseModal from '@/shared/components/BaseModal.vue'
+import BaseModal from '@/components/BaseModal.vue'
 
 // State
 const searchQuery = ref('')

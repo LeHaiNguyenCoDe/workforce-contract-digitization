@@ -4,7 +4,7 @@
  */
 
 import { ref } from 'vue'
-import { useSwal } from '@/shared/utils'
+import { useSwal } from '@/utils'
 import { adminPromotionService } from '@/plugins/api/services/PromotionService'
 import type { Promotion } from '@/plugins/api/services/PromotionService'
 

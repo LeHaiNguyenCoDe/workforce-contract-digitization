@@ -14,10 +14,12 @@ declare global {
   const adminPromotionService: typeof import('@/plugins/api/services').adminPromotionService
   const adminReviewService: typeof import('@/plugins/api/services').adminReviewService
   const adminUserService: typeof import('@/plugins/api/services').adminUserService
-  const auditActionClasses: typeof import('./shared/helpers/statusHelpers').auditActionClasses
-  const auditActionKeys: typeof import('./shared/helpers/statusHelpers').auditActionKeys
-  const auditActionLabels: typeof import('./shared/helpers/statusHelpers').auditActionLabels
+  const auditActionClasses: typeof import('./helpers/statusHelpers').auditActionClasses
+  const auditActionKeys: typeof import('./helpers/statusHelpers').auditActionKeys
+  const auditActionLabels: typeof import('./helpers/statusHelpers').auditActionLabels
   const authService: typeof import('@/plugins/api/services').authService
+  const camelToSnake: typeof import('./utils/string').camelToSnake
+  const capitalize: typeof import('./utils/string').capitalize
   const cartService: typeof import('@/plugins/api/services').cartService
   const categoryService: typeof import('@/plugins/api/services').categoryService
   const computed: typeof import('vue').computed
@@ -28,28 +30,31 @@ declare global {
   const defineComponent: typeof import('vue').defineComponent
   const defineStore: typeof import('pinia').defineStore
   const effectScope: typeof import('vue').effectScope
-  const formatDate: typeof import('./shared/helpers/formatters').formatDate
-  const formatDateTime: typeof import('./shared/helpers/formatters').formatDateTime
-  const formatNumber: typeof import('./shared/helpers/formatters').formatNumber
-  const formatPrice: typeof import('./shared/helpers/formatters').formatPrice
-  const formatRelativeTime: typeof import('./shared/helpers/formatters').formatRelativeTime
+  const formatDate: typeof import('./utils/format').formatDate
+  const formatDateTime: typeof import('./utils/format').formatDateTime
+  const formatNumber: typeof import('./utils/format').formatNumber
+  const formatPrice: typeof import('./utils/format').formatPrice
+  const formatRelativeTime: typeof import('./utils/format').formatRelativeTime
+  const generateSlug: typeof import('./utils/string').generateSlug
   const getActivePinia: typeof import('pinia').getActivePinia
   const getCurrentInstance: typeof import('vue').getCurrentInstance
   const getCurrentScope: typeof import('vue').getCurrentScope
   const getCurrentWatcher: typeof import('vue').getCurrentWatcher
   const getEcho: typeof import('./modules/admin/chat/composables/useRealtime').getEcho
-  const getOrderStatusClass: typeof import('./shared/helpers/statusHelpers').getOrderStatusClass
-  const getOrderStatusLabel: typeof import('./shared/helpers/statusHelpers').getOrderStatusLabel
-  const getReturnStatusClass: typeof import('./shared/helpers/statusHelpers').getReturnStatusClass
-  const getReturnStatusLabel: typeof import('./shared/helpers/statusHelpers').getReturnStatusLabel
+  const getOrderStatusClass: typeof import('./helpers/statusHelpers').getOrderStatusClass
+  const getOrderStatusLabel: typeof import('./helpers/statusHelpers').getOrderStatusLabel
+  const getReturnStatusClass: typeof import('./helpers/statusHelpers').getReturnStatusClass
+  const getReturnStatusLabel: typeof import('./helpers/statusHelpers').getReturnStatusLabel
   const h: typeof import('vue').h
-  const initConsoleSanitizer: typeof import('./shared/helpers/consoleSanitizer').initConsoleSanitizer
+  const initConsoleSanitizer: typeof import('./helpers/consoleSanitizer').initConsoleSanitizer
   const inject: typeof import('vue').inject
   const isProxy: typeof import('vue').isProxy
   const isReactive: typeof import('vue').isReactive
   const isReadonly: typeof import('vue').isReadonly
   const isRef: typeof import('vue').isRef
   const isShallow: typeof import('vue').isShallow
+  const isValidEmail: typeof import('./utils/string').isValidEmail
+  const isValidPhone: typeof import('./utils/string').isValidPhone
   const mapActions: typeof import('pinia').mapActions
   const mapGetters: typeof import('pinia').mapGetters
   const mapState: typeof import('pinia').mapState
@@ -75,12 +80,12 @@ declare global {
   const onUpdated: typeof import('vue').onUpdated
   const onWatcherCleanup: typeof import('vue').onWatcherCleanup
   const orderService: typeof import('@/plugins/api/services').orderService
-  const orderStatusClasses: typeof import('./shared/helpers/statusHelpers').orderStatusClasses
-  const orderStatusKeys: typeof import('./shared/helpers/statusHelpers').orderStatusKeys
-  const orderStatusLabels: typeof import('./shared/helpers/statusHelpers').orderStatusLabels
-  const pointTransactionClasses: typeof import('./shared/helpers/statusHelpers').pointTransactionClasses
-  const pointTransactionKeys: typeof import('./shared/helpers/statusHelpers').pointTransactionKeys
-  const pointTransactionLabels: typeof import('./shared/helpers/statusHelpers').pointTransactionLabels
+  const orderStatusClasses: typeof import('./helpers/statusHelpers').orderStatusClasses
+  const orderStatusKeys: typeof import('./helpers/statusHelpers').orderStatusKeys
+  const orderStatusLabels: typeof import('./helpers/statusHelpers').orderStatusLabels
+  const pointTransactionClasses: typeof import('./helpers/statusHelpers').pointTransactionClasses
+  const pointTransactionKeys: typeof import('./helpers/statusHelpers').pointTransactionKeys
+  const pointTransactionLabels: typeof import('./helpers/statusHelpers').pointTransactionLabels
   const productService: typeof import('@/plugins/api/services').productService
   const provide: typeof import('vue').provide
   const reactive: typeof import('vue').reactive
@@ -88,24 +93,28 @@ declare global {
   const ref: typeof import('vue').ref
   const resolveComponent: typeof import('vue').resolveComponent
   const returnService: typeof import('@/plugins/api/services').returnService
-  const returnStatusClasses: typeof import('./shared/helpers/statusHelpers').returnStatusClasses
-  const returnStatusKeys: typeof import('./shared/helpers/statusHelpers').returnStatusKeys
-  const returnStatusLabels: typeof import('./shared/helpers/statusHelpers').returnStatusLabels
+  const returnStatusClasses: typeof import('./helpers/statusHelpers').returnStatusClasses
+  const returnStatusKeys: typeof import('./helpers/statusHelpers').returnStatusKeys
+  const returnStatusLabels: typeof import('./helpers/statusHelpers').returnStatusLabels
+  const sanitizeHtml: typeof import('./utils/sanitize').sanitizeHtml
+  const sanitizeSimpleHtml: typeof import('./utils/sanitize').sanitizeSimpleHtml
   const setActivePinia: typeof import('pinia').setActivePinia
   const setMapStoreSuffix: typeof import('pinia').setMapStoreSuffix
   const shallowReactive: typeof import('vue').shallowReactive
   const shallowReadonly: typeof import('vue').shallowReadonly
   const shallowRef: typeof import('vue').shallowRef
+  const snakeToCamel: typeof import('./utils/string').snakeToCamel
   const storeToRefs: typeof import('pinia').storeToRefs
   const toRaw: typeof import('vue').toRaw
   const toRef: typeof import('vue').toRef
   const toRefs: typeof import('vue').toRefs
   const toValue: typeof import('vue').toValue
   const triggerRef: typeof import('vue').triggerRef
-  const truncate: typeof import('./shared/helpers/formatters').truncate
+  const truncate: typeof import('./utils/string').truncate
   const unref: typeof import('vue').unref
   const useAdminCategories: typeof import('./modules/admin/categories/composables/useAdminCategories').useAdminCategories
   const useAdminCategoryStore: typeof import('./modules/admin/categories/store/store').useAdminCategoryStore
+  const useAdminList: typeof import('./composables/useAdminList').useAdminList
   const useAdminOrderStore: typeof import('./modules/admin/orders/store/store').useAdminOrderStore
   const useAdminOrders: typeof import('./modules/admin/orders/composables/useAdminOrders').useAdminOrders
   const useAdminProductStore: typeof import('./modules/admin/products/store/store').useAdminProductStore
@@ -115,15 +124,15 @@ declare global {
   const useArticleStore: typeof import('./modules/landing/articles/store/store').useArticleStore
   const useArticles: typeof import('./modules/landing/articles/composables/useArticles').useArticles
   const useAttrs: typeof import('vue').useAttrs
-  const useAuditActionLabel: typeof import('./shared/helpers/statusHelpers').useAuditActionLabel
+  const useAuditActionLabel: typeof import('./helpers/statusHelpers').useAuditActionLabel
   const useAuditLogs: typeof import('./modules/admin/erp/audit-logs/composables/useAuditLogs').useAuditLogs
   const useAuth: typeof import('./modules/landing/auth/composables/useAuth').useAuth
   const useAuthStore: typeof import('@/stores').useAuthStore
   const useAutoConnect: typeof import('./modules/admin/chat/composables/useRealtime').useAutoConnect
+  const useAutoTranslate: typeof import('./composables/useAutoTranslate').default
   const useAutomations: typeof import('./modules/admin/erp/automations/composables/useAutomations').useAutomations
   const useCart: typeof import('./modules/landing/cart/composables/useCart').useCart
   const useCartStore: typeof import('./modules/landing/cart/store/store').useCartStore
-  const useCategories: typeof import('./modules/landing/categories/composables/useLandingCategories').useCategories
   const useCheckout: typeof import('./modules/landing/orders/composables/useCheckout').useCheckout
   const useCssModule: typeof import('vue').useCssModule
   const useCssVars: typeof import('vue').useCssVars
@@ -148,26 +157,25 @@ declare global {
   const useLoyaltyStore: typeof import('./modules/landing/loyalty/store/store').useLoyaltyStore
   const useMembership: typeof import('./modules/admin/erp/membership/composables/useMembership').useMembership
   const useModel: typeof import('vue').useModel
-  const useOrderStatusLabel: typeof import('./shared/helpers/statusHelpers').useOrderStatusLabel
-  const useOrders: typeof import('./modules/landing/orders/composables/useLandingOrders').useOrders
+  const useOrderStatusLabel: typeof import('./helpers/statusHelpers').useOrderStatusLabel
+  const usePagination: typeof import('./composables/usePagination').usePagination
   const usePermission: typeof import('./composables/usePermission').usePermission
   const usePermissions: typeof import('./modules/admin/erp/permissions/composables/usePermissions').usePermissions
-  const usePointTransactionLabel: typeof import('./shared/helpers/statusHelpers').usePointTransactionLabel
+  const usePointTransactionLabel: typeof import('./helpers/statusHelpers').usePointTransactionLabel
   const usePoints: typeof import('./modules/admin/erp/points/composables/usePoints').usePoints
   const useProductModal: typeof import('./modules/admin/warehouses/composables/useProductModal').useProductModal
-  const useProducts: typeof import('./modules/landing/products/composables/useLandingProducts').useProducts
   const useProfile: typeof import('./modules/landing/profile/composables/useProfile').useProfile
-  const usePromotions: typeof import('./modules/landing/promotions/composables/useLandingPromotions').usePromotions
   const useRealtime: typeof import('./modules/admin/chat/composables/useRealtime').useRealtime
-  const useReturnStatusLabel: typeof import('./shared/helpers/statusHelpers').useReturnStatusLabel
+  const useReturnStatusLabel: typeof import('./helpers/statusHelpers').useReturnStatusLabel
   const useReturns: typeof import('./modules/admin/erp/returns/composables/useReturns').useReturns
   const useReviewStore: typeof import('./modules/admin/reviews/store/store').useReviewStore
   const useReviews: typeof import('./modules/admin/reviews/composables/useReviews').useReviews
   const useRoute: typeof import('vue-router').useRoute
   const useRouter: typeof import('vue-router').useRouter
   const useSlots: typeof import('vue').useSlots
+  const useSwal: typeof import('./utils/useSwal').useSwal
   const useTemplateRef: typeof import('vue').useTemplateRef
-  const useUserStatusLabel: typeof import('./shared/helpers/statusHelpers').useUserStatusLabel
+  const useUserStatusLabel: typeof import('./helpers/statusHelpers').useUserStatusLabel
   const useUserStore: typeof import('./modules/admin/users/store/store').useUserStore
   const useUsers: typeof import('./modules/admin/users/composables/useUsers').useUsers
   const useVoiceRecorder: typeof import('./modules/admin/chat/composables/useVoiceRecorder').useVoiceRecorder
@@ -175,9 +183,9 @@ declare global {
   const useWarehouseStore: typeof import('./modules/admin/warehouses/store/store').useWarehouseStore
   const useWishlist: typeof import('./modules/landing/wishlist/composables/useWishlist').useWishlist
   const useWishlistStore: typeof import('./modules/landing/wishlist/store/store').useWishlistStore
-  const userStatusClasses: typeof import('./shared/helpers/statusHelpers').userStatusClasses
-  const userStatusKeys: typeof import('./shared/helpers/statusHelpers').userStatusKeys
-  const userStatusLabels: typeof import('./shared/helpers/statusHelpers').userStatusLabels
+  const userStatusClasses: typeof import('./helpers/statusHelpers').userStatusClasses
+  const userStatusKeys: typeof import('./helpers/statusHelpers').userStatusKeys
+  const userStatusLabels: typeof import('./helpers/statusHelpers').userStatusLabels
   const warehouseService: typeof import('@/plugins/api/services').warehouseService
   const watch: typeof import('vue').watch
   const watchEffect: typeof import('vue').watchEffect
@@ -189,6 +197,18 @@ declare global {
   // @ts-ignore
   export type { Component, Slot, Slots, ComponentPublicInstance, ComputedRef, DirectiveBinding, ExtractDefaultPropTypes, ExtractPropTypes, ExtractPublicPropTypes, InjectionKey, PropType, Ref, ShallowRef, MaybeRef, MaybeRefOrGetter, VNode, WritableComputedRef } from 'vue'
   import('vue')
+  // @ts-ignore
+  export type { UseAdminListOptions } from './composables/useAdminList'
+  import('./composables/useAdminList')
+  // @ts-ignore
+  export type { TranslatableField } from './composables/useAutoTranslate'
+  import('./composables/useAutoTranslate')
+  // @ts-ignore
+  export type { UsePaginationOptions } from './composables/usePagination'
+  import('./composables/usePagination')
+  // @ts-ignore
+  export type { SwalOptions } from './utils/useSwal'
+  import('./utils/useSwal')
   // @ts-ignore
   export type { VoiceRecorderState } from './modules/admin/chat/composables/useVoiceRecorder'
   import('./modules/admin/chat/composables/useVoiceRecorder')
@@ -225,10 +245,12 @@ declare module 'vue' {
     readonly adminPromotionService: UnwrapRef<typeof import('@/plugins/api/services')['adminPromotionService']>
     readonly adminReviewService: UnwrapRef<typeof import('@/plugins/api/services')['adminReviewService']>
     readonly adminUserService: UnwrapRef<typeof import('@/plugins/api/services')['adminUserService']>
-    readonly auditActionClasses: UnwrapRef<typeof import('./shared/helpers/statusHelpers')['auditActionClasses']>
-    readonly auditActionKeys: UnwrapRef<typeof import('./shared/helpers/statusHelpers')['auditActionKeys']>
-    readonly auditActionLabels: UnwrapRef<typeof import('./shared/helpers/statusHelpers')['auditActionLabels']>
+    readonly auditActionClasses: UnwrapRef<typeof import('./helpers/statusHelpers')['auditActionClasses']>
+    readonly auditActionKeys: UnwrapRef<typeof import('./helpers/statusHelpers')['auditActionKeys']>
+    readonly auditActionLabels: UnwrapRef<typeof import('./helpers/statusHelpers')['auditActionLabels']>
     readonly authService: UnwrapRef<typeof import('@/plugins/api/services')['authService']>
+    readonly camelToSnake: UnwrapRef<typeof import('./utils/string')['camelToSnake']>
+    readonly capitalize: UnwrapRef<typeof import('./utils/string')['capitalize']>
     readonly cartService: UnwrapRef<typeof import('@/plugins/api/services')['cartService']>
     readonly categoryService: UnwrapRef<typeof import('@/plugins/api/services')['categoryService']>
     readonly computed: UnwrapRef<typeof import('vue')['computed']>
@@ -239,28 +261,31 @@ declare module 'vue' {
     readonly defineComponent: UnwrapRef<typeof import('vue')['defineComponent']>
     readonly defineStore: UnwrapRef<typeof import('pinia')['defineStore']>
     readonly effectScope: UnwrapRef<typeof import('vue')['effectScope']>
-    readonly formatDate: UnwrapRef<typeof import('./shared/helpers/formatters')['formatDate']>
-    readonly formatDateTime: UnwrapRef<typeof import('./shared/helpers/formatters')['formatDateTime']>
-    readonly formatNumber: UnwrapRef<typeof import('./shared/helpers/formatters')['formatNumber']>
-    readonly formatPrice: UnwrapRef<typeof import('./shared/helpers/formatters')['formatPrice']>
-    readonly formatRelativeTime: UnwrapRef<typeof import('./shared/helpers/formatters')['formatRelativeTime']>
+    readonly formatDate: UnwrapRef<typeof import('./utils/format')['formatDate']>
+    readonly formatDateTime: UnwrapRef<typeof import('./utils/format')['formatDateTime']>
+    readonly formatNumber: UnwrapRef<typeof import('./utils/format')['formatNumber']>
+    readonly formatPrice: UnwrapRef<typeof import('./utils/format')['formatPrice']>
+    readonly formatRelativeTime: UnwrapRef<typeof import('./utils/format')['formatRelativeTime']>
+    readonly generateSlug: UnwrapRef<typeof import('./utils/string')['generateSlug']>
     readonly getActivePinia: UnwrapRef<typeof import('pinia')['getActivePinia']>
     readonly getCurrentInstance: UnwrapRef<typeof import('vue')['getCurrentInstance']>
     readonly getCurrentScope: UnwrapRef<typeof import('vue')['getCurrentScope']>
     readonly getCurrentWatcher: UnwrapRef<typeof import('vue')['getCurrentWatcher']>
     readonly getEcho: UnwrapRef<typeof import('./modules/admin/chat/composables/useRealtime')['getEcho']>
-    readonly getOrderStatusClass: UnwrapRef<typeof import('./shared/helpers/statusHelpers')['getOrderStatusClass']>
-    readonly getOrderStatusLabel: UnwrapRef<typeof import('./shared/helpers/statusHelpers')['getOrderStatusLabel']>
-    readonly getReturnStatusClass: UnwrapRef<typeof import('./shared/helpers/statusHelpers')['getReturnStatusClass']>
-    readonly getReturnStatusLabel: UnwrapRef<typeof import('./shared/helpers/statusHelpers')['getReturnStatusLabel']>
+    readonly getOrderStatusClass: UnwrapRef<typeof import('./helpers/statusHelpers')['getOrderStatusClass']>
+    readonly getOrderStatusLabel: UnwrapRef<typeof import('./helpers/statusHelpers')['getOrderStatusLabel']>
+    readonly getReturnStatusClass: UnwrapRef<typeof import('./helpers/statusHelpers')['getReturnStatusClass']>
+    readonly getReturnStatusLabel: UnwrapRef<typeof import('./helpers/statusHelpers')['getReturnStatusLabel']>
     readonly h: UnwrapRef<typeof import('vue')['h']>
-    readonly initConsoleSanitizer: UnwrapRef<typeof import('./shared/helpers/consoleSanitizer')['initConsoleSanitizer']>
+    readonly initConsoleSanitizer: UnwrapRef<typeof import('./helpers/consoleSanitizer')['initConsoleSanitizer']>
     readonly inject: UnwrapRef<typeof import('vue')['inject']>
     readonly isProxy: UnwrapRef<typeof import('vue')['isProxy']>
     readonly isReactive: UnwrapRef<typeof import('vue')['isReactive']>
     readonly isReadonly: UnwrapRef<typeof import('vue')['isReadonly']>
     readonly isRef: UnwrapRef<typeof import('vue')['isRef']>
     readonly isShallow: UnwrapRef<typeof import('vue')['isShallow']>
+    readonly isValidEmail: UnwrapRef<typeof import('./utils/string')['isValidEmail']>
+    readonly isValidPhone: UnwrapRef<typeof import('./utils/string')['isValidPhone']>
     readonly mapActions: UnwrapRef<typeof import('pinia')['mapActions']>
     readonly mapGetters: UnwrapRef<typeof import('pinia')['mapGetters']>
     readonly mapState: UnwrapRef<typeof import('pinia')['mapState']>
@@ -286,12 +311,12 @@ declare module 'vue' {
     readonly onUpdated: UnwrapRef<typeof import('vue')['onUpdated']>
     readonly onWatcherCleanup: UnwrapRef<typeof import('vue')['onWatcherCleanup']>
     readonly orderService: UnwrapRef<typeof import('@/plugins/api/services')['orderService']>
-    readonly orderStatusClasses: UnwrapRef<typeof import('./shared/helpers/statusHelpers')['orderStatusClasses']>
-    readonly orderStatusKeys: UnwrapRef<typeof import('./shared/helpers/statusHelpers')['orderStatusKeys']>
-    readonly orderStatusLabels: UnwrapRef<typeof import('./shared/helpers/statusHelpers')['orderStatusLabels']>
-    readonly pointTransactionClasses: UnwrapRef<typeof import('./shared/helpers/statusHelpers')['pointTransactionClasses']>
-    readonly pointTransactionKeys: UnwrapRef<typeof import('./shared/helpers/statusHelpers')['pointTransactionKeys']>
-    readonly pointTransactionLabels: UnwrapRef<typeof import('./shared/helpers/statusHelpers')['pointTransactionLabels']>
+    readonly orderStatusClasses: UnwrapRef<typeof import('./helpers/statusHelpers')['orderStatusClasses']>
+    readonly orderStatusKeys: UnwrapRef<typeof import('./helpers/statusHelpers')['orderStatusKeys']>
+    readonly orderStatusLabels: UnwrapRef<typeof import('./helpers/statusHelpers')['orderStatusLabels']>
+    readonly pointTransactionClasses: UnwrapRef<typeof import('./helpers/statusHelpers')['pointTransactionClasses']>
+    readonly pointTransactionKeys: UnwrapRef<typeof import('./helpers/statusHelpers')['pointTransactionKeys']>
+    readonly pointTransactionLabels: UnwrapRef<typeof import('./helpers/statusHelpers')['pointTransactionLabels']>
     readonly productService: UnwrapRef<typeof import('@/plugins/api/services')['productService']>
     readonly provide: UnwrapRef<typeof import('vue')['provide']>
     readonly reactive: UnwrapRef<typeof import('vue')['reactive']>
@@ -299,24 +324,28 @@ declare module 'vue' {
     readonly ref: UnwrapRef<typeof import('vue')['ref']>
     readonly resolveComponent: UnwrapRef<typeof import('vue')['resolveComponent']>
     readonly returnService: UnwrapRef<typeof import('@/plugins/api/services')['returnService']>
-    readonly returnStatusClasses: UnwrapRef<typeof import('./shared/helpers/statusHelpers')['returnStatusClasses']>
-    readonly returnStatusKeys: UnwrapRef<typeof import('./shared/helpers/statusHelpers')['returnStatusKeys']>
-    readonly returnStatusLabels: UnwrapRef<typeof import('./shared/helpers/statusHelpers')['returnStatusLabels']>
+    readonly returnStatusClasses: UnwrapRef<typeof import('./helpers/statusHelpers')['returnStatusClasses']>
+    readonly returnStatusKeys: UnwrapRef<typeof import('./helpers/statusHelpers')['returnStatusKeys']>
+    readonly returnStatusLabels: UnwrapRef<typeof import('./helpers/statusHelpers')['returnStatusLabels']>
+    readonly sanitizeHtml: UnwrapRef<typeof import('./utils/sanitize')['sanitizeHtml']>
+    readonly sanitizeSimpleHtml: UnwrapRef<typeof import('./utils/sanitize')['sanitizeSimpleHtml']>
     readonly setActivePinia: UnwrapRef<typeof import('pinia')['setActivePinia']>
     readonly setMapStoreSuffix: UnwrapRef<typeof import('pinia')['setMapStoreSuffix']>
     readonly shallowReactive: UnwrapRef<typeof import('vue')['shallowReactive']>
     readonly shallowReadonly: UnwrapRef<typeof import('vue')['shallowReadonly']>
     readonly shallowRef: UnwrapRef<typeof import('vue')['shallowRef']>
+    readonly snakeToCamel: UnwrapRef<typeof import('./utils/string')['snakeToCamel']>
     readonly storeToRefs: UnwrapRef<typeof import('pinia')['storeToRefs']>
     readonly toRaw: UnwrapRef<typeof import('vue')['toRaw']>
     readonly toRef: UnwrapRef<typeof import('vue')['toRef']>
     readonly toRefs: UnwrapRef<typeof import('vue')['toRefs']>
     readonly toValue: UnwrapRef<typeof import('vue')['toValue']>
     readonly triggerRef: UnwrapRef<typeof import('vue')['triggerRef']>
-    readonly truncate: UnwrapRef<typeof import('./shared/helpers/formatters')['truncate']>
+    readonly truncate: UnwrapRef<typeof import('./utils/string')['truncate']>
     readonly unref: UnwrapRef<typeof import('vue')['unref']>
     readonly useAdminCategories: UnwrapRef<typeof import('./modules/admin/categories/composables/useAdminCategories')['useAdminCategories']>
     readonly useAdminCategoryStore: UnwrapRef<typeof import('./modules/admin/categories/store/store')['useAdminCategoryStore']>
+    readonly useAdminList: UnwrapRef<typeof import('./composables/useAdminList')['useAdminList']>
     readonly useAdminOrderStore: UnwrapRef<typeof import('./modules/admin/orders/store/store')['useAdminOrderStore']>
     readonly useAdminOrders: UnwrapRef<typeof import('./modules/admin/orders/composables/useAdminOrders')['useAdminOrders']>
     readonly useAdminProductStore: UnwrapRef<typeof import('./modules/admin/products/store/store')['useAdminProductStore']>
@@ -326,11 +355,12 @@ declare module 'vue' {
     readonly useArticleStore: UnwrapRef<typeof import('./modules/landing/articles/store/store')['useArticleStore']>
     readonly useArticles: UnwrapRef<typeof import('./modules/landing/articles/composables/useArticles')['useArticles']>
     readonly useAttrs: UnwrapRef<typeof import('vue')['useAttrs']>
-    readonly useAuditActionLabel: UnwrapRef<typeof import('./shared/helpers/statusHelpers')['useAuditActionLabel']>
+    readonly useAuditActionLabel: UnwrapRef<typeof import('./helpers/statusHelpers')['useAuditActionLabel']>
     readonly useAuditLogs: UnwrapRef<typeof import('./modules/admin/erp/audit-logs/composables/useAuditLogs')['useAuditLogs']>
     readonly useAuth: UnwrapRef<typeof import('./modules/landing/auth/composables/useAuth')['useAuth']>
     readonly useAuthStore: UnwrapRef<typeof import('@/stores')['useAuthStore']>
     readonly useAutoConnect: UnwrapRef<typeof import('./modules/admin/chat/composables/useRealtime')['useAutoConnect']>
+    readonly useAutoTranslate: UnwrapRef<typeof import('./composables/useAutoTranslate')['default']>
     readonly useAutomations: UnwrapRef<typeof import('./modules/admin/erp/automations/composables/useAutomations')['useAutomations']>
     readonly useCart: UnwrapRef<typeof import('./modules/landing/cart/composables/useCart')['useCart']>
     readonly useCartStore: UnwrapRef<typeof import('./modules/landing/cart/store/store')['useCartStore']>
@@ -358,23 +388,25 @@ declare module 'vue' {
     readonly useLoyaltyStore: UnwrapRef<typeof import('./modules/landing/loyalty/store/store')['useLoyaltyStore']>
     readonly useMembership: UnwrapRef<typeof import('./modules/admin/erp/membership/composables/useMembership')['useMembership']>
     readonly useModel: UnwrapRef<typeof import('vue')['useModel']>
-    readonly useOrderStatusLabel: UnwrapRef<typeof import('./shared/helpers/statusHelpers')['useOrderStatusLabel']>
+    readonly useOrderStatusLabel: UnwrapRef<typeof import('./helpers/statusHelpers')['useOrderStatusLabel']>
+    readonly usePagination: UnwrapRef<typeof import('./composables/usePagination')['usePagination']>
     readonly usePermission: UnwrapRef<typeof import('./composables/usePermission')['usePermission']>
     readonly usePermissions: UnwrapRef<typeof import('./modules/admin/erp/permissions/composables/usePermissions')['usePermissions']>
-    readonly usePointTransactionLabel: UnwrapRef<typeof import('./shared/helpers/statusHelpers')['usePointTransactionLabel']>
+    readonly usePointTransactionLabel: UnwrapRef<typeof import('./helpers/statusHelpers')['usePointTransactionLabel']>
     readonly usePoints: UnwrapRef<typeof import('./modules/admin/erp/points/composables/usePoints')['usePoints']>
     readonly useProductModal: UnwrapRef<typeof import('./modules/admin/warehouses/composables/useProductModal')['useProductModal']>
     readonly useProfile: UnwrapRef<typeof import('./modules/landing/profile/composables/useProfile')['useProfile']>
     readonly useRealtime: UnwrapRef<typeof import('./modules/admin/chat/composables/useRealtime')['useRealtime']>
-    readonly useReturnStatusLabel: UnwrapRef<typeof import('./shared/helpers/statusHelpers')['useReturnStatusLabel']>
+    readonly useReturnStatusLabel: UnwrapRef<typeof import('./helpers/statusHelpers')['useReturnStatusLabel']>
     readonly useReturns: UnwrapRef<typeof import('./modules/admin/erp/returns/composables/useReturns')['useReturns']>
     readonly useReviewStore: UnwrapRef<typeof import('./modules/admin/reviews/store/store')['useReviewStore']>
     readonly useReviews: UnwrapRef<typeof import('./modules/admin/reviews/composables/useReviews')['useReviews']>
     readonly useRoute: UnwrapRef<typeof import('vue-router')['useRoute']>
     readonly useRouter: UnwrapRef<typeof import('vue-router')['useRouter']>
     readonly useSlots: UnwrapRef<typeof import('vue')['useSlots']>
+    readonly useSwal: UnwrapRef<typeof import('./utils/useSwal')['useSwal']>
     readonly useTemplateRef: UnwrapRef<typeof import('vue')['useTemplateRef']>
-    readonly useUserStatusLabel: UnwrapRef<typeof import('./shared/helpers/statusHelpers')['useUserStatusLabel']>
+    readonly useUserStatusLabel: UnwrapRef<typeof import('./helpers/statusHelpers')['useUserStatusLabel']>
     readonly useUserStore: UnwrapRef<typeof import('./modules/admin/users/store/store')['useUserStore']>
     readonly useUsers: UnwrapRef<typeof import('./modules/admin/users/composables/useUsers')['useUsers']>
     readonly useVoiceRecorder: UnwrapRef<typeof import('./modules/admin/chat/composables/useVoiceRecorder')['useVoiceRecorder']>
@@ -382,9 +414,9 @@ declare module 'vue' {
     readonly useWarehouseStore: UnwrapRef<typeof import('./modules/admin/warehouses/store/store')['useWarehouseStore']>
     readonly useWishlist: UnwrapRef<typeof import('./modules/landing/wishlist/composables/useWishlist')['useWishlist']>
     readonly useWishlistStore: UnwrapRef<typeof import('./modules/landing/wishlist/store/store')['useWishlistStore']>
-    readonly userStatusClasses: UnwrapRef<typeof import('./shared/helpers/statusHelpers')['userStatusClasses']>
-    readonly userStatusKeys: UnwrapRef<typeof import('./shared/helpers/statusHelpers')['userStatusKeys']>
-    readonly userStatusLabels: UnwrapRef<typeof import('./shared/helpers/statusHelpers')['userStatusLabels']>
+    readonly userStatusClasses: UnwrapRef<typeof import('./helpers/statusHelpers')['userStatusClasses']>
+    readonly userStatusKeys: UnwrapRef<typeof import('./helpers/statusHelpers')['userStatusKeys']>
+    readonly userStatusLabels: UnwrapRef<typeof import('./helpers/statusHelpers')['userStatusLabels']>
     readonly warehouseService: UnwrapRef<typeof import('@/plugins/api/services')['warehouseService']>
     readonly watch: UnwrapRef<typeof import('vue')['watch']>
     readonly watchEffect: UnwrapRef<typeof import('vue')['watchEffect']>
