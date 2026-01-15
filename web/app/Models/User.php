@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -180,6 +181,16 @@ class User extends Authenticatable
     public function getIsOnlineAttribute(): bool
     {
         return $this->last_seen_at && $this->last_seen_at->gt(now()->subMinutes(5));
+    }
+
+    /**
+     * Get user's membership information.
+     * 
+     * @return HasOne
+     */
+    public function membership(): HasOne
+    {
+        return $this->hasOne(CustomerMembership::class, 'user_id');
     }
 }
 
