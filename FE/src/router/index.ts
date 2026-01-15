@@ -1,9 +1,13 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import { getAdminRoutes, getLandingRoutes } from './autoRoutes'
 import { useAuthStore } from '@/stores'
+import foodieRoutes from '@/modules/foodie/router'
 
 // Define routes using auto-loading
 const routes: RouteRecordRaw[] = [
+  // Foodie routes (standalone - no layout wrapper)
+  ...foodieRoutes,
+  
   // Landing (Frontend) routes
   {
     path: '/',

@@ -59,7 +59,7 @@ export default defineConfig(({ mode }) => {
       }),
       Components({
         // Folders to scan for components
-        dirs: ['src/components', 'src/shared/components', 'src/modules/landing/components', 'src/modules/admin/components'],
+        dirs: ['src/components', 'src/shared/components', 'src/modules/landing/components', 'src/modules/admin/components', 'src/modules/foodie/components'],
         // Enable auto-import for Vue components
         extensions: ['vue'],
         // Generate TypeScript declarations
