@@ -80,9 +80,9 @@ onUnmounted(() => {
             leave-active-class="transition-all duration-150 ease-in"
             leave-from-class="opacity-100 scale-100 translate-y-0" leave-to-class="opacity-0 scale-95 -translate-y-2">
             <div v-if="isOpen"
-                class="absolute top-full right-0 mt-2 min-w-[160px] bg-[#9F7A5F] border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden">
+                class="absolute top-full right-0 mt-2 min-w-[160px] bg-[#9F7A5F] border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden app-dropdown">
                 <button v-for="lang in languages" :key="lang.code" @click="selectLanguage(lang.code)"
-                    class="flex items-center gap-3 w-full px-4 py-3 text-sm text-left transition-colors"
+                    class="flex items-center gap-3 w-full px-4 py-3 text-sm text-left transition-colors app-dropdown-item"
                     :class="locale === lang.code ? 'bg-primary/10 text-black' : 'text-white hover:bg-white/5 hover:text-white'">
                     <span class="text-lg">{{ lang.flag }}</span>
                     <span>{{ lang.name }}</span>

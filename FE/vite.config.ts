@@ -49,6 +49,8 @@ export default defineConfig(({ mode }) => {
               'adminReviewService',
               'returnService',
               'membershipService',
+              'reportService',
+              'settingsService',
             ],
           },
         ],
@@ -68,7 +70,17 @@ export default defineConfig(({ mode }) => {
         directoryAsNamespace: false,
         // Don't include subfolders in component name
         collapseSamePrefixes: true,
+        // Add Bootstrap-Vue-Next resolver for automatic component imports
+        resolvers: [
+          // Bootstrap-Vue-Next components resolver
+          (componentName) => {
+            if (componentName.startsWith('B')) {
+              return { name: componentName, from: 'bootstrap-vue-next' }
+            }
+          }
+        ],
       }),
+
     ],
     resolve: {
       alias: {

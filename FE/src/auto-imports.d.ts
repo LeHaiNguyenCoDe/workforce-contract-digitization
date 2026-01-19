@@ -91,6 +91,7 @@ declare global {
   const reactive: typeof import('vue').reactive
   const readonly: typeof import('vue').readonly
   const ref: typeof import('vue').ref
+  const reportService: typeof import('@/plugins/api/services').reportService
   const resolveComponent: typeof import('vue').resolveComponent
   const returnService: typeof import('@/plugins/api/services').returnService
   const returnStatusClasses: typeof import('./helpers/statusHelpers').returnStatusClasses
@@ -100,6 +101,7 @@ declare global {
   const sanitizeSimpleHtml: typeof import('./utils/sanitize').sanitizeSimpleHtml
   const setActivePinia: typeof import('pinia').setActivePinia
   const setMapStoreSuffix: typeof import('pinia').setMapStoreSuffix
+  const settingsService: typeof import('@/plugins/api/services').settingsService
   const shallowReactive: typeof import('vue').shallowReactive
   const shallowReadonly: typeof import('vue').shallowReadonly
   const shallowRef: typeof import('vue').shallowRef
@@ -322,6 +324,7 @@ declare module 'vue' {
     readonly reactive: UnwrapRef<typeof import('vue')['reactive']>
     readonly readonly: UnwrapRef<typeof import('vue')['readonly']>
     readonly ref: UnwrapRef<typeof import('vue')['ref']>
+    readonly reportService: UnwrapRef<typeof import('@/plugins/api/services')['reportService']>
     readonly resolveComponent: UnwrapRef<typeof import('vue')['resolveComponent']>
     readonly returnService: UnwrapRef<typeof import('@/plugins/api/services')['returnService']>
     readonly returnStatusClasses: UnwrapRef<typeof import('./helpers/statusHelpers')['returnStatusClasses']>
@@ -331,6 +334,7 @@ declare module 'vue' {
     readonly sanitizeSimpleHtml: UnwrapRef<typeof import('./utils/sanitize')['sanitizeSimpleHtml']>
     readonly setActivePinia: UnwrapRef<typeof import('pinia')['setActivePinia']>
     readonly setMapStoreSuffix: UnwrapRef<typeof import('pinia')['setMapStoreSuffix']>
+    readonly settingsService: UnwrapRef<typeof import('@/plugins/api/services')['settingsService']>
     readonly shallowReactive: UnwrapRef<typeof import('vue')['shallowReactive']>
     readonly shallowReadonly: UnwrapRef<typeof import('vue')['shallowReadonly']>
     readonly shallowRef: UnwrapRef<typeof import('vue')['shallowRef']>

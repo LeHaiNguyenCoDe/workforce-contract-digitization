@@ -38,7 +38,7 @@ export const i18nInstance = i18n
 /**
  * Categories for locale files
  */
-const LOCALE_CATEGORIES = ['common', 'nav', 'auth', 'product', 'cart', 'order', 'admin', 'validation', 'home'] as const
+const LOCALE_CATEGORIES = ['common', 'nav', 'auth', 'product', 'cart', 'order', 'admin', 'validation', 'home', 'velzon'] as const
 
 /**
  * Load locale messages dynamically from folder structure
@@ -56,7 +56,11 @@ export async function loadLocaleMessages(locale: Locale): Promise<void> {
     LOCALE_CATEGORIES.map(async (category) => {
       try {
         const module = await import(`./locales/${locale}/${category}.json`)
-        messages[category] = module.default
+        if (category === 'velzon') {
+          Object.assign(messages, module.default)
+        } else {
+          messages[category] = module.default
+        }
       } catch (e) {
         console.warn(`Failed to load ${locale}/${category}.json`)
       }
