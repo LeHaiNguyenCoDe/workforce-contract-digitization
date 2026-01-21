@@ -11,3 +11,6 @@ export const routes: RouteRecordRaw[] = [
     }
   }
 ]
+
+// Menu is part of "Tools" group - defined in advanced-modules
+export default routes

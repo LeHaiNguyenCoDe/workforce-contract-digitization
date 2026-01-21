@@ -18,6 +18,13 @@ export interface Product {
   images?: ProductImage[]
   variants?: ProductVariant[]
   rating?: ProductRating
+  manufacturer_name?: string
+  manufacturer_brand?: string
+  discount_percentage?: number
+  orders_count?: number
+  published_at?: string
+  tags?: string[]
+  visibility?: 'public' | 'private'
   created_at?: string
   updated_at?: string
 }
@@ -58,6 +65,14 @@ export interface CreateProductRequest {
   description?: string
   short_description?: string
   category_id: number
+  stock_quantity?: number
+  is_active?: boolean
+  manufacturer_name?: string
+  manufacturer_brand?: string
+  discount_percentage?: number
+  published_at?: string
+  tags?: string[]
+  visibility?: 'public' | 'private'
 }
 
 export interface UpdateProductRequest {
@@ -67,4 +82,12 @@ export interface UpdateProductRequest {
   description?: string
   short_description?: string
   category_id?: number
+  stock_quantity?: number
+  is_active?: boolean
+  manufacturer_name?: string
+  manufacturer_brand?: string
+  discount_percentage?: number
+  published_at?: string
+  tags?: string[]
+  visibility?: 'public' | 'private'
 }

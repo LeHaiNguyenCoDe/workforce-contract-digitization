@@ -16,7 +16,7 @@ import VueFeather from 'vue-feather'
 
 import 'bootstrap-vue-next/dist/bootstrap-vue-next.css'
 import './assets/scss/main.scss'
-import './assets/velzon/scss/app.scss'
+import './assets/admin-panel/scss/app.scss'
 import 'sweetalert2/dist/sweetalert2.min.css'
 
 const app = createApp(App)

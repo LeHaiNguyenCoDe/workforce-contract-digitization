@@ -10,6 +10,13 @@ export interface ProductFormData {
   is_active: boolean
   thumbnail?: string
   images?: string[]
+  manufacturer_name?: string
+  manufacturer_brand?: string
+  discount_percentage?: number
+  orders_count?: number
+  published_at?: string
+  tags?: string[]
+  visibility?: 'public' | 'private'
 }
 
 export interface ProductFilters {

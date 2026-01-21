@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
-import MainLayout from '@/layouts/velzon/main.vue'
+import MainLayout from '@/layouts/admin-panel/main.vue'
 import { useAutoConnect } from '@/modules/admin/chat/composables/useRealtime'
 
 // Initialize real-time connection for notifications across all admin pages

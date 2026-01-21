@@ -4,21 +4,33 @@
  */
 
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useSwal } from '@/utils'
+import { useAdminProductStore } from '../store/store'
+import { adminProductService } from '@/plugins/api/services/ProductService'
 import type { Product } from '../types'
 
 export function useAdminProducts() {
   const store = useAdminProductStore()
   const swal = useSwal()
+  const router = useRouter()
 
   // Local state
   const searchQuery = ref('')
+  const selectedCategoryId = ref<number | null>(null)
+  const priceRange = ref({ min: 0, max: 20000000 })
+  const selectedBrands = ref<string[]>([])
+  const selectedRating = ref<number | null>(null)
+  const activeTab = ref(0)
   const showModal = ref(false)
   const editingProduct = ref<Product | null>(null)
+  const errors = ref<Record<string, string>>({})
 
   // Computed
   const filteredProducts = computed(() => {
     let result = store.products
+
+    // 1. Search Query
     if (searchQuery.value) {
       const query = searchQuery.value.toLowerCase()
       result = result.filter(
@@ -27,6 +39,43 @@ export function useAdminProducts() {
           p.slug?.toLowerCase().includes(query)
       )
     }
+
+    // 2. Category Filter
+    if (selectedCategoryId.value) {
+      result = result.filter(p => Number(p.category_id) === selectedCategoryId.value || p.category?.id === selectedCategoryId.value)
+    }
+
+    // 3. Price Range Filter
+    if (priceRange.value.min !== undefined || priceRange.value.max !== undefined) {
+      result = result.filter(p => {
+        const price = p.price || 0
+        const min = priceRange.value.min || 0
+        const max = priceRange.value.max || Infinity
+        return price >= min && price <= max
+      })
+    }
+
+    // 4. Brand Filter
+    if (selectedBrands.value.length > 0) {
+      result = result.filter(p => {
+        const brand = p.manufacturer_brand || ''
+        return selectedBrands.value.includes(brand)
+      })
+    }
+
+    // 5. Rating Filter
+    if (selectedRating.value) {
+      result = result.filter(p => (Number(p.rating?.avg) || 0) >= selectedRating.value!)
+    }
+
+    // 6. Publication Status Tab Filter
+    const tabIdx = Number(activeTab.value)
+    if (tabIdx === 1) { // Published
+      result = result.filter(p => p.is_active)
+    } else if (tabIdx === 2) { // Draft
+      result = result.filter(p => !p.is_active)
+    }
+
     return result
   })
 
@@ -69,6 +118,9 @@ export function useAdminProducts() {
     try {
       // Fetch full product data by ID to ensure we have all fields
       const fullProduct = await adminProductService.getById(product.id)
+      console.log('DEBUG: fullProduct', fullProduct)
+      console.log('DEBUG: fullProduct.images', fullProduct.images)
+      
       editingProduct.value = fullProduct
       store.selectedProduct = fullProduct
       store.productForm = {
@@ -80,8 +132,21 @@ export function useAdminProducts() {
         short_description: fullProduct.short_description || '',
         description: fullProduct.description || '',
         thumbnail: fullProduct.thumbnail || '',
-        is_active: fullProduct.is_active ?? true
+        is_active: fullProduct.is_active ?? true,
+        manufacturer_name: fullProduct.manufacturer_name || '',
+        manufacturer_brand: fullProduct.manufacturer_brand || '',
+        stock_quantity: fullProduct.stock_quantity || 0,
+        discount_percentage: fullProduct.discount_percentage || 0,
+        orders_count: fullProduct.orders_count || 0,
+        published_at: fullProduct.published_at || '',
+        tags: fullProduct.tags || [],
+        visibility: (fullProduct as any).visibility || 'public',
+        images: fullProduct.images?.map((img: any) => img.image_url || img.url || '').filter(Boolean) || [],
+        specs: fullProduct.specs || {},
+        variants: fullProduct.variants || [],
+        faqs: (fullProduct as any).faqs || []
       }
+      console.log('DEBUG: Mapped images', store.productForm.images)
     } catch (error) {
       console.error('Failed to fetch product details:', error)
       // Fallback to using product data from list
@@ -96,10 +161,45 @@ export function useAdminProducts() {
         short_description: product.short_description || '',
         description: product.description || '',
         thumbnail: product.thumbnail || '',
-        is_active: product.is_active ?? true
+        is_active: product.is_active ?? true,
+        manufacturer_name: product.manufacturer_name || '',
+        manufacturer_brand: product.manufacturer_brand || '',
+        stock_quantity: product.stock_quantity || 0,
+        discount_percentage: product.discount_percentage || 0,
+        orders_count: product.orders_count || 0,
+        published_at: product.published_at || '',
+        tags: product.tags || [],
+        visibility: (product as any).visibility || 'public',
+        images: product.images?.map((img: any) => JSON.stringify(img)) || [],
+        specs: (product as any).specs || {},
+        variants: (product as any).variants || [],
+        faqs: (product as any).faqs || []
       }
-    }
     showModal.value = true
+  }
+  }
+
+  function validate() {
+    errors.value = {}
+    const form = store.productForm
+    let isValid = true
+
+    if (!form.name || !form.name.trim()) {
+      errors.value.name = 'Tên sản phẩm là bắt buộc'
+      isValid = false
+    }
+
+    if (!form.category_id || form.category_id === '0') {
+      errors.value.category_id = 'Vui lòng chọn danh mục'
+      isValid = false
+    }
+
+    if (form.price === undefined || form.price === null || form.price === 0) {
+      errors.value.price = 'Giá sản phẩm là bắt buộc và phải lớn hơn 0'
+      isValid = false
+    }
+
+    return isValid
   }
 
   async function saveProduct() {
@@ -108,90 +208,37 @@ export function useAdminProducts() {
     // Get current form values directly from store (reactive)
     const form = store.productForm
 
-    // Validate required fields - use actual form values
-    const errors: string[] = []
+    // Validate required fields
+    if (!validate()) {
+      return false
+    }
 
-    // Check name - trim and check
     const name = String(form.name || '').trim()
-    if (!name) {
-      errors.push('Tên sản phẩm')
-    }
-
-    // Check category_id - can be string or number
-    const categoryId = form.category_id
-    const categoryIdStr = String(categoryId || '').trim()
-    const categoryIdNum = Number(categoryId)
-    if (!categoryId || categoryIdStr === '' || categoryIdStr === '0' || categoryIdNum === 0 || isNaN(categoryIdNum)) {
-      errors.push('Danh mục')
-    }
-
-    // Check price - allow 0 but not undefined/null/empty string
-    const price = form.price
-    if (price === undefined || price === null || String(price).trim() === '') {
-      errors.push('Giá')
-    }
-
-    if (errors.length > 0) {
-      console.log('Validation errors:', {
-        name,
-        categoryId,
-        price,
-        formName: form.name,
-        formCategoryId: form.category_id,
-        formPrice: form.price,
-        fullForm: form
-      })
-      await swal.warning(`Vui lòng điền đầy đủ thông tin bắt buộc: ${errors.join(', ')}`)
-      return
-    }
 
     try {
-      // Get fresh form values directly from store
-      const form = store.productForm
-
-      // Parse category_id - handle both string and number
-      let categoryIdParsed = 0
-      if (typeof form.category_id === 'string') {
-        categoryIdParsed = parseInt(form.category_id) || 0
-      } else if (typeof form.category_id === 'number') {
-        categoryIdParsed = form.category_id
-      }
-
-      // Build payload with proper types
       const payload: any = {
-        name: String(form.name || '').trim(),
-        slug: form.slug || generateSlug(form.name),
-        category_id: categoryIdParsed,
-        price: Math.round(Number(form.price) || 0), // Backend expects integer
-        is_active: form.is_active ?? true
+        name: name,
+        slug: form.slug || generateSlug(name),
+        category_id: Number(form.category_id),
+        price: Math.round(Number(form.price) || 0),
+        is_active: form.is_active ?? true,
+        sale_price: form.sale_price ? Math.round(Number(form.sale_price)) : null,
+        short_description: form.short_description,
+        description: form.description,
+        thumbnail: form.thumbnail,
+        manufacturer_name: form.manufacturer_name,
+        manufacturer_brand: form.manufacturer_brand,
+        stock_quantity: Number(form.stock_quantity) || 0,
+        discount_percentage: Number(form.discount_percentage) || 0,
+        published_at: form.published_at,
+        tags: form.tags,
+        visibility: form.visibility,
+        images: form.images,
+        specs: form.specs,
+        variants: form.variants,
+        faqs: form.faqs
       }
 
-      // Add optional fields
-      if (form.sale_price) {
-        payload.sale_price = Math.round(Number(form.sale_price))
-      }
-      if (form.short_description) {
-        payload.short_description = String(form.short_description).trim()
-      }
-      if (form.description) {
-        payload.description = String(form.description).trim()
-      }
-      if (form.thumbnail) {
-        payload.thumbnail = String(form.thumbnail).trim()
-      }
-
-      // Final validation after parsing
-      if (!payload.name || payload.name === '') {
-        await swal.warning('Tên sản phẩm không được để trống!')
-        return
-      }
-      if (!payload.category_id || payload.category_id === 0) {
-        await swal.warning('Vui lòng chọn danh mục!')
-        return
-      }
-
-      // Debug log
-      console.log('Saving product with payload:', payload)
 
       if (editingProduct.value) {
         await store.updateProduct(editingProduct.value.id, payload)
@@ -199,60 +246,49 @@ export function useAdminProducts() {
       } else {
         await store.createProduct(payload)
         await swal.success('Tạo sản phẩm thành công!')
-        // Reset to page 1 to see new product
         store.setPage(1)
       }
 
       showModal.value = false
       editingProduct.value = null
-      store.selectedProduct = null
       store.resetProductForm()
-
-      // Force refresh products list - reset to page 1 for new products
-      // Use setTimeout to ensure modal is closed first
-      setTimeout(async () => {
-        await store.fetchProducts({ page: 1 })
-      }, 100)
+      
+      return true
     } catch (error: any) {
       console.error('Failed to save product:', error)
-      const errorData = error.response?.data
-
-      // Show detailed validation errors
-      if (errorData?.errors) {
-        const errorMessages: string[] = []
-        Object.keys(errorData.errors).forEach(key => {
-          const messages = errorData.errors[key]
-          if (Array.isArray(messages)) {
-            errorMessages.push(...messages)
-          } else {
-            errorMessages.push(messages)
-          }
-        })
-        await swal.error(errorMessages.join('\n') || 'Validation failed')
-      } else {
-        const message = errorData?.message || 'Lưu thất bại!'
-        await swal.error(message)
-      }
+      const message = error.response?.data?.message || 'Lưu thất bại!'
+      await swal.error(message)
+      return false
     }
   }
 
   async function deleteProduct(id: number) {
-    console.log('[deleteProduct] Starting delete for id:', id)
     const confirmed = await swal.confirmDelete('Bạn có chắc muốn xóa sản phẩm này?')
-    if (!confirmed) {
-      console.log('[deleteProduct] User cancelled')
-      return
-    }
+    if (!confirmed) return
 
     try {
-      console.log('[deleteProduct] Calling store.deleteProduct...')
-      const result = await store.deleteProduct(id)
-      console.log('[deleteProduct] Delete result:', result)
+      await store.deleteProduct(id)
       await swal.success('Xóa sản phẩm thành công!')
     } catch (error: any) {
-      console.error('[deleteProduct] Failed to delete product:', error)
-      console.error('[deleteProduct] Error response:', error.response)
       await swal.error(error.response?.data?.message || 'Xóa sản phẩm thất bại!')
+    }
+  }
+
+  async function deleteProducts(ids: number[]) {
+    if (!ids.length) return
+    
+    const confirmed = await swal.confirmDelete(`Bạn có chắc muốn xóa ${ids.length} sản phẩm đã chọn?`)
+    if (!confirmed) return
+
+    store.isLoading = true
+    try {
+      // Delete all selected products
+      await Promise.all(ids.map(id => store.deleteProduct(id)))
+      await swal.success(`Đã xóa ${ids.length} sản phẩm thành công!`)
+    } catch (error: any) {
+      await swal.error(error.response?.data?.message || 'Xóa sản phẩm thất bại!')
+    } finally {
+      store.isLoading = false
     }
   }
 
@@ -261,107 +297,93 @@ export function useAdminProducts() {
     store.fetchProducts({ search: searchQuery.value })
   }
 
-  // Auto-generate slug from name (only for new products)
   function handleNameChange() {
     if (!editingProduct.value && store.productForm.name) {
       const productName = store.productForm.name.trim()
-
-      // Auto-generate slug
       store.productForm.slug = generateSlug(productName)
-
-      // Auto-select category if product name contains category name
       autoSelectCategory(productName)
-
-      // Auto-generate short description and full description
       autoGenerateShortDescription(productName)
     }
   }
 
-  // Auto-select category based on product name
   function autoSelectCategory(productName: string) {
-    if (!productName || store.productForm.category_id || store.categories.length === 0) return // Skip if already selected or no categories
-
+    if (!productName || store.productForm.category_id || store.categories.length === 0) return
     const nameLower = productName.toLowerCase().trim()
-
-    // Find category whose name is contained in product name (best match first)
-    let matchedCategory = null
+    let matchedCategory: any = null
     let bestMatchLength = 0
 
     for (const cat of store.categories) {
       const catNameLower = cat.name.toLowerCase().trim()
-
-      // Check if category name is in product name
-      if (nameLower.includes(catNameLower)) {
-        // Prefer longer category names (more specific)
-        if (catNameLower.length > bestMatchLength) {
-          bestMatchLength = catNameLower.length
-          matchedCategory = cat
-        }
-      }
-      // Also check reverse (product name in category name)
-      else if (catNameLower.includes(nameLower) && nameLower.length >= 3) {
-        if (nameLower.length > bestMatchLength) {
-          bestMatchLength = nameLower.length
-          matchedCategory = cat
-        }
+      if (nameLower.includes(catNameLower) && catNameLower.length > bestMatchLength) {
+        bestMatchLength = catNameLower.length
+        matchedCategory = cat
       }
     }
-
     if (matchedCategory) {
       store.productForm.category_id = matchedCategory.id.toString()
     }
   }
 
-  // Auto-generate short description and full description
   function autoGenerateShortDescription(productName: string) {
-    if (!productName) return
-
-    // Use selected category if available, otherwise find matched category
+    if (!productName || store.productForm.short_description) return
     let categoryName = 'sản phẩm'
     if (store.productForm.category_id) {
-      const selectedCategory = store.categories.find(cat => cat.id.toString() === store.productForm.category_id)
-      if (selectedCategory) {
-        categoryName = selectedCategory.name
-      }
-    } else {
-      // Find matched category for context
-      const matchedCategory = store.categories.find(cat => {
-        const nameLower = productName.toLowerCase()
-        const catNameLower = cat.name.toLowerCase()
-        return nameLower.includes(catNameLower) || catNameLower.includes(nameLower)
-      })
-      if (matchedCategory) {
-        categoryName = matchedCategory.name
-      }
+      const cat = store.categories.find(c => c.id.toString() === store.productForm.category_id)
+      if (cat) categoryName = cat.name
     }
+    const shortDesc = `${productName} là ${categoryName} chất lượng cao, thiết kế hiện đại, phù hợp cho mọi nhu cầu sử dụng.`
+    store.productForm.short_description = shortDesc
+  }
 
-    // Generate short description (only if empty)
-    if (!store.productForm.short_description) {
-      const shortDesc = `${productName} là ${categoryName} chất lượng cao, được thiết kế và sản xuất với tiêu chuẩn nghiêm ngặt. Sản phẩm phù hợp cho mọi nhu cầu sử dụng, mang lại trải nghiệm tuyệt vời cho người dùng.`
-      store.productForm.short_description = shortDesc
-    }
+  async function navigateToCreate() {
+    store.resetProductForm()
+    editingProduct.value = null
+    router.push({ name: 'admin-products-create' })
+  }
 
-    // Generate full description (only if empty)
-    if (!store.productForm.description) {
-      const fullDesc = `## ${productName}
+  async function navigateToEdit(id: number) {
+    router.push({ name: 'admin-products-edit', params: { id } })
+  }
 
-**Danh mục:** ${categoryName}
+  async function navigateToView(id: number) {
+    router.push({ name: 'admin-products-view', params: { id } })
+  }
 
-### Mô tả sản phẩm
-
-${productName} là ${categoryName} được thiết kế với công nghệ tiên tiến, mang đến trải nghiệm sử dụng tuyệt vời cho người dùng. Sản phẩm được sản xuất với tiêu chuẩn chất lượng cao, đảm bảo độ bền và hiệu suất tối ưu.
-
-### Đặc điểm nổi bật
-
-- Chất lượng cao, đáng tin cậy
-- Thiết kế hiện đại, sang trọng
-- Hiệu suất vượt trội
-- Phù hợp cho mọi nhu cầu sử dụng
-
-### Thông tin chi tiết
-
-${productName} là lựa chọn hoàn hảo cho những ai đang tìm kiếm một ${categoryName} chất lượng với giá trị tốt nhất. Sản phẩm được bảo hành chính hãng và có đầy đủ phụ kiện đi kèm.`
-      store.productForm.description = fullDesc
+  async function loadProductForForm(id: number) {
+    try {
+      store.isLoading = true
+      const fullProduct = await adminProductService.getById(id)
+      editingProduct.value = fullProduct
+      store.selectedProduct = fullProduct
+      store.productForm = {
+        name: fullProduct.name,
+        slug: fullProduct.slug || '',
+        category_id: fullProduct.category_id?.toString() || fullProduct.category?.id?.toString() || '',
+        price: fullProduct.price,
+        sale_price: fullProduct.sale_price?.toString() || '',
+        short_description: fullProduct.short_description || '',
+        description: fullProduct.description || '',
+        thumbnail: fullProduct.thumbnail || '',
+        is_active: fullProduct.is_active ?? true,
+        manufacturer_name: fullProduct.manufacturer_name || '',
+        manufacturer_brand: fullProduct.manufacturer_brand || '',
+        stock_quantity: fullProduct.stock_quantity || 0,
+        discount_percentage: fullProduct.discount_percentage || 0,
+        orders_count: fullProduct.orders_count || 0,
+        published_at: fullProduct.published_at || '',
+        tags: fullProduct.tags || [],
+        visibility: (fullProduct as any).visibility || 'public',
+        images: fullProduct.images?.map((img: any) => img.image_url || img.url || '').filter(Boolean) || [],
+        specs: fullProduct.specs || {},
+        variants: fullProduct.variants || [],
+        faqs: (fullProduct as any).faqs || []
+      }
+    } catch (error) {
+      console.error('Failed to load product for form:', error)
+      swal.error('Không thể tải thông tin sản phẩm')
+      router.push({ name: 'admin-products' })
+    } finally {
+      store.isLoading = false
     }
   }
 
@@ -370,6 +392,12 @@ ${productName} là lựa chọn hoàn hảo cho những ai đang tìm kiếm m�
     searchQuery,
     showModal,
     editingProduct,
+    selectedCategoryId,
+    priceRange,
+    selectedBrands,
+    selectedRating,
+    activeTab,
+    errors,
     // Computed
     filteredProducts,
     // Methods
@@ -378,10 +406,14 @@ ${productName} là lựa chọn hoàn hảo cho những ai đang tìm kiếm m�
     setSearchQuery,
     openCreateModal,
     openEditModal,
+    navigateToCreate,
+    navigateToEdit,
+    navigateToView,
+    loadProductForForm,
     saveProduct,
     deleteProduct,
+    deleteProducts,
     changePage,
     handleNameChange
   }
 }
-

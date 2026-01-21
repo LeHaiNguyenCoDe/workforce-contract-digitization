@@ -37,7 +37,9 @@ export function useHome() {
 
   async function fetchFeaturedCategories() {
     try {
-      const response = await httpClient.get('/frontend/categories', { params: { per_page: 6 } })
+      const response = await httpClient.get('/frontend/categories', { 
+        params: { per_page: 6, is_active: 1 } 
+      })
       const data = response.data as any
       
       if (Array.isArray(data?.data)) {

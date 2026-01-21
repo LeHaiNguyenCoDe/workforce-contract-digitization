@@ -114,7 +114,7 @@ declare global {
   const triggerRef: typeof import('vue').triggerRef
   const truncate: typeof import('./utils/string').truncate
   const unref: typeof import('vue').unref
-  const useAdminCategories: typeof import('./modules/admin/categories/composables/useAdminCategories').useAdminCategories
+  const useAdminCategories: typeof import('./modules/admin/products/composables/useAdminCategories').useAdminCategories
   const useAdminCategoryStore: typeof import('./modules/admin/categories/store/store').useAdminCategoryStore
   const useAdminList: typeof import('./composables/useAdminList').useAdminList
   const useAdminOrderStore: typeof import('./modules/admin/orders/store/store').useAdminOrderStore
@@ -220,9 +220,6 @@ declare global {
   // @ts-ignore
   export type { ShippingAddress, CheckoutForm, PaymentMethod } from './modules/landing/orders/composables/useCheckout'
   import('./modules/landing/orders/composables/useCheckout')
-  // @ts-ignore
-  export type { Category } from './modules/admin/categories/store/store'
-  import('./modules/admin/categories/store/store')
   // @ts-ignore
   export type { OrderItem, Order, Shipper } from './modules/admin/orders/store/store'
   import('./modules/admin/orders/store/store')
@@ -347,8 +344,7 @@ declare module 'vue' {
     readonly triggerRef: UnwrapRef<typeof import('vue')['triggerRef']>
     readonly truncate: UnwrapRef<typeof import('./utils/string')['truncate']>
     readonly unref: UnwrapRef<typeof import('vue')['unref']>
-    readonly useAdminCategories: UnwrapRef<typeof import('./modules/admin/categories/composables/useAdminCategories')['useAdminCategories']>
-    readonly useAdminCategoryStore: UnwrapRef<typeof import('./modules/admin/categories/store/store')['useAdminCategoryStore']>
+    readonly useAdminCategories: UnwrapRef<typeof import('./modules/admin/products/composables/useAdminCategories')['useAdminCategories']>
     readonly useAdminList: UnwrapRef<typeof import('./composables/useAdminList')['useAdminList']>
     readonly useAdminOrderStore: UnwrapRef<typeof import('./modules/admin/orders/store/store')['useAdminOrderStore']>
     readonly useAdminOrders: UnwrapRef<typeof import('./modules/admin/orders/composables/useAdminOrders')['useAdminOrders']>

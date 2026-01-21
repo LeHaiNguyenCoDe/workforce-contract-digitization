@@ -85,7 +85,8 @@ export function useLandingProducts() {
     try {
       const queryParams: Record<string, any> = {
         page: params?.page || currentPage.value,
-        per_page: 12
+        per_page: 12,
+        active_category_only: 1
       }
 
       if (searchQuery.value) queryParams.search = searchQuery.value
@@ -140,7 +141,7 @@ export function useLandingProducts() {
 
   async function fetchCategories() {
     try {
-      const response = await httpClient.get('/frontend/categories', { params: { per_page: 50 } })
+      const response = await httpClient.get('/frontend/categories', { params: { per_page: 50, is_active: 1 } })
       const data = response.data as any
       categories.value = Array.isArray(data?.data) ? data.data : []
     } catch (error) {

@@ -1,176 +1,154 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { productColumns } from '../../configs/columns'
+import { useAdminProductStore } from '../../store/store'
+import { useAdminProducts } from '../../composables/useAdminProducts'
+import ProductFilterSidebar from '../../components/ProductFilterSidebar.vue'
+import ProductTableList from '../../components/ProductTableList.vue'
 
 const { t } = useI18n()
-
-// Store
 const store = useAdminProductStore()
 
-// Composables
 const {
   searchQuery,
-  showModal,
-  editingProduct,
   filteredProducts,
   formatPrice,
   setSearchQuery,
-  openCreateModal,
-  openEditModal,
-  saveProduct,
+  navigateToCreate,
+  navigateToEdit,
+  navigateToView,
   deleteProduct,
+  deleteProducts,
   changePage,
-  handleNameChange
+  selectedCategoryId,
+  priceRange,
+  selectedBrands,
+  selectedRating,
+  activeTab
 } = useAdminProducts()
 
 // Computed from store
 const categories = computed(() => store.categories)
 const isLoading = computed(() => store.isLoading)
-const isSaving = computed(() => store.isSaving)
-const currentPage = computed(() => store.currentPage)
-const totalPages = computed(() => store.totalPages)
+const currentPage = ref(store.currentPage)
 
-// Lifecycle
+// DTable Columns
+const displayColumns = [
+  { key: 'selection', label: '#', width: '50px' },
+  { key: 'id', label: 'ID', width: '50px', align: 'center' as const },
+  { key: 'name', label: 'Product' },
+  { key: 'stock_quantity', label: 'Stock', width: '100px', align: 'center' as const },
+  { key: 'price', label: 'Price', width: '120px', align: 'center' as const },
+  { key: 'orders_count', label: 'Orders', width: '100px', align: 'center' as const },
+  { key: 'rating', label: 'Rating', width: '100px', align: 'center' as const },
+  { key: 'published_at', label: 'Published', width: '150px', align: 'center' as const },
+]
+
+const selectedRows = ref<number[]>([])
+
+// Mock helper for UI display
+const enrichedProducts = computed(() => {
+  return filteredProducts.value.map((p) => {
+    let display_date = 'Draft'
+    if (p.is_active) {
+      if (p.published_at) {
+        const date = new Date(p.published_at)
+        const dateStr = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+        const timeStr = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
+        display_date = `${dateStr} <span class="text-muted fs-11 ms-1">${timeStr}</span>`
+      } else {
+        display_date = 'Published'
+      }
+    }
+    
+    return {
+      ...p,
+      orders_count: p.orders_count || 0,
+      rating_val: p.rating?.avg || '0.0',
+      display_date
+    }
+  })
+})
+
+const clearAllFilters = () => {
+  searchQuery.value = ''
+  selectedCategoryId.value = null
+  priceRange.value = { min: 0, max: 20000000 }
+  selectedBrands.value = []
+  selectedRating.value = null
+}
+
+const removeFilter = (tag: any) => {
+  if (tag.type === 'category') selectedCategoryId.value = null
+  if (tag.type === 'brand') selectedBrands.value = selectedBrands.value.filter(b => b !== tag.label)
+  if (tag.type === 'price') priceRange.value = { min: 0, max: 20000000 }
+  if (tag.type === 'rating') selectedRating.value = null
+}
+
 onMounted(async () => {
   await store.fetchCategories()
   await store.fetchProducts()
 })
+
+const handlePageChange = (val: number) => {
+  changePage(val)
+}
 </script>
 
 <template>
-  <div class="h-full flex flex-col p-6">
-    <!-- Header -->
-    <AdminPageHeader :title="t('admin.products')" description="Quản lý danh sách sản phẩm (master data)">
-      <template #actions>
-        <DButton variant="primary" @click="openCreateModal">
-          <img src="@/assets/admin/icons/plus.svg" class="w-5 h-5 mr-2 brightness-0 invert" alt="Add" />
-          {{ t('common.create') }}
-        </DButton>
-      </template>
-    </AdminPageHeader>
+  <div class="page-content py-4" style="background-color: #f3f3f9;">
+    <PageHeader :title="t('admin.products')" pageTitle="Ecommerce" />
 
-    <div class="mb-4 bg-info/10 border border-info/20 rounded-xl p-3 text-xs text-info flex items-start gap-3">
-      <img src="@/assets/admin/icons/info.svg" class="w-4 h-4 mt-0.5 opacity-80" alt="Info" />
-      <div>
-        <strong>Lưu ý:</strong> Trang này quản lý danh mục sản phẩm. Thêm tồn kho tại
-        <router-link :to="{ name: 'admin-warehouse-inbound-batches' }" class="underline font-semibold mx-1">Lô
-          nhập</router-link>
-        và xem tại <router-link :to="{ name: 'admin-warehouse-inventory' }" class="underline font-semibold ml-1">Tồn
-          kho</router-link>.
-      </div>
-    </div>
+    <BRow>
+      <!-- Filter Sidebar -->
+      <BCol xl="3" lg="4" class="sticky-side-div">
+        <ProductFilterSidebar 
+          :categoryId="selectedCategoryId"
+          @update:categoryId="selectedCategoryId = $event ?? null"
+          :priceRange="priceRange"
+          @update:priceRange="priceRange = $event"
+          :brands="selectedBrands"
+          @update:brands="selectedBrands = $event"
+          :rating="selectedRating"
+          @update:rating="selectedRating = $event ?? null"
+          :categories="categories"
+          :formatPrice="formatPrice"
+          @clear-all="clearAllFilters"
+          @remove-filter="removeFilter"
+        />
+      </BCol>
 
-    <!-- Search -->
-    <AdminSearch :modelValue="searchQuery" @update:modelValue="setSearchQuery"
-      @search="store.fetchProducts({ search: searchQuery })" placeholder="Tìm kiếm sản phẩm..." />
-
-    <!-- Table -->
-    <AdminTable :columns="productColumns" :data="filteredProducts" :loading="isLoading"
-      empty-text="Không có sản phẩm nào">
-      <template #cell-name="{ item }">
-        <div class="flex items-center gap-3">
-          <img v-if="item.thumbnail" :src="item.thumbnail" :alt="item.name"
-            class="w-10 h-10 rounded-lg object-cover border border-white/5" />
-          <div v-else class="w-10 h-10 rounded-lg bg-slate-700 flex items-center justify-center text-slate-500">📦</div>
-          <div>
-            <p class="font-medium text-white">{{ item.name }}</p>
-            <p class="text-xs text-slate-500">{{ item.slug }}</p>
-          </div>
-        </div>
-      </template>
-
-      <template #cell-category="{ item }">
-        <span class="text-slate-400">{{ item.category?.name || 'N/A' }}</span>
-      </template>
-
-      <template #cell-price="{ item }">
-        <div class="flex flex-col">
-          <span class="font-semibold text-primary-light">{{ formatPrice(item.price) }}</span>
-          <span v-if="item.sale_price" class="text-xs text-slate-500 line-through">{{ formatPrice(item.sale_price)
-            }}</span>
-        </div>
-      </template>
-
-      <template #cell-stock_quantity="{ item }">
-        <div class="flex items-center gap-2">
-          <span
-            :class="['px-2 py-0.5 rounded-full text-xs font-medium', (item.stock_quantity || 0) > 0 ? 'bg-success/10 text-success' : 'bg-error/10 text-error']">
-            {{ item.stock_quantity || 0 }}
-          </span>
-          <router-link v-if="(item.stock_quantity || 0) === 0" :to="{ name: 'admin-warehouse-inbound-batches' }"
-            class="text-[10px] text-info hover:underline">Nhập hàng</router-link>
-        </div>
-      </template>
-
-      <template #actions="{ item }">
-        <div class="flex items-center justify-end gap-1">
-          <DAction icon="edit" @click.stop="openEditModal(item)" />
-          <DAction icon="delete" variant="danger" @click.stop="deleteProduct(item.id)" />
-        </div>
-      </template>
-
-      <template #footer>
-        <Pagination :currentPage="currentPage" :totalPages="totalPages" @page-change="changePage" />
-      </template>
-    </AdminTable>
-
-    <!-- Modal -->
-    <DModal v-model="showModal" :title="editingProduct ? 'Sửa sản phẩm' : 'Thêm sản phẩm'" size="lg">
-      <div class="grid grid-cols-2 gap-4">
-        <div class="col-span-2">
-          <label class="block text-sm font-medium text-slate-300 mb-2">Tên sản phẩm *</label>
-          <input v-model="store.productForm.name" @input="handleNameChange" type="text" class="form-input"
-            placeholder="Nhập tên sản phẩm" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-slate-300 mb-2">Slug</label>
-          <input v-model="store.productForm.slug" type="text" class="form-input" placeholder="Tự động tạo từ tên" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-slate-300 mb-2">Danh mục *</label>
-          <select v-model="store.productForm.category_id" class="form-input">
-            <option value="">Chọn danh mục</option>
-            <option v-for="cat in categories" :key="cat.id" :value="cat.id.toString()">{{ cat.name }}</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-slate-300 mb-2">Giá *</label>
-          <input v-model.number="store.productForm.price" type="number" min="0" step="1" class="form-input"
-            placeholder="0" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-slate-300 mb-2">Giá khuyến mãi</label>
-          <input v-model="store.productForm.sale_price" type="number" min="0" class="form-input" placeholder="0" />
-        </div>
-        <div class="col-span-2">
-          <label class="block text-sm font-medium text-slate-300 mb-2">Mô tả ngắn</label>
-          <textarea v-model="store.productForm.short_description" rows="2" class="form-input"
-            placeholder="Mô tả ngắn..."></textarea>
-        </div>
-        <div class="col-span-2">
-          <label class="block text-sm font-medium text-slate-300 mb-2">Mô tả chi tiết</label>
-          <textarea v-model="store.productForm.description" rows="4" class="form-input"
-            placeholder="Mô tả chi tiết..."></textarea>
-        </div>
-        <div class="col-span-2">
-          <label class="block text-sm font-medium text-slate-300 mb-2">Hình ảnh (URL)</label>
-          <input v-model="store.productForm.thumbnail" type="text" class="form-input" placeholder="URL hình ảnh" />
-        </div>
-        <div class="col-span-2">
-          <label class="flex items-center gap-2 cursor-pointer">
-            <input v-model="store.productForm.is_active" type="checkbox" class="form-checkbox" />
-            <span class="text-sm text-slate-300">Kích hoạt sản phẩm</span>
-          </label>
-        </div>
-      </div>
-
-      <template #footer>
-        <div class="flex gap-3">
-          <DButton variant="secondary" class="flex-1" @click="showModal = false">Hủy</DButton>
-          <DButton variant="primary" class="flex-1" :loading="isSaving" @click="saveProduct">Lưu thay đổi</DButton>
-        </div>
-      </template>
-    </DModal>
+      <!-- Product List -->
+      <BCol xl="9" lg="8">
+        <ProductTableList 
+          :searchQuery="searchQuery"
+          @update:searchQuery="searchQuery = $event"
+          :activeTab="activeTab"
+          @update:activeTab="activeTab = $event"
+          :currentPage="currentPage"
+          @update:currentPage="currentPage = $event"
+          :selectedRows="selectedRows"
+          @update:selectedRows="selectedRows = $event"
+          :columns="displayColumns"
+          :products="enrichedProducts"
+          :isLoading="isLoading"
+          :formatPrice="formatPrice"
+          @create="navigateToCreate"
+          @edit="navigateToEdit"
+          @view="navigateToView"
+          @delete="deleteProduct"
+          @delete-bulk="deleteProducts"
+          @change-page="handlePageChange"
+          @search-input="setSearchQuery"
+        />
+      </BCol>
+    </BRow>
   </div>
 </template>
+
+<style scoped>
+.sticky-side-div {
+    position: sticky;
+    top: 70px;
+}
+</style>

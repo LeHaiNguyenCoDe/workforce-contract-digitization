@@ -14,20 +14,6 @@ export const useHomeStore = defineStore('landing-home', () => {
   const promotions = ref<Promotion[]>([])
   const banners = ref<HomeBanner[]>([])
   const isLoading = ref(false)
-  const categoriesSymbolicNames = {
-    1: 'https://ladora.com.vn/wp-content/uploads/2019/05/binh-gom-trang-tri-bg021-3.jpg',
-    2: 'https://vungdecor.com/wp-content/uploads/2022/10/binh-gom-trang-tri-Vung-Decor10.jpg',
-    3: 'https://bizweb.dktcdn.net/100/400/560/products/z4544943015781-2f0075e3e216d9a6399fc773d1533632.jpg?v=1690254500157',
-    4: 'https://phapduyen.com/wp-content/uploads/2024/10/00-1a-1.jpg',
-    5: 'https://ecocare.vn/wp-content/uploads/2019/03/do-gia-dung-thong-minh-4-800x800.jpg',
-    6: 'https://naty.vn/wp-content/uploads/2023/06/qua-tang-tan-gia-4.jpg',
-    7: 'https://battrangceramics.com/User_folder_upload/admin/images/2021/gom-tam-linh-aug/loc-linh-tam-hop-ty-dau-suu-mau-xanh-ngoc-cao-31cm3.jpg',
-    8: 'https://flexdecor.vn/wp-content/uploads/2022/11/binh-gom-trang-tri-phong-cach-nhat-ban-jfs9297-1.jpg',
-    9: 'https://gomsubaokhanh.vn/media/product/1_hu_sanh_dung_gao_20_kg_tai_loc_dang_tru__cg_004_20_2.jpg',
-    10: 'https://quatangcaominh.com/wp-content/uploads/2024/12/hop-qua-tam-linh-1024x576.jpg',
-    11: 'https://gomtruongan.vn/uploads/products/02062020012026/tranh-gom-su-op-tuong-canh-dong-que_02062020012026.jpg',
-    12: 'https://vuongomviet.com/public/uploads/Tintuc/tuong-gom-su-1.jpg'
-  }
 
   // Getters
   const hasFeaturedProducts = computed(() => featuredProducts.value.length > 0)
@@ -77,7 +63,6 @@ export const useHomeStore = defineStore('landing-home', () => {
     hasFeaturedProducts,
     hasPromotions,
     fetchHomeData,
-    categoriesSymbolicNames,
     reset
   }
 })

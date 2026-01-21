@@ -21,7 +21,9 @@ export const useLandingCategoryStore = defineStore('landing-categories', () => {
   async function fetchCategories() {
     isLoading.value = true
     try {
-      const response = await httpClient.get<any>('/frontend/categories')
+      const response = await httpClient.get<any>('/frontend/categories', {
+        params: { is_active: 1 }
+      })
       const data = response.data as any
       categories.value = Array.isArray(data?.data) ? data.data : []
     } catch (error) {

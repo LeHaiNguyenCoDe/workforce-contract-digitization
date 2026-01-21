@@ -30,7 +30,19 @@ export const useAdminProductStore = defineStore('admin-products', () => {
     short_description: '',
     description: '',
     thumbnail: '',
-    is_active: true
+    is_active: true,
+    manufacturer_name: '',
+    manufacturer_brand: '',
+    stock_quantity: 0,
+    discount_percentage: 0,
+    orders_count: 0,
+    published_at: '',
+    tags: [] as string[],
+    visibility: 'public' as 'public' | 'private',
+    images: [] as string[],
+    specs: {} as Record<string, string>,
+    variants: [] as any[],
+    faqs: [] as any[]
   })
 
   // Getters
@@ -117,6 +129,7 @@ export const useAdminProductStore = defineStore('admin-products', () => {
 
   async function deleteProduct(id: number): Promise<boolean> {
     console.log('[store.deleteProduct] Starting delete for id:', id)
+    isLoading.value = true
     try {
       console.log('[store.deleteProduct] Calling adminProductService.delete...')
       await adminProductService.delete(id)
@@ -132,6 +145,8 @@ export const useAdminProductStore = defineStore('admin-products', () => {
     } catch (error) {
       console.error('[store.deleteProduct] Failed to delete product:', error)
       throw error // Re-throw to let composable handle the error
+    } finally {
+      isLoading.value = false
     }
   }
 
@@ -156,7 +171,19 @@ export const useAdminProductStore = defineStore('admin-products', () => {
       short_description: '',
       description: '',
       thumbnail: '',
-      is_active: true
+      is_active: true,
+      manufacturer_name: '',
+      manufacturer_brand: '',
+      stock_quantity: 0,
+      discount_percentage: 0,
+      orders_count: 0,
+      published_at: '',
+      tags: [],
+      visibility: 'public',
+      images: [] as string[],
+      specs: {} as Record<string, string>,
+      variants: [] as any[],
+      faqs: [] as any[]
     }
   }
 
