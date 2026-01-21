@@ -94,6 +94,46 @@ class ArticleController extends Controller
             return $this->serverErrorResponse('error', $ex);
         }
     }
+
+    /**
+     * Publish article
+     */
+    public function publish(Article $article): JsonResponse
+    {
+        try {
+            if (!$article || !$article->id) {
+                return $this->notFoundResponse('article_not_found');
+            }
+
+            $articleData = $this->articleService->publish($article->id);
+
+            return $this->updatedResponse($articleData, 'article_published');
+        } catch (NotFoundException $ex) {
+            return $this->notFoundResponse('article_not_found');
+        } catch (\Exception $ex) {
+            return $this->serverErrorResponse('error', $ex);
+        }
+    }
+
+    /**
+     * Unpublish article
+     */
+    public function unpublish(Article $article): JsonResponse
+    {
+        try {
+            if (!$article || !$article->id) {
+                return $this->notFoundResponse('article_not_found');
+            }
+
+            $articleData = $this->articleService->unpublish($article->id);
+
+            return $this->updatedResponse($articleData, 'article_unpublished');
+        } catch (NotFoundException $ex) {
+            return $this->notFoundResponse('article_not_found');
+        } catch (\Exception $ex) {
+            return $this->serverErrorResponse('error', $ex);
+        }
+    }
 }
 
 

@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Modules\Admin;
 
 use App\Http\Controllers\Controller;
 
-use App\Models\Fund;
 use App\Http\Requests\Modules\Admin\FinanceTransactionRequest;
 use App\Services\Admin\FinanceService;
 use App\Traits\StoreApiResponse;
@@ -22,23 +21,25 @@ class FinanceController extends Controller
 
     public function getFunds(): JsonResponse
     {
-        $funds = Fund::where('is_active', true)->get();
-        return $this->successResponse($funds);
+        try {
+            $funds = $this->financeService->getFunds();
+            return $this->successResponse($funds);
+        } catch (\Exception $ex) {
+            return $this->serverErrorResponse('error', $ex);
+        }
     }
 
     public function getTransactions(Request $request): JsonResponse
     {
-        $perPage = $request->input('per_page', 15);
-        $transactions = $this->financeService->getTransactions($request->all(), $perPage);
+        try {
+            $perPage = $request->input('per_page', 15);
+            $filters = $request->only(['type', 'fund_id', 'from_date', 'to_date']);
+            $transactions = $this->financeService->getTransactions($filters, $perPage);
 
-        return $this->successResponse([
-            'items' => $transactions->items(),
-            'meta' => [
-                'current_page' => $transactions->currentPage(),
-                'last_page' => $transactions->lastPage(),
-                'total' => $transactions->total(),
-            ],
-        ]);
+            return $this->paginatedResponse($transactions);
+        } catch (\Exception $ex) {
+            return $this->serverErrorResponse('error', $ex);
+        }
     }
 
     public function createTransaction(FinanceTransactionRequest $request): JsonResponse
@@ -59,14 +60,15 @@ class FinanceController extends Controller
 
     public function getSummary(Request $request): JsonResponse
     {
-        $fromDate = $request->input('from_date', now()->startOfMonth()->toDateString());
-        $toDate = $request->input('to_date', now()->toDateString());
+        try {
+            $fromDate = $request->input('from_date', now()->startOfMonth()->toDateString());
+            $toDate = $request->input('to_date', now()->toDateString());
 
-        $summary = $this->financeService->getSummary($fromDate, $toDate);
+            $summary = $this->financeService->getSummary($fromDate, $toDate);
 
-        return $this->successResponse($summary);
+            return $this->successResponse($summary);
+        } catch (\Exception $ex) {
+            return $this->serverErrorResponse('error', $ex);
+        }
     }
 }
-
-
-

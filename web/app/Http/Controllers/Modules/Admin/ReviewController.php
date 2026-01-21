@@ -25,7 +25,7 @@ class ReviewController extends Controller
     public function index(Product $product, Request $request): JsonResponse
     {
         try {
-            if (!$product || !$product->id) {
+            if (!$product->exists) {
                 return $this->notFoundResponse('product_not_found');
             }
 
@@ -33,8 +33,6 @@ class ReviewController extends Controller
             $reviews = $this->reviewService->getByProductId($product->id, $perPage);
 
             return $this->paginatedResponse($reviews);
-        } catch (NotFoundException $ex) {
-            return $this->notFoundResponse('product_not_found');
         } catch (\Exception $ex) {
             return $this->serverErrorResponse('error', $ex);
         }
@@ -43,7 +41,7 @@ class ReviewController extends Controller
     public function store(Product $product, ReviewRequest $request): JsonResponse
     {
         try {
-            if (!$product || !$product->id) {
+            if (!$product->exists) {
                 return $this->notFoundResponse('product_not_found');
             }
 
@@ -51,17 +49,11 @@ class ReviewController extends Controller
             $review = $this->reviewService->create($product->id, $userId, $request->validated());
 
             return $this->createdResponse($review, 'review_created');
-        } catch (NotFoundException $ex) {
-            return $this->notFoundResponse('product_not_found');
         } catch (\Exception $ex) {
             return $this->serverErrorResponse('error', $ex);
         }
     }
 
-    /**
-     * Get featured reviews (rating >= 4) with product info
-     * Optimized single query - no N+1 problem
-     */
     public function getFeaturedReviews(Request $request): JsonResponse
     {
         try {
@@ -95,36 +87,13 @@ class ReviewController extends Controller
         }
     }
 
-    public function approve(Review $review): JsonResponse
-    {
-        try {
-            return $this->successResponse($review, 'review_approved');
-        } catch (\Exception $ex) {
-            return $this->serverErrorResponse('error', $ex);
-        }
-    }
-
-    public function reject(Review $review): JsonResponse
-    {
-        try {
-            $review->delete();
-
-            return $this->deletedResponse('review_rejected');
-        } catch (\Exception $ex) {
-            return $this->serverErrorResponse('error', $ex);
-        }
-    }
-
     public function destroy(Review $review): JsonResponse
     {
         try {
             $review->delete();
-
             return $this->deletedResponse('review_deleted');
         } catch (\Exception $ex) {
             return $this->serverErrorResponse('error', $ex);
         }
     }
 }
-
-

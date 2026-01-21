@@ -24,6 +24,11 @@ use App\Repositories\Contracts\InventoryLogRepositoryInterface;
 use App\Repositories\Contracts\ProductImageRepositoryInterface;
 use App\Repositories\Contracts\ProductVariantRepositoryInterface;
 use App\Repositories\Contracts\PromotionItemRepositoryInterface;
+use App\Repositories\Contracts\QuotationRepositoryInterface;
+use App\Repositories\Contracts\ShipmentRepositoryInterface;
+use App\Repositories\Contracts\EmployeeRepositoryInterface;
+use App\Repositories\Contracts\AttendanceRepositoryInterface;
+use App\Repositories\Contracts\TaskRepositoryInterface;
 use App\Repositories\ArticleRepository;
 use App\Repositories\BatchRepository;
 use App\Repositories\CartRepository;
@@ -46,6 +51,11 @@ use App\Repositories\InventoryLogRepository;
 use App\Repositories\ProductImageRepository;
 use App\Repositories\ProductVariantRepository;
 use App\Repositories\PromotionItemRepository;
+use App\Repositories\QuotationRepository;
+use App\Repositories\ShipmentRepository;
+use App\Repositories\EmployeeRepository;
+use App\Repositories\AttendanceRepository;
+use App\Repositories\TaskRepository;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -74,6 +84,14 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(ProductImageRepositoryInterface::class, ProductImageRepository::class);
         $this->app->bind(ProductVariantRepositoryInterface::class, ProductVariantRepository::class);
         $this->app->bind(PromotionItemRepositoryInterface::class, PromotionItemRepository::class);
+        $this->app->bind(QuotationRepositoryInterface::class, QuotationRepository::class);
+        $this->app->bind(ShipmentRepositoryInterface::class, ShipmentRepository::class);
+        $this->app->bind(EmployeeRepositoryInterface::class, EmployeeRepository::class);
+        $this->app->bind(AttendanceRepositoryInterface::class, AttendanceRepository::class);
+        $this->app->bind(TaskRepositoryInterface::class, TaskRepository::class);
+
+
+
 
         // Finance & Debt repositories
         $this->app->bind(FinanceRepositoryInterface::class, FinanceRepository::class);

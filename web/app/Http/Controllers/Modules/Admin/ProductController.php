@@ -11,6 +11,7 @@ use App\Http\Requests\Modules\Admin\ProductUpdateRequest;
 use App\Models\Category;
 use App\Models\Product;
 use App\Services\Admin\ProductService;
+use App\Http\Resources\Admin\ProductResource;
 use App\Traits\StoreApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -42,11 +43,12 @@ class ProductController extends Controller
                 'color' => $request->query('color'),
                 'sort_by' => $request->query('sort_by', 'latest'),
                 'only_with_stock' => (bool) $request->query('only_with_stock', false),
+                'active_category_only' => (bool) $request->query('active_category_only', false),
             ];
 
             $products = $this->productService->getAll($perPage, $filters);
 
-            return $this->paginatedResponse($products);
+            return $this->paginatedResponse(ProductResource::collection($products));
         } catch (\Exception $ex) {
             return $this->serverErrorResponse('error', $ex);
         }
@@ -61,39 +63,7 @@ class ProductController extends Controller
             $categoriesLimit = (int) $request->query('categories_limit', 6);
             $productsPerCategory = (int) $request->query('products_per_category', 4);
 
-            $categories = \App\Models\Category::with(['products' => function ($query) use ($productsPerCategory) {
-                $query->with(['images' => function ($q) {
-                    $q->select('id', 'product_id', 'image_url', 'is_main')
-                        ->orderByDesc('is_main');
-                }])
-                ->select('id', 'name', 'slug', 'price', 'thumbnail', 'category_id')
-                ->limit($productsPerCategory);
-            }])
-            ->select('id', 'name', 'slug')
-            ->limit($categoriesLimit)
-            ->get();
-
-            $result = $categories->filter(function ($category) {
-                return $category->products->count() > 0;
-            })->map(function ($category) {
-                return [
-                    'category' => [
-                        'id' => $category->id,
-                        'name' => $category->name,
-                        'slug' => $category->slug,
-                    ],
-                    'products' => $category->products->map(function ($product) {
-                        return [
-                            'id' => $product->id,
-                            'name' => $product->name,
-                            'slug' => $product->slug,
-                            'price' => $product->price,
-                            'thumbnail' => $product->thumbnail,
-                            'images' => $product->images,
-                        ];
-                    })->values(),
-                ];
-            })->values();
+            $result = $this->productService->getHomeData($categoriesLimit, $productsPerCategory);
 
             return $this->successResponse($result);
         } catch (\Exception $ex) {
@@ -110,7 +80,7 @@ class ProductController extends Controller
             $perPage = $request->query('per_page', 12);
             $products = $this->productService->getByCategory($category->id, $perPage);
 
-            return $this->paginatedResponse($products);
+            return $this->paginatedResponse(ProductResource::collection($products));
         } catch (\Exception $ex) {
             return $this->serverErrorResponse('error', $ex);
         }
@@ -128,7 +98,7 @@ class ProductController extends Controller
 
             $productData = $this->productService->getDetails($product->id);
 
-            return $this->successResponse($productData);
+            return $this->successResponse(new ProductResource($productData));
         } catch (NotFoundException $ex) {
             return $this->notFoundResponse('product_not_found');
         } catch (\Exception $ex) {
@@ -244,7 +214,7 @@ class ProductController extends Controller
         try {
             $product = $this->productService->create($request->validated());
 
-            return $this->createdResponse($product, 'product_created');
+            return $this->createdResponse(new ProductResource($product), 'product_created');
         } catch (\Illuminate\Validation\ValidationException $ex) {
             return $this->validationErrorResponse($ex->errors());
         } catch (\Exception $ex) {
@@ -264,7 +234,7 @@ class ProductController extends Controller
 
             $productData = $this->productService->update($product->id, $request->validated());
 
-            return $this->updatedResponse($productData, 'product_updated');
+            return $this->updatedResponse(new ProductResource($productData), 'product_updated');
         } catch (NotFoundException $ex) {
             return $this->notFoundResponse('product_not_found');
         } catch (\Illuminate\Validation\ValidationException $ex) {

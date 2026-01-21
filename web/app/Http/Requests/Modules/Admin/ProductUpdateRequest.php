@@ -19,12 +19,19 @@ class ProductUpdateRequest extends FormRequest
             'name' => ['sometimes', 'string', 'max:255'],
             'slug' => ['sometimes', 'string', 'max:255', 'unique:products,slug,' . $productId],
             'price' => ['sometimes', 'integer', 'min:0'],
-            'sale_price' => ['sometimes', 'integer', 'min:0'],
-            'short_description' => ['sometimes', 'string'],
-            'description' => ['sometimes', 'string'],
-            'thumbnail' => ['sometimes', 'string', 'url'],
+            'sale_price' => ['nullable', 'integer', 'min:0'],
+            'short_description' => ['nullable', 'string'],
+            'description' => ['nullable', 'string'],
+            'thumbnail' => ['nullable', 'string'],
             'is_active' => ['sometimes', 'boolean'],
             'specs' => ['sometimes', 'array'],
+            'images' => ['sometimes', 'array'],
+            'tags' => ['sometimes', 'array'],
+            'stock_quantity' => ['nullable', 'integer', 'min:0'],
+            'discount_percentage' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'manufacturer_name' => ['nullable', 'string', 'max:255'],
+            'manufacturer_brand' => ['nullable', 'string', 'max:255'],
+            'published_at' => ['nullable', 'date'],
         ];
     }
 

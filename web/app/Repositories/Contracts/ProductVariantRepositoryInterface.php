@@ -38,5 +38,12 @@ interface ProductVariantRepositoryInterface
      * @return bool
      */
     public function delete(ProductVariant $variant): bool;
+    /**
+     * Delete all variants for a product
+     *
+     * @param  int  $productId
+     * @return void
+     */
+    public function deleteByProduct(int $productId): void;
 }
 

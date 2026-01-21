@@ -29,15 +29,7 @@ class StocktakeController extends Controller
 
             $stocktakes = $this->stocktakeService->getAll($filters, $perPage);
 
-            return $this->successResponse([
-                'items' => $stocktakes->items(),
-                'meta' => [
-                    'current_page' => $stocktakes->currentPage(),
-                    'last_page' => $stocktakes->lastPage(),
-                    'per_page' => $stocktakes->perPage(),
-                    'total' => $stocktakes->total(),
-                ],
-            ]);
+            return $this->paginatedResponse($stocktakes);
         } catch (Exception $e) {
             return $this->serverErrorResponse('error', $e);
         }

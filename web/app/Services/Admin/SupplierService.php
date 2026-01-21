@@ -2,6 +2,7 @@
 
 namespace App\Services\Admin;
 
+use App\Exceptions\NotFoundException;
 use App\Models\Supplier;
 use App\Repositories\Contracts\SupplierRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
@@ -18,7 +19,7 @@ class SupplierService
      */
     public function getAll(): Collection
     {
-        return Supplier::withCount('products')->get();
+        return $this->supplierRepository->getAll();
     }
 
     /**
@@ -26,33 +27,54 @@ class SupplierService
      */
     public function create(array $data): Supplier
     {
-        return Supplier::create($data);
+        return $this->supplierRepository->create($data);
     }
 
     /**
      * Get supplier by ID
+     * 
+     * @throws NotFoundException
      */
-    public function getById(int $id): ?Supplier
+    public function getById(int $id): Supplier
     {
-        return Supplier::with('products')->find($id);
-    }
-
-    /**
-     * Update supplier
-     */
-    public function update(int $id, array $data): Supplier
-    {
-        $supplier = Supplier::findOrFail($id);
-        $supplier->update($data);
+        $supplier = $this->supplierRepository->findById($id);
+        
+        if (!$supplier) {
+            throw new NotFoundException("Supplier with ID {$id} not found");
+        }
+        
         return $supplier;
     }
 
     /**
+     * Update supplier
+     * 
+     * @throws NotFoundException
+     */
+    public function update(int $id, array $data): Supplier
+    {
+        $supplier = $this->supplierRepository->findById($id);
+        
+        if (!$supplier) {
+            throw new NotFoundException("Supplier with ID {$id} not found");
+        }
+        
+        return $this->supplierRepository->update($supplier, $data);
+    }
+
+    /**
      * Delete supplier
+     * 
+     * @throws NotFoundException
      */
     public function delete(int $id): bool
     {
-        $supplier = Supplier::findOrFail($id);
-        return $supplier->delete();
+        $supplier = $this->supplierRepository->findById($id);
+        
+        if (!$supplier) {
+            throw new NotFoundException("Supplier with ID {$id} not found");
+        }
+        
+        return $this->supplierRepository->delete($id);
     }
 }

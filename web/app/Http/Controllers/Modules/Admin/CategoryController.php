@@ -24,7 +24,12 @@ class CategoryController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            $categories = $this->categoryService->getAll();
+            $filters = [];
+            if ($request->has('is_active')) {
+                $filters['is_active'] = $request->boolean('is_active');
+            }
+
+            $categories = $this->categoryService->getAll($filters);
 
             return $this->successResponse($categories);
         } catch (\Exception $ex) {
@@ -32,14 +37,11 @@ class CategoryController extends Controller
         }
     }
 
-    public function show(Category $category): JsonResponse
+    public function show(Category $category, Request $request): JsonResponse
     {
         try {
-            if (!$category || !$category->id) {
-                return $this->notFoundResponse('category_not_found');
-            }
-
-            $categoryData = $this->categoryService->getById($category->id);
+            $isAdmin = $request->is('*/admin/*');
+            $categoryData = $this->categoryService->getById($category->id, !$isAdmin);
 
             return $this->successResponse($categoryData);
         } catch (NotFoundException $ex) {

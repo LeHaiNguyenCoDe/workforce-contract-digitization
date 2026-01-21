@@ -13,12 +13,20 @@ class CategoryRepository implements CategoryRepositoryInterface
      *
      * @return Collection
      */
-    public function getAll(): Collection
+    public function getAll(array $filters = []): Collection
     {
-        return Category::query()
-            ->select('id', 'name', 'slug', 'parent_id')
-            ->orderBy('name')
-            ->get();
+        $query = Category::query()
+            ->select('id', 'name', 'slug', 'parent_id', 'is_active', 'image', 'created_at', 'updated_at');
+
+        if (isset($filters['is_active'])) {
+            $query->where('is_active', $filters['is_active']);
+        }
+
+        if (isset($filters['limit'])) {
+            $query->limit($filters['limit']);
+        }
+
+        return $query->orderBy('name')->get();
     }
 
     /**

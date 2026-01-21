@@ -20,347 +20,370 @@ use App\Http\Controllers\Modules\Admin\SupplierController;
 use App\Http\Controllers\Modules\Admin\TransferController;
 use App\Http\Controllers\Modules\Admin\UserController;
 use App\Http\Controllers\Modules\Admin\WarehouseController;
+use App\Http\Controllers\Modules\Admin\TranslationController;
+use App\Http\Controllers\Modules\Admin\SettingsController;
+use App\Http\Controllers\Modules\Admin\QuotationController;
+use App\Http\Controllers\Modules\Admin\ShippingController;
+use App\Http\Controllers\Modules\Admin\EmployeeController;
+use App\Http\Controllers\Modules\Admin\TaskController;
+use App\Http\Controllers\Modules\Admin\AppointmentController;
+use App\Http\Controllers\Modules\Admin\WarrantyController;
+use App\Http\Controllers\Modules\Admin\ApiLogController;
+use App\Http\Controllers\Modules\Admin\ImportExportController;
+use App\Http\Controllers\Modules\Admin\EmailController;
 use App\Http\Controllers\Modules\Landing\CodReconciliationController;
 use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| Admin Routes
+| Admin Modules Configuration
 |--------------------------------------------------------------------------
-| All routes require Authentication + Admin/Manager role
+| Define modules as an array to facilitate automatic route registration.
+| format: 'uri' => ['controller' => Controller::class, 'resource' => bool, 'custom' => callback]
 */
 
-// User Management
-Route::apiResource('users', UserController::class);
-Route::get('users/{user}/orders', [UserController::class, 'orders']);
+$modules = [
+    'users' => [
+        'controller' => UserController::class,
+        'resource' => true,
+        'custom' => function() {
+            Route::get('{user}/orders', [UserController::class, 'orders']);
+        }
+    ],
+    'products' => [
+        'controller' => ProductController::class,
+        'resource' => true,
+        'custom' => function() {
+            Route::post('{product}/images', [ProductController::class, 'addImage']);
+            Route::delete('{product}/images/{image}', [ProductController::class, 'removeImage']);
+            Route::post('{product}/variants', [ProductController::class, 'addVariant']);
+            Route::put('{product}/variants/{variant}', [ProductController::class, 'updateVariant']);
+            Route::delete('{product}/variants/{variant}', [ProductController::class, 'removeVariant']);
+        }
+    ],
+    'categories' => ['controller' => CategoryController::class, 'resource' => true],
+    'orders' => [
+        'controller' => OrderController::class,
+        'custom' => function() {
+            Route::get('/', [OrderController::class, 'index']);
+            Route::get('{order}', [OrderController::class, 'show']);
+            Route::put('{order}/status', [OrderController::class, 'updateStatus']);
+            Route::put('{order}/cancel', [OrderController::class, 'cancelOrder']);
+            Route::get('{order}/check-stock', [OrderController::class, 'checkStock']);
+            Route::post('{order}/assign-shipper', [OrderController::class, 'assignShipper']);
+            Route::put('{order}/tracking', [OrderController::class, 'updateTracking']);
+            Route::post('{order}/confirm', [OrderController::class, 'confirmOrder']);
+            Route::post('{order}/deliver', [OrderController::class, 'markDelivered']);
+            Route::post('{order}/complete', [OrderController::class, 'completeOrder']);
+        }
+    ],
+    'finance' => [
+        'controller' => FinanceController::class,
+        'custom' => function() {
+            Route::get('funds', [FinanceController::class, 'getFunds']);
+            Route::get('transactions', [FinanceController::class, 'getTransactions']);
+            Route::post('transactions', [FinanceController::class, 'createTransaction']);
+            Route::get('summary', [FinanceController::class, 'getSummary']);
+        }
+    ],
+    'debts' => [
+        'controller' => DebtController::class,
+        'custom' => function() {
+            Route::get('receivables', [DebtController::class, 'getReceivables']);
+            Route::get('receivables/summary', [DebtController::class, 'getReceivableSummary']);
+            Route::post('receivables/{receivable}/pay', [DebtController::class, 'payReceivable']);
+            Route::get('payables', [DebtController::class, 'getPayables']);
+            Route::get('payables/summary', [DebtController::class, 'getPayableSummary']);
+            Route::post('payables/{payable}/pay', [DebtController::class, 'payPayable']);
+        }
+    ],
+    'promotions' => [
+        'controller' => PromotionController::class,
+        'resource' => true,
+        'custom' => function() {
+            Route::post('{promotion}/items', [PromotionController::class, 'addItem']);
+            Route::delete('{promotion}/items/{item}', [PromotionController::class, 'removeItem']);
+        }
+    ],
+    'warehouses' => [
+        'controller' => WarehouseController::class,
+        'resource' => true,
+        'custom' => function() {
+            Route::get('dashboard-stats', [WarehouseController::class, 'dashboardStats']);
+            
+            // Sub-modules within warehouses
+            $sub = ['inbound-receipts', 'inbound-batches', 'quality-checks', 'outbound-receipts'];
+            foreach($sub as $s) {
+                Route::prefix($s)->group(function() use ($s) {
+                    $method = \Str::camel($s);
+                    Route::get('/', [WarehouseController::class, $method]);
+                    if($s === 'inbound-receipts') {
+                        Route::post('/', [WarehouseController::class, 'createInboundReceipt']);
+                        Route::put('{id}', [WarehouseController::class, 'updateInboundReceipt']);
+                        Route::post('{id}/approve', [WarehouseController::class, 'approveInboundReceipt']);
+                        Route::post('{id}/cancel', [WarehouseController::class, 'cancelInboundReceipt']);
+                        Route::delete('{id}', [WarehouseController::class, 'deleteInboundReceipt']);
+                    }
+                    if($s === 'inbound-batches') {
+                        Route::post('/', [WarehouseController::class, 'createInboundBatch']);
+                        Route::get('{id}', [WarehouseController::class, 'showInboundBatch']);
+                        Route::post('{id}/receive', [WarehouseController::class, 'receiveInboundBatch']);
+                    }
+                    if($s === 'quality-checks') {
+                        Route::post('/', [WarehouseController::class, 'createQualityCheck']);
+                        Route::put('{id}', [WarehouseController::class, 'updateQualityCheck']);
+                        Route::delete('{id}', [WarehouseController::class, 'deleteQualityCheck']);
+                    }
+                    if($s === 'outbound-receipts') {
+                        Route::post('/', [WarehouseController::class, 'createOutboundReceipt']);
+                        Route::put('{id}', [WarehouseController::class, 'updateOutboundReceipt']);
+                        Route::post('{id}/approve', [WarehouseController::class, 'approveOutboundReceipt']);
+                        Route::post('{id}/complete', [WarehouseController::class, 'completeOutboundReceipt']);
+                        Route::post('{id}/cancel', [WarehouseController::class, 'cancelOutboundReceipt']);
+                    }
+                });
+            }
 
-// Product Management
-Route::apiResource('products', ProductController::class);
-Route::post('products/{product}/images', [ProductController::class, 'addImage']);
-Route::delete('products/{product}/images/{image}', [ProductController::class, 'removeImage']);
-Route::post('products/{product}/variants', [ProductController::class, 'addVariant']);
-Route::put('products/{product}/variants/{variant}', [ProductController::class, 'updateVariant']);
-Route::delete('products/{product}/variants/{variant}', [ProductController::class, 'removeVariant']);
+            Route::get('stock-adjustments', [WarehouseController::class, 'stockAdjustments']);
+            Route::post('stock-adjustments', [WarehouseController::class, 'createStockAdjustment']);
+            Route::get('{warehouse}/stocks', [WarehouseController::class, 'stocks']);
+            Route::post('{warehouse}/stocks/adjust', [WarehouseController::class, 'adjustStock']);
+            Route::post('{warehouse}/stocks/outbound', [WarehouseController::class, 'outboundStock']);
+            Route::get('{warehouse}/inventory-logs', [WarehouseController::class, 'inventoryLogs']);
+        }
+    ],
+    'batches' => [
+        'controller' => BatchController::class,
+        'custom' => function() {
+            Route::get('expiring-soon', [BatchController::class, 'expiringSoon']);
+            Route::get('product/{productId}', [BatchController::class, 'getProductBatches']);
+            Route::apiResource('/', BatchController::class)->parameters(['' => 'id']);
+        }
+    ],
+    'stocktakes' => [
+        'controller' => StocktakeController::class,
+        'custom' => function() {
+            Route::apiResource('/', StocktakeController::class)->only(['index', 'store', 'show', 'destroy'])->parameters(['' => 'id']);
+            Route::post('{id}/start', [StocktakeController::class, 'start']);
+            Route::put('{id}/items', [StocktakeController::class, 'updateItems']);
+            Route::post('{id}/complete', [StocktakeController::class, 'complete']);
+            Route::post('{id}/approve', [StocktakeController::class, 'approve']);
+            Route::post('{id}/cancel', [StocktakeController::class, 'cancel']);
+        }
+    ],
+    'inventory' => [
+        'controller' => InventoryAlertController::class,
+        'custom' => function() {
+            Route::get('settings', [InventoryAlertController::class, 'settings']);
+            Route::post('settings', [InventoryAlertController::class, 'saveSetting']);
+            Route::delete('settings/{id}', [InventoryAlertController::class, 'deleteSetting']);
+            Route::get('alerts', [InventoryAlertController::class, 'alerts']);
+            Route::get('alerts/summary', [InventoryAlertController::class, 'summary']);
+            Route::post('alerts/trigger-requests', [InventoryAlertController::class, 'triggerAutoRequests']);
+        }
+    ],
+    'purchase-requests' => [
+        'controller' => PurchaseRequestController::class,
+        'custom' => function() {
+            Route::get('summary', [PurchaseRequestController::class, 'summary']);
+            Route::apiResource('/', PurchaseRequestController::class)->parameters(['' => 'id']);
+            Route::post('{id}/approve', [PurchaseRequestController::class, 'approve']);
+            Route::post('{id}/reject', [PurchaseRequestController::class, 'reject']);
+            Route::post('{id}/mark-ordered', [PurchaseRequestController::class, 'markOrdered']);
+            Route::post('{id}/complete', [PurchaseRequestController::class, 'complete']);
+            Route::post('{id}/cancel', [PurchaseRequestController::class, 'cancel']);
+        }
+    ],
+    'transfers' => [
+        'controller' => TransferController::class,
+        'custom' => function() {
+            Route::apiResource('/', TransferController::class)->except(['update'])->parameters(['' => 'id']);
+            Route::post('{id}/ship', [TransferController::class, 'ship']);
+            Route::post('{id}/receive', [TransferController::class, 'receive']);
+            Route::post('{id}/cancel', [TransferController::class, 'cancel']);
+        }
+    ],
+    'expenses' => [
+        'controller' => ExpenseController::class,
+        'custom' => function() {
+            Route::get('categories', [ExpenseController::class, 'categories']);
+            Route::post('categories', [ExpenseController::class, 'createCategory']);
+            Route::put('categories/{id}', [ExpenseController::class, 'updateCategory']);
+            Route::delete('categories/{id}', [ExpenseController::class, 'deleteCategory']);
+            Route::get('summary', [ExpenseController::class, 'summary']);
+            Route::apiResource('/', ExpenseController::class)->parameters(['' => 'id']);
+        }
+    ],
+    'reports' => [
+        'controller' => ReportController::class,
+        'custom' => function() {
+            Route::get('dashboard', [ReportController::class, 'dashboardAnalytics']);
+            Route::get('pnl', [ReportController::class, 'pnl']);
+            Route::get('sales', [ReportController::class, 'sales']);
+            Route::get('inventory', [ReportController::class, 'inventory']);
+        }
+    ],
+    'cod-reconciliations' => [
+        'controller' => CodReconciliationController::class,
+        'custom' => function() {
+            Route::get('shipping-partners', [CodReconciliationController::class, 'shippingPartners']);
+            Route::apiResource('/', CodReconciliationController::class)->except(['update'])->parameters(['' => 'id']);
+            Route::put('{id}/items', [CodReconciliationController::class, 'updateItems']);
+            Route::post('{id}/reconcile', [CodReconciliationController::class, 'reconcile']);
+        }
+    ],
+    'returns' => [
+        'controller' => ReturnController::class,
+        'custom' => function() {
+            Route::apiResource('/', ReturnController::class)->only(['index', 'store', 'show'])->parameters(['' => 'id']);
+            Route::post('{id}/approve', [ReturnController::class, 'approve']);
+            Route::post('{id}/reject', [ReturnController::class, 'reject']);
+            Route::put('{id}/receive', [ReturnController::class, 'receiveItems']);
+            Route::post('{id}/complete', [ReturnController::class, 'complete']);
+            Route::post('{id}/cancel', [ReturnController::class, 'cancel']);
+        }
+    ],
+    'membership' => [
+        'controller' => MembershipController::class,
+        'custom' => function() {
+            Route::get('tiers', [MembershipController::class, 'tiers']);
+            Route::post('tiers', [MembershipController::class, 'createTier']);
+            Route::put('tiers/{id}', [MembershipController::class, 'updateTier']);
+            Route::delete('tiers/{id}', [MembershipController::class, 'deleteTier']);
+            Route::get('customers/{customerId}', [MembershipController::class, 'customerMembership']);
+            Route::get('customers/{customerId}/transactions', [MembershipController::class, 'transactions']);
+            Route::post('customers/{customerId}/redeem', [MembershipController::class, 'redeem']);
+            Route::post('calculate-discount', [MembershipController::class, 'calculateDiscount']);
+        }
+    ],
+    'suppliers' => ['controller' => SupplierController::class, 'resource' => true],
+    'articles' => [
+        'controller' => ArticleController::class,
+        'resource' => true,
+        'custom' => function() {
+            Route::post('{article}/publish', [ArticleController::class, 'publish']);
+            Route::post('{article}/unpublish', [ArticleController::class, 'unpublish']);
+        }
+    ],
+    'reviews' => [
+        'controller' => ReviewController::class,
+        'custom' => function() {
+            Route::get('/', [ReviewController::class, 'getAllReviews']);
+            Route::get('{review}', [ReviewController::class, 'showReview']);
+            Route::put('{review}/approve', [ReviewController::class, 'approve']);
+            Route::put('{review}/reject', [ReviewController::class, 'reject']);
+            Route::delete('{review}', [ReviewController::class, 'destroy']);
+        }
+    ],
+    'translate' => [
+        'controller' => TranslationController::class,
+        'custom' => function() {
+            Route::post('/', [TranslationController::class, 'translate']);
+            Route::get('/', [TranslationController::class, 'getTranslation']);
+            Route::post('/batch', [TranslationController::class, 'translateBatch']);
+            Route::post('/all', [TranslationController::class, 'translateAll']);
+        }
+    ],
+    'settings' => [
+        'controller' => SettingsController::class,
+        'custom' => function() {
+            Route::get('/', [SettingsController::class, 'index']);
+            Route::get('{group}', [SettingsController::class, 'getByGroup']);
+            Route::put('{group}', [SettingsController::class, 'update']);
+            Route::get('{group}/{key}', [SettingsController::class, 'getSetting']);
+        }
+    ],
+    'quotations' => [
+        'controller' => QuotationController::class,
+        'resource' => true,
+        'except' => ['update'], // define custom update below
+        'custom' => function() {
+            Route::put('{id}', [QuotationController::class, 'update']);
+            Route::post('{id}/send', [QuotationController::class, 'send']);
+            Route::post('{id}/convert', [QuotationController::class, 'convertToOrder']);
+        }
+    ],
+    'shipping' => [
+        'controller' => ShippingController::class,
+        'custom' => function() {
+            Route::prefix('partners')->group(function() {
+                Route::get('/', [ShippingController::class, 'index']);
+                Route::post('/', [ShippingController::class, 'store']);
+                Route::get('{id}', [ShippingController::class, 'show']);
+                Route::put('{id}', [ShippingController::class, 'update']);
+                Route::post('{id}/toggle', [ShippingController::class, 'toggle']);
+            });
+            Route::post('calculate-fee', [ShippingController::class, 'calculateFee']);
+        }
+    ],
+    'employees' => [
+        'controller' => EmployeeController::class,
+        'resource' => true,
+        'custom' => function() {
+            Route::get('attendance-report', [EmployeeController::class, 'attendanceReport']);
+            Route::post('{id}/check-in', [EmployeeController::class, 'checkIn']);
+            Route::post('{id}/check-out', [EmployeeController::class, 'checkOut']);
+        }
+    ],
+    'tasks' => [
+        'controller' => TaskController::class,
+        'resource' => true,
+        'except' => ['show'],
+        'custom' => function() {
+            Route::get('board', [TaskController::class, 'board']);
+            Route::patch('{id}/status', [TaskController::class, 'updateStatus']);
+        }
+    ],
+    'appointments' => ['controller' => AppointmentController::class, 'resource' => true, 'except' => ['show']],
+    'warranties' => [
+        'controller' => WarrantyController::class,
+        'custom' => function() {
+            Route::get('/', [WarrantyController::class, 'index']);
+            Route::get('lookup', [WarrantyController::class, 'lookup']);
+            Route::post('/', [WarrantyController::class, 'store']);
+            Route::post('{id}/claims', [WarrantyController::class, 'createClaim']);
+            Route::put('claims/{id}', [WarrantyController::class, 'resolveClaim']);
+        }
+    ],
+    'api-logs' => [
+        'controller' => ApiLogController::class,
+        'custom' => function() {
+            Route::get('/', [ApiLogController::class, 'index']);
+            Route::get('stats', [ApiLogController::class, 'stats']);
+            Route::get('{id}', [ApiLogController::class, 'show']);
+            Route::delete('cleanup', [ApiLogController::class, 'cleanup']);
+        }
+    ],
+    'import-export' => [
+        'controller' => ImportExportController::class,
+        'custom' => function() {
+            Route::get('export/products', [ImportExportController::class, 'exportProducts']);
+            Route::get('export/orders', [ImportExportController::class, 'exportOrders']);
+            Route::post('import/products', [ImportExportController::class, 'importProducts']);
+            Route::get('template/{type}', [ImportExportController::class, 'downloadTemplate']);
+        }
+    ],
+    'email' => [
+        'controller' => EmailController::class,
+        'custom' => function() {
+            Route::prefix('campaigns')->group(function() {
+                Route::apiResource('/', EmailController::class)->parameters(['' => 'id']);
+                Route::post('{id}/send', [EmailController::class, 'send']);
+            });
+            Route::get('templates', [EmailController::class, 'templates']);
+        }
+    ]
+];
 
-// Category Management
-Route::apiResource('categories', CategoryController::class);
-
-// Order Management
-Route::get('orders', [OrderController::class, 'index']);
-Route::get('orders/{order}', [OrderController::class, 'show']);
-Route::put('orders/{order}/status', [OrderController::class, 'updateStatus']);
-Route::put('orders/{order}/cancel', [OrderController::class, 'cancel']);
-Route::get('orders/{order}/check-stock', [OrderController::class, 'checkStock']);
-Route::post('orders/{order}/assign-shipper', [OrderController::class, 'assignShipper']);
-Route::put('orders/{order}/tracking', [OrderController::class, 'updateTracking']);
-Route::post('orders/{order}/confirm', [OrderController::class, 'confirmOrder']);
-Route::post('orders/{order}/deliver', [OrderController::class, 'markDelivered']);
-Route::post('orders/{order}/complete', [OrderController::class, 'completeOrder']);
-Route::post('orders/{order}/cancel', [OrderController::class, 'cancelOrder']);
-
-// Finance Management
-Route::prefix('finance')->group(function () {
-    Route::get('funds', [FinanceController::class, 'getFunds']);
-    Route::get('transactions', [FinanceController::class, 'getTransactions']);
-    Route::post('transactions', [FinanceController::class, 'createTransaction']);
-    Route::get('summary', [FinanceController::class, 'getSummary']);
-});
-
-// Debt Management
-Route::prefix('debts')->group(function () {
-    Route::get('receivables', [DebtController::class, 'getReceivables']);
-    Route::get('receivables/summary', [DebtController::class, 'getReceivableSummary']);
-    Route::post('receivables/{receivable}/pay', [DebtController::class, 'payReceivable']);
-    Route::get('payables', [DebtController::class, 'getPayables']);
-    Route::get('payables/summary', [DebtController::class, 'getPayableSummary']);
-    Route::post('payables/{payable}/pay', [DebtController::class, 'payPayable']);
-});
-
-// Promotion Management
-Route::apiResource('promotions', PromotionController::class);
-Route::post('promotions/{promotion}/items', [PromotionController::class, 'addItem']);
-Route::delete('promotions/{promotion}/items/{item}', [PromotionController::class, 'removeItem']);
-
-// Warehouse Management
-Route::prefix('warehouses')->group(function () {
-    Route::get('dashboard-stats', [WarehouseController::class, 'dashboardStats']);
-
-    // Inbound Receipts
-    Route::get('inbound-receipts', [WarehouseController::class, 'inboundReceipts']);
-    Route::post('inbound-receipts', [WarehouseController::class, 'createInboundReceipt']);
-    Route::put('inbound-receipts/{id}', [WarehouseController::class, 'updateInboundReceipt']);
-    Route::post('inbound-receipts/{id}/approve', [WarehouseController::class, 'approveInboundReceipt']);
-    Route::post('inbound-receipts/{id}/cancel', [WarehouseController::class, 'cancelInboundReceipt']);
-    Route::delete('inbound-receipts/{id}', [WarehouseController::class, 'deleteInboundReceipt']);
-
-    // Inbound Batches
-    Route::get('inbound-batches', [WarehouseController::class, 'inboundBatches']);
-    Route::post('inbound-batches', [WarehouseController::class, 'createInboundBatch']);
-    Route::get('inbound-batches/{id}', [WarehouseController::class, 'showInboundBatch']);
-    Route::post('inbound-batches/{id}/receive', [WarehouseController::class, 'receiveInboundBatch']);
-
-    // Quality Checks
-    Route::get('quality-checks', [WarehouseController::class, 'qualityChecks']);
-    Route::post('quality-checks', [WarehouseController::class, 'createQualityCheck']);
-    Route::put('quality-checks/{id}', [WarehouseController::class, 'updateQualityCheck']);
-    Route::delete('quality-checks/{id}', [WarehouseController::class, 'deleteQualityCheck']);
-
-    // Outbound Receipts
-    Route::get('outbound-receipts', [WarehouseController::class, 'outboundReceipts']);
-    Route::post('outbound-receipts', [WarehouseController::class, 'createOutboundReceipt']);
-    Route::put('outbound-receipts/{id}', [WarehouseController::class, 'updateOutboundReceipt']);
-    Route::post('outbound-receipts/{id}/approve', [WarehouseController::class, 'approveOutboundReceipt']);
-    Route::post('outbound-receipts/{id}/complete', [WarehouseController::class, 'completeOutboundReceipt']);
-    Route::post('outbound-receipts/{id}/cancel', [WarehouseController::class, 'cancelOutboundReceipt']);
-
-    // Stock Adjustments
-    Route::get('stock-adjustments', [WarehouseController::class, 'stockAdjustments']);
-    Route::post('stock-adjustments', [WarehouseController::class, 'createStockAdjustment']);
-});
-
-// Warehouse CRUD
-Route::apiResource('warehouses', WarehouseController::class);
-Route::get('warehouses/{warehouse}/stocks', [WarehouseController::class, 'stocks']);
-Route::post('warehouses/{warehouse}/stocks/adjust', [WarehouseController::class, 'adjustStock']);
-Route::post('warehouses/{warehouse}/stocks/outbound', [WarehouseController::class, 'outboundStock']);
-Route::get('warehouses/{warehouse}/inventory-logs', [WarehouseController::class, 'inventoryLogs']);
-
-// Batch Management
-Route::prefix('batches')->group(function () {
-    Route::get('expiring-soon', [BatchController::class, 'expiringSoon']);
-    Route::get('product/{productId}', [BatchController::class, 'getProductBatches']);
-    Route::get('/', [BatchController::class, 'index']);
-    Route::post('/', [BatchController::class, 'store']);
-    Route::get('{id}', [BatchController::class, 'show']);
-    Route::put('{id}', [BatchController::class, 'update']);
-    Route::delete('{id}', [BatchController::class, 'destroy']);
-});
-
-// Stocktake Management
-Route::prefix('stocktakes')->group(function () {
-    Route::get('/', [StocktakeController::class, 'index']);
-    Route::post('/', [StocktakeController::class, 'store']);
-    Route::get('{id}', [StocktakeController::class, 'show']);
-    Route::post('{id}/start', [StocktakeController::class, 'start']);
-    Route::put('{id}/items', [StocktakeController::class, 'updateItems']);
-    Route::post('{id}/complete', [StocktakeController::class, 'complete']);
-    Route::post('{id}/approve', [StocktakeController::class, 'approve']);
-    Route::post('{id}/cancel', [StocktakeController::class, 'cancel']);
-    Route::delete('{id}', [StocktakeController::class, 'destroy']);
-});
-
-// Inventory Alerts & Settings
-Route::prefix('inventory')->group(function () {
-    Route::get('settings', [InventoryAlertController::class, 'settings']);
-    Route::post('settings', [InventoryAlertController::class, 'saveSetting']);
-    Route::delete('settings/{id}', [InventoryAlertController::class, 'deleteSetting']);
-    Route::get('alerts', [InventoryAlertController::class, 'alerts']);
-    Route::get('alerts/summary', [InventoryAlertController::class, 'summary']);
-    Route::post('alerts/trigger-requests', [InventoryAlertController::class, 'triggerAutoRequests']);
-});
-
-// Purchase Requests
-Route::prefix('purchase-requests')->group(function () {
-    Route::get('summary', [PurchaseRequestController::class, 'summary']);
-    Route::get('/', [PurchaseRequestController::class, 'index']);
-    Route::post('/', [PurchaseRequestController::class, 'store']);
-    Route::get('{id}', [PurchaseRequestController::class, 'show']);
-    Route::put('{id}', [PurchaseRequestController::class, 'update']);
-    Route::post('{id}/approve', [PurchaseRequestController::class, 'approve']);
-    Route::post('{id}/reject', [PurchaseRequestController::class, 'reject']);
-    Route::post('{id}/mark-ordered', [PurchaseRequestController::class, 'markOrdered']);
-    Route::post('{id}/complete', [PurchaseRequestController::class, 'complete']);
-    Route::post('{id}/cancel', [PurchaseRequestController::class, 'cancel']);
-    Route::delete('{id}', [PurchaseRequestController::class, 'destroy']);
-});
-
-// Transfer Management
-Route::prefix('transfers')->group(function () {
-    Route::get('/', [TransferController::class, 'index']);
-    Route::post('/', [TransferController::class, 'store']);
-    Route::get('{id}', [TransferController::class, 'show']);
-    Route::post('{id}/ship', [TransferController::class, 'ship']);
-    Route::post('{id}/receive', [TransferController::class, 'receive']);
-    Route::post('{id}/cancel', [TransferController::class, 'cancel']);
-    Route::delete('{id}', [TransferController::class, 'destroy']);
-});
-
-// Expense Management
-Route::prefix('expenses')->group(function () {
-    Route::get('categories', [ExpenseController::class, 'categories']);
-    Route::post('categories', [ExpenseController::class, 'createCategory']);
-    Route::put('categories/{id}', [ExpenseController::class, 'updateCategory']);
-    Route::delete('categories/{id}', [ExpenseController::class, 'deleteCategory']);
-    Route::get('summary', [ExpenseController::class, 'summary']);
-    Route::get('/', [ExpenseController::class, 'index']);
-    Route::post('/', [ExpenseController::class, 'store']);
-    Route::get('{id}', [ExpenseController::class, 'show']);
-    Route::put('{id}', [ExpenseController::class, 'update']);
-    Route::delete('{id}', [ExpenseController::class, 'destroy']);
-});
-
-// Reports
-Route::prefix('reports')->group(function () {
-    Route::get('dashboard', [ReportController::class, 'dashboardAnalytics']);
-    Route::get('pnl', [ReportController::class, 'pnl']);
-    Route::get('sales', [ReportController::class, 'sales']);
-    Route::get('inventory', [ReportController::class, 'inventory']);
-});
-
-// COD Reconciliation
-Route::prefix('cod-reconciliations')->group(function () {
-    Route::get('shipping-partners', [CodReconciliationController::class, 'shippingPartners']);
-    Route::get('/', [CodReconciliationController::class, 'index']);
-    Route::post('/', [CodReconciliationController::class, 'store']);
-    Route::get('{id}', [CodReconciliationController::class, 'show']);
-    Route::put('{id}/items', [CodReconciliationController::class, 'updateItems']);
-    Route::post('{id}/reconcile', [CodReconciliationController::class, 'reconcile']);
-    Route::delete('{id}', [CodReconciliationController::class, 'destroy']);
-});
-
-// Returns/RMA
-Route::prefix('returns')->group(function () {
-    Route::get('/', [ReturnController::class, 'index']);
-    Route::post('/', [ReturnController::class, 'store']);
-    Route::get('{id}', [ReturnController::class, 'show']);
-    Route::post('{id}/approve', [ReturnController::class, 'approve']);
-    Route::post('{id}/reject', [ReturnController::class, 'reject']);
-    Route::put('{id}/receive', [ReturnController::class, 'receiveItems']);
-    Route::post('{id}/complete', [ReturnController::class, 'complete']);
-    Route::post('{id}/cancel', [ReturnController::class, 'cancel']);
-});
-
-// Membership & Points
-Route::prefix('membership')->group(function () {
-    Route::get('tiers', [MembershipController::class, 'tiers']);
-    Route::post('tiers', [MembershipController::class, 'createTier']);
-    Route::put('tiers/{id}', [MembershipController::class, 'updateTier']);
-    Route::delete('tiers/{id}', [MembershipController::class, 'deleteTier']);
-    Route::get('customers/{customerId}', [MembershipController::class, 'customerMembership']);
-    Route::get('customers/{customerId}/transactions', [MembershipController::class, 'transactions']);
-    Route::post('customers/{customerId}/redeem', [MembershipController::class, 'redeem']);
-    Route::post('calculate-discount', [MembershipController::class, 'calculateDiscount']);
-});
-
-// Suppliers
-Route::apiResource('suppliers', SupplierController::class);
-
-// Articles/Blog Management
-Route::apiResource('articles', ArticleController::class);
-Route::post('articles/{article}/publish', [ArticleController::class, 'publish']);
-Route::post('articles/{article}/unpublish', [ArticleController::class, 'unpublish']);
-
-// Review Management
-Route::prefix('reviews')->group(function () {
-    Route::get('/', [ReviewController::class, 'getAllReviews']);
-    Route::get('{review}', [ReviewController::class, 'showReview']);
-    Route::put('{review}/approve', [ReviewController::class, 'approve']);
-    Route::put('{review}/reject', [ReviewController::class, 'reject']);
-    Route::delete('{review}', [ReviewController::class, 'destroy']);
-});
-
-// Translation Management
-Route::prefix('translate')->group(function () {
-    Route::post('/', [\App\Http\Controllers\Modules\Admin\TranslationController::class, 'translate']);
-    Route::get('/', [\App\Http\Controllers\Modules\Admin\TranslationController::class, 'getTranslation']);
-    Route::post('/batch', [\App\Http\Controllers\Modules\Admin\TranslationController::class, 'translateBatch']);
-    Route::post('/all', [\App\Http\Controllers\Modules\Admin\TranslationController::class, 'translateAll']);
-});
-
-// Settings Management
-Route::prefix('settings')->group(function () {
-    Route::get('/', [\App\Http\Controllers\Modules\Admin\SettingsController::class, 'index']);
-    Route::get('{group}', [\App\Http\Controllers\Modules\Admin\SettingsController::class, 'getByGroup']);
-    Route::put('{group}', [\App\Http\Controllers\Modules\Admin\SettingsController::class, 'update']);
-    Route::get('{group}/{key}', [\App\Http\Controllers\Modules\Admin\SettingsController::class, 'getSetting']);
-});
-
-// Quotations Management
-Route::prefix('quotations')->group(function () {
-    Route::get('/', [\App\Http\Controllers\Modules\Admin\QuotationController::class, 'index']);
-    Route::post('/', [\App\Http\Controllers\Modules\Admin\QuotationController::class, 'store']);
-    Route::get('{id}', [\App\Http\Controllers\Modules\Admin\QuotationController::class, 'show']);
-    Route::put('{id}', [\App\Http\Controllers\Modules\Admin\QuotationController::class, 'update']);
-    Route::post('{id}/send', [\App\Http\Controllers\Modules\Admin\QuotationController::class, 'send']);
-    Route::post('{id}/convert', [\App\Http\Controllers\Modules\Admin\QuotationController::class, 'convertToOrder']);
-    Route::delete('{id}', [\App\Http\Controllers\Modules\Admin\QuotationController::class, 'destroy']);
-});
-
-// Shipping Partners
-Route::prefix('shipping')->group(function () {
-    Route::get('partners', [\App\Http\Controllers\Modules\Admin\ShippingController::class, 'index']);
-    Route::post('partners', [\App\Http\Controllers\Modules\Admin\ShippingController::class, 'store']);
-    Route::get('partners/{id}', [\App\Http\Controllers\Modules\Admin\ShippingController::class, 'show']);
-    Route::put('partners/{id}', [\App\Http\Controllers\Modules\Admin\ShippingController::class, 'update']);
-    Route::post('partners/{id}/toggle', [\App\Http\Controllers\Modules\Admin\ShippingController::class, 'toggle']);
-    Route::post('calculate-fee', [\App\Http\Controllers\Modules\Admin\ShippingController::class, 'calculateFee']);
-});
-
-// Employees & HR
-Route::prefix('employees')->group(function () {
-    Route::get('/', [\App\Http\Controllers\Modules\Admin\EmployeeController::class, 'index']);
-    Route::post('/', [\App\Http\Controllers\Modules\Admin\EmployeeController::class, 'store']);
-    Route::get('attendance-report', [\App\Http\Controllers\Modules\Admin\EmployeeController::class, 'attendanceReport']);
-    Route::get('{id}', [\App\Http\Controllers\Modules\Admin\EmployeeController::class, 'show']);
-    Route::put('{id}', [\App\Http\Controllers\Modules\Admin\EmployeeController::class, 'update']);
-    Route::delete('{id}', [\App\Http\Controllers\Modules\Admin\EmployeeController::class, 'destroy']);
-    Route::post('{id}/check-in', [\App\Http\Controllers\Modules\Admin\EmployeeController::class, 'checkIn']);
-    Route::post('{id}/check-out', [\App\Http\Controllers\Modules\Admin\EmployeeController::class, 'checkOut']);
-});
-
-// Tasks (Kanban)
-Route::prefix('tasks')->group(function () {
-    Route::get('board', [\App\Http\Controllers\Modules\Admin\TaskController::class, 'board']);
-    Route::get('/', [\App\Http\Controllers\Modules\Admin\TaskController::class, 'index']);
-    Route::post('/', [\App\Http\Controllers\Modules\Admin\TaskController::class, 'store']);
-    Route::put('{id}', [\App\Http\Controllers\Modules\Admin\TaskController::class, 'update']);
-    Route::patch('{id}/status', [\App\Http\Controllers\Modules\Admin\TaskController::class, 'updateStatus']);
-    Route::delete('{id}', [\App\Http\Controllers\Modules\Admin\TaskController::class, 'destroy']);
-});
-
-// Appointments/Calendar
-Route::prefix('appointments')->group(function () {
-    Route::get('/', [\App\Http\Controllers\Modules\Admin\AppointmentController::class, 'index']);
-    Route::post('/', [\App\Http\Controllers\Modules\Admin\AppointmentController::class, 'store']);
-    Route::put('{id}', [\App\Http\Controllers\Modules\Admin\AppointmentController::class, 'update']);
-    Route::delete('{id}', [\App\Http\Controllers\Modules\Admin\AppointmentController::class, 'destroy']);
-});
-
-// Warranties
-Route::prefix('warranties')->group(function () {
-    Route::get('/', [\App\Http\Controllers\Modules\Admin\WarrantyController::class, 'index']);
-    Route::get('lookup', [\App\Http\Controllers\Modules\Admin\WarrantyController::class, 'lookup']);
-    Route::post('/', [\App\Http\Controllers\Modules\Admin\WarrantyController::class, 'store']);
-    Route::post('{id}/claims', [\App\Http\Controllers\Modules\Admin\WarrantyController::class, 'createClaim']);
-    Route::put('claims/{id}', [\App\Http\Controllers\Modules\Admin\WarrantyController::class, 'resolveClaim']);
-});
-
-// API Logs
-Route::prefix('api-logs')->group(function () {
-    Route::get('/', [\App\Http\Controllers\Modules\Admin\ApiLogController::class, 'index']);
-    Route::get('stats', [\App\Http\Controllers\Modules\Admin\ApiLogController::class, 'stats']);
-    Route::get('{id}', [\App\Http\Controllers\Modules\Admin\ApiLogController::class, 'show']);
-    Route::delete('cleanup', [\App\Http\Controllers\Modules\Admin\ApiLogController::class, 'cleanup']);
-});
-
-// Import/Export
-Route::prefix('import-export')->group(function () {
-    Route::get('export/products', [\App\Http\Controllers\Modules\Admin\ImportExportController::class, 'exportProducts']);
-    Route::get('export/orders', [\App\Http\Controllers\Modules\Admin\ImportExportController::class, 'exportOrders']);
-    Route::post('import/products', [\App\Http\Controllers\Modules\Admin\ImportExportController::class, 'importProducts']);
-    Route::get('template/{type}', [\App\Http\Controllers\Modules\Admin\ImportExportController::class, 'downloadTemplate']);
-});
-
-// Email Marketing
-Route::prefix('email')->group(function () {
-    Route::get('campaigns', [\App\Http\Controllers\Modules\Admin\EmailController::class, 'index']);
-    Route::post('campaigns', [\App\Http\Controllers\Modules\Admin\EmailController::class, 'store']);
-    Route::get('campaigns/{id}', [\App\Http\Controllers\Modules\Admin\EmailController::class, 'show']);
-    Route::put('campaigns/{id}', [\App\Http\Controllers\Modules\Admin\EmailController::class, 'update']);
-    Route::delete('campaigns/{id}', [\App\Http\Controllers\Modules\Admin\EmailController::class, 'destroy']);
-    Route::post('campaigns/{id}/send', [\App\Http\Controllers\Modules\Admin\EmailController::class, 'send']);
-    Route::get('templates', [\App\Http\Controllers\Modules\Admin\EmailController::class, 'templates']);
-});
+// Register Routes
+foreach ($modules as $uri => $cfg) {
+    if (isset($cfg['resource']) && $cfg['resource']) {
+        Route::apiResource($uri, $cfg['controller'], array_intersect_key($cfg, array_flip(['only', 'except'])));
+    }
+    if (isset($cfg['custom'])) {
+        Route::prefix($uri)->group($cfg['custom']);
+    }
+}
 
 
 

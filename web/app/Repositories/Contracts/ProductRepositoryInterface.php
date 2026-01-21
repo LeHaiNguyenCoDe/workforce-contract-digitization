@@ -9,6 +9,15 @@ use Illuminate\Database\Eloquent\Collection;
 interface ProductRepositoryInterface
 {
     /**
+     * Get top N products for a category
+     *
+     * @param int $categoryId
+     * @param int $limit
+     * @return Collection
+     */
+    public function getTopProductsByCategory(int $categoryId, int $limit = 4): Collection;
+
+    /**
      * Get all products with pagination and filters
      *
      * @param  int  $perPage

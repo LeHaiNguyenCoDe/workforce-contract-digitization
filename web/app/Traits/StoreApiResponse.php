@@ -216,6 +216,16 @@ trait StoreApiResponse
         ?\Throwable $exception = null,
         array $replace = []
     ): JsonResponse {
+        // Handle ModelNotFoundException (Route Model Binding failures) as 404
+        if ($exception instanceof \Illuminate\Database\Eloquent\ModelNotFoundException) {
+            return $this->notFoundResponse();
+        }
+
+        // Handle custom NotFoundException as 404
+        if ($exception instanceof \App\Exceptions\NotFoundException) {
+            return $this->notFoundResponse();
+        }
+
         // Log exception to appropriate error channel if provided
         if ($exception) {
             try {

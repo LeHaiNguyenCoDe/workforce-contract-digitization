@@ -91,5 +91,51 @@ class ArticleService
 
         $this->articleRepository->delete($article);
     }
+
+    /**
+     * Publish article
+     *
+     * @param  int  $id
+     * @return array
+     * @throws NotFoundException
+     */
+    public function publish(int $id): array
+    {
+        $article = $this->articleRepository->findById($id);
+
+        if (!$article) {
+            throw new NotFoundException("Article with ID {$id} not found");
+        }
+
+        $article = $this->articleRepository->update($article, [
+            'is_published' => true,
+            'published_at' => now(),
+        ]);
+
+        return $article->toArray();
+    }
+
+    /**
+     * Unpublish article
+     *
+     * @param  int  $id
+     * @return array
+     * @throws NotFoundException
+     */
+    public function unpublish(int $id): array
+    {
+        $article = $this->articleRepository->findById($id);
+
+        if (!$article) {
+            throw new NotFoundException("Article with ID {$id} not found");
+        }
+
+        $article = $this->articleRepository->update($article, [
+            'is_published' => false,
+            'published_at' => null,
+        ]);
+
+        return $article->toArray();
+    }
 }
 

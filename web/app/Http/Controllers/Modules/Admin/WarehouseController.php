@@ -10,9 +10,13 @@ use App\Http\Requests\Modules\Admin\WarehouseUpdateRequest;
 use App\Http\Requests\Modules\Admin\InboundBatchRequest;
 use App\Http\Requests\Modules\Admin\ReceiveBatchRequest;
 use App\Http\Requests\Modules\Admin\QualityCheckRequest;
+use App\Http\Requests\Modules\Admin\QualityCheckUpdateRequest;
 use App\Http\Requests\Modules\Admin\StockAdjustmentRequest;
+use App\Http\Requests\Modules\Admin\StockAdjustmentStoreRequest;
 use App\Http\Requests\Modules\Admin\StockOutboundRequest;
 use App\Http\Requests\Modules\Admin\InboundReceiptRequest;
+use App\Http\Requests\Modules\Admin\InboundReceiptUpdateRequest;
+use App\Http\Requests\Modules\Admin\OutboundReceiptUpdateRequest;
 use App\Http\Requests\Modules\Admin\OutboundReceiptRequest;
 use App\Models\Warehouse;
 use App\Services\Admin\WarehouseService;
@@ -299,19 +303,12 @@ class WarehouseController extends Controller
     /**
      * Update quality check (legacy - chỉ cho rollback)
      */
-    public function updateQualityCheck(int $id, Request $request): JsonResponse
+    public function updateQualityCheck(int $id, QualityCheckUpdateRequest $request): JsonResponse
     {
         try {
-            $request->validate([
-                'status' => 'sometimes|in:pass,fail,partial',
-                'score' => 'sometimes|integer|min:0|max:100',
-                'notes' => 'nullable|string',
-                'issues' => 'nullable|array'
-            ]);
+            $check = $this->warehouseService->updateQualityCheck($id, $request->validated());
 
-            $check = $this->warehouseService->updateQualityCheck($id, $request->all());
-
-            return $this->successResponse($check);
+            return $this->updatedResponse($check, 'quality_check_updated');
         } catch (BusinessLogicException $ex) {
             return $this->errorResponse($ex->getMessage(), null, 400);
         } catch (\Exception $ex) {
@@ -367,11 +364,13 @@ class WarehouseController extends Controller
     /**
      * Update inbound receipt
      */
-    public function updateInboundReceipt(int $id, Request $request): JsonResponse
+    public function updateInboundReceipt(int $id, InboundReceiptUpdateRequest $request): JsonResponse
     {
         try {
-            $receipt = $this->warehouseService->updateInboundReceipt($id, $request->all());
-            return $this->successResponse($receipt);
+            $receipt = $this->warehouseService->updateInboundReceipt($id, $request->validated());
+            return $this->updatedResponse($receipt, 'receipt_updated');
+        } catch (BusinessLogicException $ex) {
+            return $this->errorResponse($ex->getMessage(), null, 400);
         } catch (\Exception $ex) {
             return $this->serverErrorResponse($ex->getMessage(), $ex);
         }
@@ -454,11 +453,13 @@ class WarehouseController extends Controller
     /**
      * Update outbound receipt
      */
-    public function updateOutboundReceipt(int $id, Request $request): JsonResponse
+    public function updateOutboundReceipt(int $id, OutboundReceiptUpdateRequest $request): JsonResponse
     {
         try {
-            $receipt = $this->warehouseService->updateOutboundReceipt($id, $request->all());
-            return $this->successResponse($receipt);
+            $receipt = $this->warehouseService->updateOutboundReceipt($id, $request->validated());
+            return $this->updatedResponse($receipt, 'receipt_updated');
+        } catch (BusinessLogicException $ex) {
+            return $this->errorResponse($ex->getMessage(), null, 400);
         } catch (\Exception $ex) {
             return $this->serverErrorResponse($ex->getMessage(), $ex);
         }
@@ -527,22 +528,12 @@ class WarehouseController extends Controller
     /**
      * Create stock adjustment (BR-05)
      */
-    public function createStockAdjustment(Request $request): JsonResponse
+    public function createStockAdjustment(StockAdjustmentStoreRequest $request): JsonResponse
     {
         try {
-            $request->validate([
-                'warehouse_id' => 'required|exists:warehouses,id',
-                'stock_id' => 'required|exists:stocks,id',
-                'previous_quantity' => 'required|integer|min:0',
-                'new_quantity' => 'required|integer|min:0',
-                'adjustment_quantity' => 'required|integer',
-                'reason' => 'required|string|min:3', // BR-05.2: Bắt buộc có lý do
-                'notes' => 'nullable|string',
-            ]);
+            $adjustment = $this->warehouseService->createStockAdjustment($request->validated());
 
-            $adjustment = $this->warehouseService->createStockAdjustment($request->all());
-
-            return $this->createdResponse($adjustment, 'Stock adjusted successfully');
+            return $this->createdResponse($adjustment, 'stock_adjusted');
         } catch (BusinessLogicException $ex) {
             return $this->errorResponse($ex->getMessage(), null, 400);
         } catch (\Exception $ex) {

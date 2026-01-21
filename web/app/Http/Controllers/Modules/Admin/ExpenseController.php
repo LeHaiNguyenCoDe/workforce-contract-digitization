@@ -2,17 +2,18 @@
 
 namespace App\Http\Controllers\Modules\Admin;
 
+use App\Exceptions\NotFoundException;
 use App\Http\Controllers\Controller;
 
 use App\Services\Admin\FinanceService;
 use App\Services\Admin\ExpenseService;
 use App\Http\Requests\Modules\Admin\ExpenseStoreRequest;
 use App\Http\Requests\Modules\Admin\ExpenseUpdateRequest;
-use App\Models\FinanceTransaction;
+use App\Http\Requests\Modules\Admin\ExpenseCategoryStoreRequest;
+use App\Http\Requests\Modules\Admin\ExpenseCategoryUpdateRequest;
 use App\Traits\StoreApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Exception;
 
 class ExpenseController extends Controller
 {
@@ -28,17 +29,11 @@ class ExpenseController extends Controller
     {
         try {
             $filters = $request->only(['type', 'category_id', 'warehouse_id', 'fund_id', 'from_date', 'to_date', 'status']);
-            $expenses = $this->financeService->getExpenses($filters, $request->input('per_page', 15));
+            $perPage = $request->input('per_page', 15);
+            $expenses = $this->financeService->getExpenses($filters, $perPage);
 
-            return $this->successResponse([
-                'items' => $expenses->items(),
-                'meta' => [
-                    'current_page' => $expenses->currentPage(),
-                    'last_page' => $expenses->lastPage(),
-                    'total' => $expenses->total(),
-                ],
-            ]);
-        } catch (Exception $e) {
+            return $this->paginatedResponse($expenses);
+        } catch (\Exception $e) {
             return $this->serverErrorResponse('error', $e);
         }
     }
@@ -46,11 +41,12 @@ class ExpenseController extends Controller
     public function show(int $id): JsonResponse
     {
         try {
-            $expense = FinanceTransaction::with(['fund', 'category', 'warehouse', 'creator'])
-                ->findOrFail($id);
+            $expense = $this->financeService->getExpenseById($id);
             return $this->successResponse($expense);
-        } catch (Exception $e) {
+        } catch (NotFoundException $e) {
             return $this->notFoundResponse('not_found');
+        } catch (\Exception $e) {
+            return $this->serverErrorResponse('error', $e);
         }
     }
 
@@ -59,7 +55,7 @@ class ExpenseController extends Controller
         try {
             $expense = $this->financeService->createExpense($request->validated());
             return $this->createdResponse($expense, 'expense_created');
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), null, 422);
         }
     }
@@ -69,7 +65,9 @@ class ExpenseController extends Controller
         try {
             $expense = $this->financeService->updateExpense($id, $request->validated());
             return $this->updatedResponse($expense, 'expense_updated');
-        } catch (Exception $e) {
+        } catch (NotFoundException $e) {
+            return $this->notFoundResponse('not_found');
+        } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), null, 422);
         }
     }
@@ -79,7 +77,9 @@ class ExpenseController extends Controller
         try {
             $this->financeService->deleteExpense($id);
             return $this->deletedResponse('expense_deleted');
-        } catch (Exception $e) {
+        } catch (NotFoundException $e) {
+            return $this->notFoundResponse('not_found');
+        } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), null, 422);
         }
     }
@@ -89,39 +89,29 @@ class ExpenseController extends Controller
         try {
             $categories = $this->expenseService->getCategories();
             return $this->successResponse($categories);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return $this->serverErrorResponse('error', $e);
         }
     }
 
-    public function createCategory(Request $request): JsonResponse
+    public function createCategory(ExpenseCategoryStoreRequest $request): JsonResponse
     {
         try {
-            $validated = $request->validate([
-                'name' => 'required|string|max:100',
-                'code' => 'required|string|max:50|unique:expense_categories,code',
-                'type' => 'required|in:expense,income',
-                'description' => 'nullable|string',
-            ]);
-
-            $category = $this->expenseService->createCategory($validated);
+            $category = $this->expenseService->createCategory($request->validated());
             return $this->createdResponse($category, 'category_created_success');
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), null, 422);
         }
     }
 
-    public function updateCategory(Request $request, int $id): JsonResponse
+    public function updateCategory(ExpenseCategoryUpdateRequest $request, int $id): JsonResponse
     {
         try {
-            $validated = $request->validate([
-                'name' => 'nullable|string|max:100',
-                'description' => 'nullable|string',
-            ]);
-
-            $category = $this->expenseService->updateCategory($id, $validated);
-            return $this->successResponse($category);
-        } catch (Exception $e) {
+            $category = $this->expenseService->updateCategory($id, $request->validated());
+            return $this->updatedResponse($category, 'category_updated');
+        } catch (NotFoundException $e) {
+            return $this->notFoundResponse('category_not_found');
+        } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), null, 422);
         }
     }
@@ -131,7 +121,9 @@ class ExpenseController extends Controller
         try {
             $this->expenseService->deleteCategory($id);
             return $this->deletedResponse('category_deleted_success');
-        } catch (Exception $e) {
+        } catch (NotFoundException $e) {
+            return $this->notFoundResponse('category_not_found');
+        } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), null, 422);
         }
     }
@@ -145,11 +137,8 @@ class ExpenseController extends Controller
 
             $summary = $this->financeService->getExpenseSummary($fromDate, $toDate, $warehouseId);
             return $this->successResponse($summary);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return $this->serverErrorResponse('error', $e);
         }
     }
 }
-
-
-

@@ -72,6 +72,15 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         });
 
+        $exceptions->render(function (\Illuminate\Database\Eloquent\ModelNotFoundException $e, \Illuminate\Http\Request $request) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Resource not found',
+                ], 404);
+            }
+        });
+
         $exceptions->render(function (\App\Exceptions\BusinessLogicException $e, \Illuminate\Http\Request $request) {
             if ($request->expectsJson() || $request->is('api/*')) {
                 return $e->render($request);
@@ -97,10 +106,20 @@ return Application::configure(basePath: dirname(__DIR__))
                     'trace' => $e->getTraceAsString(),
                 ]);
 
-                // Return error response
+                // Handle 404 errors (including ModelNotFoundException which usually gets converted)
+                if ($e instanceof \Symfony\Component\HttpKernel\Exception\NotFoundHttpException || 
+                    $e instanceof \Illuminate\Database\Eloquent\ModelNotFoundException) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Resource not found',
+                    ], 404);
+                }
+
+                // Return error response for all other exceptions
                 return response()->json([
                     'status' => 'error',
                     'message' => config('app.debug') ? $e->getMessage() : 'Internal server error',
+                    'exception' => config('app.debug') ? get_class($e) : null,
                     'file' => config('app.debug') ? $e->getFile() : null,
                     'line' => config('app.debug') ? $e->getLine() : null,
                 ], 500);

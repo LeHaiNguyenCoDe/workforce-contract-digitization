@@ -9,6 +9,22 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 class ProductRepository implements ProductRepositoryInterface
 {
     /**
+     * Get top N products for a category
+     */
+    public function getTopProductsByCategory(int $categoryId, int $limit = 4): \Illuminate\Database\Eloquent\Collection
+    {
+        return Product::where('category_id', $categoryId)
+            ->where('is_active', true)
+            ->with(['images' => function ($q) {
+                $q->select('id', 'product_id', 'image_url', 'is_main')
+                  ->orderByDesc('is_main');
+            }])
+            ->select('id', 'name', 'slug', 'price', 'thumbnail', 'category_id')
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
      * Get all products with pagination and filters
      * For admin: Only show products that have stock in warehouse
      *
@@ -36,6 +52,13 @@ class ProductRepository implements ProductRepositoryInterface
             }
         } elseif ($categoryId = ($filters['category_id'] ?? null)) {
             $query->where('category_id', $categoryId);
+        }
+
+        // 2.1 Active Category Filter (For Landing Page)
+        if ($filters['active_category_only'] ?? false) {
+            $query->whereHas('category', function($q) {
+                $q->where('is_active', true);
+            });
         }
 
         // 3. Brand Filter (Check brand column or specs->brand)

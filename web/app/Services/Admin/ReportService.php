@@ -207,4 +207,70 @@ class ReportService
             'expiring_soon' => $expiringSoon,
         ];
     }
+
+    /**
+     * Get Dashboard Analytics - consolidated stats
+     */
+    public function getDashboardAnalytics(string $fromDate, string $toDate, ?int $warehouseId = null): array
+    {
+        // 1. Reports from existing methods
+        $pnlReport = $this->getPnLReport($fromDate, $toDate, $warehouseId);
+        $salesReport = $this->getSalesReport($fromDate, $toDate, $warehouseId);
+
+        // 2. Customer stats
+        $customerStats = DB::table('users')
+            ->selectRaw('
+                COUNT(*) as total,
+                COUNT(CASE WHEN created_at >= ? THEN 1 END) as new_this_period
+            ', [$fromDate])
+            ->first();
+
+        // 3. Low stock alert count
+        $lowStockCount = DB::table('stocks')
+            ->join('inventory_settings', function ($join) {
+                $join->on('inventory_settings.product_id', '=', 'stocks.product_id')
+                    ->on('inventory_settings.warehouse_id', '=', 'stocks.warehouse_id');
+            })
+            ->whereColumn('stocks.quantity', '<', 'inventory_settings.min_quantity')
+            ->when($warehouseId, fn($q) => $q->where('stocks.warehouse_id', $warehouseId))
+            ->count();
+
+        // 4. Recent orders
+        $recentOrders = Order::with(['user:id,name,email'])
+            ->when($warehouseId, fn($q) => $q->where('warehouse_id', $warehouseId))
+            ->latest()
+            ->take(10)
+            ->get(['id', 'order_number', 'user_id', 'total', 'status', 'created_at']);
+
+        // 5. Pending actions
+        $pendingOrders = Order::where('status', 'pending')->count();
+        $pendingReturns = DB::table('return_slips')->where('status', 'pending')->count();
+        $pendingPurchaseRequests = DB::table('purchase_requests')->where('status', 'pending')->count();
+
+        return [
+            'kpis' => [
+                'revenue' => $pnlReport['revenue']['sales'] ?? 0,
+                'gross_profit' => $pnlReport['gross_profit'] ?? 0,
+                'gross_margin' => $pnlReport['gross_margin'] ?? 0,
+                'order_count' => $pnlReport['summary']['order_count'] ?? 0,
+                'avg_order_value' => $pnlReport['summary']['avg_order_value'] ?? 0,
+                'customer_count' => $customerStats->total ?? 0,
+                'new_customers' => $customerStats->new_this_period ?? 0,
+            ],
+            'revenue_chart' => $salesReport['by_day'] ?? [],
+            'orders_by_status' => $salesReport['by_status'] ?? [],
+            'top_products' => $salesReport['top_products'] ?? [],
+            'recent_orders' => $recentOrders,
+            'alerts' => [
+                'low_stock' => $lowStockCount,
+                'pending_orders' => $pendingOrders,
+                'pending_returns' => $pendingReturns,
+                'pending_purchase_requests' => $pendingPurchaseRequests,
+            ],
+            'period' => [
+                'from' => $fromDate,
+                'to' => $toDate,
+            ],
+        ];
+    }
 }

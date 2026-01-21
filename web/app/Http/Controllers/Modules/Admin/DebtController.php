@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 
 use App\Models\AccountReceivable;
 use App\Models\AccountPayable;
+use App\Http\Requests\Modules\Admin\DebtPaymentRequest;
 use App\Services\Admin\DebtService;
 use App\Services\Admin\FinanceService;
 use App\Traits\StoreApiResponse;
@@ -24,38 +25,33 @@ class DebtController extends Controller
 
     public function getReceivables(Request $request): JsonResponse
     {
-        $receivables = $this->debtService->getReceivables($request->all());
-
-        return $this->successResponse([
-            'items' => $receivables->items(),
-            'meta' => [
-                'current_page' => $receivables->currentPage(),
-                'last_page' => $receivables->lastPage(),
-                'total' => $receivables->total(),
-            ],
-        ]);
+        try {
+            $receivables = $this->debtService->getReceivables($request->all());
+            return $this->paginatedResponse($receivables);
+        } catch (\Exception $e) {
+            return $this->serverErrorResponse('error', $e);
+        }
     }
 
     public function getReceivableSummary(): JsonResponse
     {
-        $summary = $this->debtService->getARSummary();
-
-        return $this->successResponse($summary);
+        try {
+            $summary = $this->debtService->getARSummary();
+            return $this->successResponse($summary);
+        } catch (\Exception $e) {
+            return $this->serverErrorResponse('error', $e);
+        }
     }
 
-    public function payReceivable(AccountReceivable $receivable, Request $request): JsonResponse
+    public function payReceivable(AccountReceivable $receivable, DebtPaymentRequest $request): JsonResponse
     {
-        $request->validate([
-            'amount' => 'required|numeric|min:0.01',
-            'fund_id' => 'sometimes|exists:funds,id',
-        ]);
-
         try {
-            $amount = $request->input('amount');
+            $validated = $request->validated();
+            $amount = $validated['amount'];
 
             $transaction = $this->financeService->recordReceipt([
                 'amount' => $amount,
-                'fund_id' => $request->input('fund_id'),
+                'fund_id' => $validated['fund_id'] ?? null,
                 'reference_type' => 'ar_payment',
                 'reference_id' => $receivable->id,
                 'description' => "Thu công nợ {$receivable->ar_code}",
@@ -71,38 +67,33 @@ class DebtController extends Controller
 
     public function getPayables(Request $request): JsonResponse
     {
-        $payables = $this->debtService->getPayables($request->all());
-
-        return $this->successResponse([
-            'items' => $payables->items(),
-            'meta' => [
-                'current_page' => $payables->currentPage(),
-                'last_page' => $payables->lastPage(),
-                'total' => $payables->total(),
-            ],
-        ]);
+        try {
+            $payables = $this->debtService->getPayables($request->all());
+            return $this->paginatedResponse($payables);
+        } catch (\Exception $e) {
+            return $this->serverErrorResponse('error', $e);
+        }
     }
 
     public function getPayableSummary(): JsonResponse
     {
-        $summary = $this->debtService->getAPSummary();
-
-        return $this->successResponse($summary);
+        try {
+            $summary = $this->debtService->getAPSummary();
+            return $this->successResponse($summary);
+        } catch (\Exception $e) {
+            return $this->serverErrorResponse('error', $e);
+        }
     }
 
-    public function payPayable(AccountPayable $payable, Request $request): JsonResponse
+    public function payPayable(AccountPayable $payable, DebtPaymentRequest $request): JsonResponse
     {
-        $request->validate([
-            'amount' => 'required|numeric|min:0.01',
-            'fund_id' => 'sometimes|exists:funds,id',
-        ]);
-
         try {
-            $amount = $request->input('amount');
+            $validated = $request->validated();
+            $amount = $validated['amount'];
 
             $transaction = $this->financeService->recordPayment([
                 'amount' => $amount,
-                'fund_id' => $request->input('fund_id'),
+                'fund_id' => $validated['fund_id'] ?? null,
                 'reference_type' => 'ap_payment',
                 'reference_id' => $payable->id,
                 'description' => "Trả công nợ NCC {$payable->ap_code}",
@@ -116,6 +107,3 @@ class DebtController extends Controller
         }
     }
 }
-
-
-

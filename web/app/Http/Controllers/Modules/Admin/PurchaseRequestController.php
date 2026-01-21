@@ -29,15 +29,7 @@ class PurchaseRequestController extends Controller
 
             $requests = $this->purchaseRequestService->getAll($filters, $perPage);
 
-            return $this->successResponse([
-                'items' => $requests->items(),
-                'meta' => [
-                    'current_page' => $requests->currentPage(),
-                    'last_page' => $requests->lastPage(),
-                    'per_page' => $requests->perPage(),
-                    'total' => $requests->total(),
-                ],
-            ]);
+            return $this->paginatedResponse($requests);
         } catch (Exception $e) {
             return $this->serverErrorResponse('error', $e);
         }

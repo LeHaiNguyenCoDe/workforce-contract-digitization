@@ -71,8 +71,8 @@ Route::post('register', [UserController::class, 'store']);
 */
 Route::middleware([Authenticate::class])->group(function () {
     // User Profile
-    Route::get('profile', [UserController::class, 'show']);
-    Route::put('profile', [UserController::class, 'update']);
+    Route::get('profile', [UserController::class, 'profile']);
+    Route::put('profile', [UserController::class, 'updateProfile']);
 
     // Orders (Customer)
     Route::get('orders', [OrderController::class, 'index']);

@@ -23,16 +23,13 @@ class OrderService
 {
     public function __construct(
         private OrderRepositoryInterface $orderRepository,
-        private PromotionRepositoryInterface $promotionRepository
+        private PromotionRepositoryInterface $promotionRepository,
+        private \App\Repositories\Contracts\ShipmentRepositoryInterface $shipmentRepository
     ) {
     }
 
     /**
      * Get all orders (for admin)
-     *
-     * @param  int  $perPage
-     * @param  array  $filters
-     * @return LengthAwarePaginator
      */
     public function getAll(int $perPage = 10, array $filters = []): LengthAwarePaginator
     {
@@ -41,10 +38,6 @@ class OrderService
 
     /**
      * Get orders by user
-     *
-     * @param  int|null  $userId
-     * @param  int  $perPage
-     * @return LengthAwarePaginator
      */
     public function getByUserId(?int $userId, int $perPage = 10): LengthAwarePaginator
     {
@@ -53,10 +46,6 @@ class OrderService
 
     /**
      * Get order details
-     *
-     * @param  int  $id
-     * @return Order
-     * @throws NotFoundException
      */
     public function getById(int $id): Order
     {
@@ -66,19 +55,22 @@ class OrderService
             throw new NotFoundException("Order with ID {$id} not found");
         }
 
-        $order->load('items.product');
+        $order->load(['items.product', 'user']);
 
         return $order;
     }
 
     /**
+     * Update order status
+     */
+    public function updateStatus(int $id, string $status): Order
+    {
+        $order = $this->getById($id);
+        return $this->orderRepository->update($order, ['status' => $status]);
+    }
+
+    /**
      * Create order from cart
-     *
-     * @param  array  $data
-     * @param  Cart|null  $cart
-     * @param  int|null  $userId
-     * @return Order
-     * @throws BusinessLogicException
      */
     public function createFromCart(array $data, ?Cart $cart, ?int $userId): Order
     {
@@ -132,9 +124,6 @@ class OrderService
 
     /**
      * Calculate cart total
-     *
-     * @param  Cart  $cart
-     * @return int
      */
     private function calculateCartTotal(Cart $cart): int
     {
@@ -147,10 +136,6 @@ class OrderService
 
     /**
      * Create order items from cart items
-     *
-     * @param  Order  $order
-     * @param  Cart  $cart
-     * @return void
      */
     private function createOrderItems(Order $order, Cart $cart): void
     {
@@ -168,11 +153,6 @@ class OrderService
 
     /**
      * Apply promotion code
-     *
-     * @param  Order  $order
-     * @param  int  $total
-     * @param  string|null  $promotionCode
-     * @return int
      */
     private function applyPromotion(Order $order, int $total, ?string $promotionCode): int
     {
@@ -208,12 +188,6 @@ class OrderService
 
     /**
      * Apply loyalty points
-     *
-     * @param  Order  $order
-     * @param  int  $totalAfterPromotion
-     * @param  int|null  $userId
-     * @param  int  $usePoints
-     * @return int
      */
     private function applyLoyaltyPoints(Order $order, int $totalAfterPromotion, ?int $userId, int $usePoints): int
     {
@@ -247,11 +221,6 @@ class OrderService
 
     /**
      * Earn loyalty points from order
-     *
-     * @param  Order  $order
-     * @param  int  $total
-     * @param  int|null  $userId
-     * @return void
      */
     private function earnLoyaltyPoints(Order $order, int $total, ?int $userId): void
     {
@@ -282,9 +251,6 @@ class OrderService
 
     /**
      * Resolve cart from request
-     *
-     * @param  Request  $request
-     * @return Cart|null
      */
     public function resolveCart(Request $request): ?Cart
     {
@@ -366,7 +332,7 @@ class OrderService
      */
     public function assignShipper(Order $order, int $shipperId): \App\Models\Shipment
     {
-        $shipment = \App\Models\Shipment::updateOrCreate(
+        $shipment = $this->shipmentRepository->updateOrCreate(
             ['order_id' => $order->id],
             [
                 'shipper_id' => $shipperId,
@@ -375,9 +341,32 @@ class OrderService
             ]
         );
 
-        $order->update(['status' => 'processing']);
+        $this->orderRepository->update($order, ['status' => 'processing']);
 
         return $shipment;
+    }
+
+    /**
+     * Update shipment tracking
+     */
+    public function updateTracking(int $orderId, array $data): \App\Models\Shipment
+    {
+        $shipment = $this->shipmentRepository->findByOrderId($orderId);
+        
+        if (!$shipment) {
+            throw new NotFoundException('Shipment not found');
+        }
+
+        $updateData = [
+            'current_lat' => $data['lat'],
+            'current_lng' => $data['lng'],
+        ];
+
+        if (isset($data['status'])) {
+            $updateData['status'] = $data['status'];
+        }
+
+        return $this->shipmentRepository->update($shipment, $updateData);
     }
 
     /**
@@ -398,14 +387,12 @@ class OrderService
             $this->updateStockLevels($order);
             $costAmount = $this->calculateOrderCost($order);
 
-            $order->update([
+            return $this->orderRepository->update($order, [
                 'status' => Order::STATUS_CONFIRMED,
                 'confirmed_at' => now(),
                 'cost_amount' => $costAmount,
                 'remaining_amount' => $order->total_amount - $order->paid_amount,
             ]);
-
-            return $order->fresh();
         });
     }
 
@@ -414,11 +401,10 @@ class OrderService
      */
     public function markDelivered(Order $order): Order
     {
-        $order->update([
+        return $this->orderRepository->update($order, [
             'status' => Order::STATUS_DELIVERED,
             'delivered_at' => now(),
         ]);
-        return $order->fresh();
     }
 
     /**
@@ -427,7 +413,7 @@ class OrderService
     public function completeOrder(Order $order): Order
     {
         return DB::transaction(function () use ($order) {
-            $order->update([
+            $order = $this->orderRepository->update($order, [
                 'status' => Order::STATUS_COMPLETED,
                 'completed_at' => now(),
             ]);
@@ -437,7 +423,7 @@ class OrderService
                 $debtService->createReceivableFromOrder($order);
             }
 
-            return $order->fresh();
+            return $order;
         });
     }
 
@@ -446,24 +432,30 @@ class OrderService
      */
     public function cancelOrder(Order $order, ?string $reason = null): Order
     {
-        if ($order->status === Order::STATUS_COMPLETED) {
-            throw new BusinessLogicException('Không thể hủy đơn đã hoàn thành!');
+        if ($order->status === Order::STATUS_CANCELLED) {
+             throw new BusinessLogicException('Đơn hàng đã bị hủy trước đó!');
+        }
+
+        if (in_array($order->status, [Order::STATUS_COMPLETED, Order::STATUS_DELIVERED, Order::STATUS_SHIPPED])) {
+            throw new BusinessLogicException('Không thể hủy đơn hàng ở trạng thái này!');
         }
 
         return DB::transaction(function () use ($order, $reason) {
-            if (in_array($order->status, [Order::STATUS_CONFIRMED, Order::STATUS_DELIVERED, Order::STATUS_PROCESSING])) {
+            if (in_array($order->status, [Order::STATUS_CONFIRMED, Order::STATUS_PROCESSING])) {
                 $this->returnStockLevels($order);
             }
 
-            $order->update([
+            return $this->orderRepository->update($order, [
                 'status' => Order::STATUS_CANCELLED,
                 'cancelled_at' => now(),
+                'note' => $order->note . ($reason ? " (Hủy: $reason)" : ""),
             ]);
-
-            return $order->fresh();
         });
     }
 
+    /**
+     * Return stock levels after order cancellation
+     */
     private function returnStockLevels(Order $order): void
     {
         foreach ($order->items as $item) {
@@ -492,6 +484,9 @@ class OrderService
         }
     }
 
+    /**
+     * Calculate total cost of an order
+     */
     private function calculateOrderCost(Order $order): float
     {
         $totalCost = 0;

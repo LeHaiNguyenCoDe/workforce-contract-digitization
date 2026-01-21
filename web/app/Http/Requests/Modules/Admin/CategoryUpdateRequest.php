@@ -18,6 +18,8 @@ class CategoryUpdateRequest extends FormRequest
             'name' => ['sometimes', 'string', 'max:255'],
             'slug' => ['sometimes', 'string', 'max:255', 'unique:categories,slug,' . $categoryId],
             'parent_id' => ['sometimes', 'integer', 'exists:categories,id'],
+            'is_active' => ['sometimes', 'boolean'],
+            'image' => ['sometimes', 'nullable', 'string'],
         ];
     }
 

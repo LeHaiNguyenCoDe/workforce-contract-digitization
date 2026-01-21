@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Modules\Admin;
 
+use App\Exceptions\NotFoundException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Modules\Admin\SupplierStoreRequest;
 use App\Http\Requests\Modules\Admin\SupplierUpdateRequest;
@@ -34,7 +35,7 @@ class SupplierController extends Controller
             $supplier = $this->supplierService->create($request->validated());
             return $this->createdResponse($supplier, 'supplier_created');
         } catch (\Exception $ex) {
-            return $this->errorResponse($ex->getMessage(), null, 422);
+            return $this->serverErrorResponse('error', $ex);
         }
     }
 
@@ -42,10 +43,9 @@ class SupplierController extends Controller
     {
         try {
             $supplier = $this->supplierService->getById($id);
-            if (!$supplier) {
-                return $this->notFoundResponse('supplier_not_found');
-            }
             return $this->successResponse($supplier);
+        } catch (NotFoundException $ex) {
+            return $this->notFoundResponse('supplier_not_found');
         } catch (\Exception $ex) {
             return $this->serverErrorResponse('error', $ex);
         }
@@ -56,8 +56,10 @@ class SupplierController extends Controller
         try {
             $supplier = $this->supplierService->update($id, $request->validated());
             return $this->updatedResponse($supplier, 'supplier_updated');
+        } catch (NotFoundException $ex) {
+            return $this->notFoundResponse('supplier_not_found');
         } catch (\Exception $ex) {
-            return $this->errorResponse($ex->getMessage(), null, 422);
+            return $this->serverErrorResponse('error', $ex);
         }
     }
 
@@ -66,10 +68,10 @@ class SupplierController extends Controller
         try {
             $this->supplierService->delete($id);
             return $this->deletedResponse('supplier_deleted');
+        } catch (NotFoundException $ex) {
+            return $this->notFoundResponse('supplier_not_found');
         } catch (\Exception $ex) {
             return $this->serverErrorResponse('error', $ex);
         }
     }
 }
-
-

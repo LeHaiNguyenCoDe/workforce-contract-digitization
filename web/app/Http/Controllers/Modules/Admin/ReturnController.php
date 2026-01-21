@@ -27,14 +27,7 @@ class ReturnController extends Controller
             $filters = $request->only(['status', 'type']);
             $returns = $this->returnService->getAll($filters, $request->input('per_page', 15));
 
-            return $this->successResponse([
-                'items' => $returns->items(),
-                'meta' => [
-                    'current_page' => $returns->currentPage(),
-                    'last_page' => $returns->lastPage(),
-                    'total' => $returns->total(),
-                ],
-            ]);
+            return $this->paginatedResponse($returns);
         } catch (Exception $e) {
             return $this->serverErrorResponse('error', $e);
         }

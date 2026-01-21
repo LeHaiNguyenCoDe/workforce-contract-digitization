@@ -2,15 +2,16 @@
 
 namespace App\Services\Admin;
 
+use App\Exceptions\BusinessLogicException;
+use App\Exceptions\NotFoundException;
 use App\Models\Fund;
 use App\Models\FinanceTransaction;
 use App\Models\Order;
 use App\Models\DebtPayment;
-use App\Models\AccountReceivable;
 use App\Repositories\Contracts\FinanceRepositoryInterface;
 use App\Helpers\Helper;
 use Illuminate\Support\Facades\DB;
-use Exception;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 /**
  * Finance Service
@@ -22,50 +23,39 @@ use Exception;
  */
 class FinanceService
 {
+    /**
+     * Allowed fields for expense update
+     */
+    private const EXPENSE_UPDATE_FIELDS = [
+        'category_id',
+        'warehouse_id',
+        'description',
+        'payment_method',
+        'reference_number',
+        'attachment',
+        'is_recurring',
+        'recurring_period',
+        'status',
+    ];
+
+    /**
+     * Cached default fund ID
+     */
+    private ?int $cachedDefaultFundId = null;
+
     public function __construct(
         private FinanceRepositoryInterface $financeRepository
     ) {
     }
+
+    // ==================== CORE TRANSACTION METHODS ====================
 
     /**
      * Record a receipt (thu tiền) - BR-FIN-01
      */
     public function recordReceipt(array $data): FinanceTransaction
     {
-        return DB::transaction(function () use ($data) {
-            $fund = Fund::findOrFail($data['fund_id'] ?? $this->getDefaultFundId());
-
-            $balanceBefore = $fund->balance;
-            $amount = (float) $data['amount'];
-
-            // Update fund balance
-            $fund->updateBalance($amount, 'receipt');
-
-            // Create transaction
-            $transaction = FinanceTransaction::create([
-                'transaction_code' => FinanceTransaction::generateCode('receipt'),
-                'fund_id' => $fund->id,
-                'type' => FinanceTransaction::TYPE_RECEIPT,
-                'amount' => $amount,
-                'balance_before' => $balanceBefore,
-                'balance_after' => $fund->balance,
-                'transaction_date' => $data['transaction_date'] ?? now()->toDateString(),
-                'reference_type' => $data['reference_type'] ?? null,
-                'reference_id' => $data['reference_id'] ?? null,
-                'category_id' => $data['category_id'] ?? null,
-                'description' => $data['description'] ?? null,
-                'payment_method' => $data['payment_method'] ?? null,
-                'created_by' => auth()->id(),
-                'status' => FinanceTransaction::STATUS_APPROVED,
-            ]);
-
-            Helper::addLog([
-                'action' => 'finance.receipt',
-                'obj_action' => json_encode([$transaction->id, $amount]),
-            ]);
-
-            return $transaction;
-        });
+        return $this->createTransaction($data, FinanceTransaction::TYPE_RECEIPT);
     }
 
     /**
@@ -73,25 +63,36 @@ class FinanceService
      */
     public function recordPayment(array $data): FinanceTransaction
     {
-        return DB::transaction(function () use ($data) {
-            $fund = Fund::findOrFail($data['fund_id'] ?? $this->getDefaultFundId());
+        return $this->createTransaction($data, FinanceTransaction::TYPE_PAYMENT);
+    }
+
+    /**
+     * Create a finance transaction (unified method for receipt/payment)
+     * 
+     * @throws BusinessLogicException
+     */
+    private function createTransaction(array $data, string $type): FinanceTransaction
+    {
+        return DB::transaction(function () use ($data, $type) {
+            $fund = $this->resolveFund($data['fund_id'] ?? null);
             $amount = (float) $data['amount'];
 
-            // BR-FIN-03: Check balance
-            if (!$fund->canWithdraw($amount)) {
-                throw new Exception('Số dư quỹ không đủ để chi!');
+            // BR-FIN-03: Check balance for payments
+            if ($type === FinanceTransaction::TYPE_PAYMENT && !$fund->canWithdraw($amount)) {
+                throw new BusinessLogicException('Số dư quỹ không đủ để chi!');
             }
 
             $balanceBefore = $fund->balance;
-
+            $operationType = $type === FinanceTransaction::TYPE_RECEIPT ? 'receipt' : 'payment';
+            
             // Update fund balance
-            $fund->updateBalance($amount, 'payment');
+            $fund->updateBalance($amount, $operationType);
 
-            // Create transaction
-            $transaction = FinanceTransaction::create([
-                'transaction_code' => FinanceTransaction::generateCode('payment'),
+            // Create transaction via repository
+            $transaction = $this->financeRepository->createTransaction([
+                'transaction_code' => FinanceTransaction::generateCode($operationType),
                 'fund_id' => $fund->id,
-                'type' => FinanceTransaction::TYPE_PAYMENT,
+                'type' => $type,
                 'amount' => $amount,
                 'balance_before' => $balanceBefore,
                 'balance_after' => $fund->balance,
@@ -105,10 +106,7 @@ class FinanceService
                 'status' => FinanceTransaction::STATUS_APPROVED,
             ]);
 
-            Helper::addLog([
-                'action' => 'finance.payment',
-                'obj_action' => json_encode([$transaction->id, $amount]),
-            ]);
+            $this->logAction("finance.{$operationType}", [$transaction->id, $amount]);
 
             return $transaction;
         });
@@ -119,40 +117,44 @@ class FinanceService
      */
     public function collectOrderPayment(Order $order, float $amount, array $options = []): FinanceTransaction
     {
-        $transaction = $this->recordReceipt([
-            'fund_id' => $options['fund_id'] ?? null,
-            'amount' => $amount,
-            'reference_type' => 'order',
-            'reference_id' => $order->id,
-            'description' => "Thu tiền đơn hàng {$order->code}",
-            'payment_method' => $options['payment_method'] ?? $order->payment_method,
-        ]);
-
-        // Update order paid amount
-        $order->paid_amount = (float) $order->paid_amount + $amount;
-        $order->remaining_amount = (float) $order->total_amount - (float) $order->paid_amount;
-        $order->save();
-
-        // Update AR if exists
-        if ($order->receivable) {
-            $order->receivable->recordPayment($amount);
-
-            DebtPayment::create([
-                'debt_type' => DebtPayment::TYPE_AR,
-                'debt_id' => $order->receivable->id,
-                'finance_transaction_id' => $transaction->id,
+        return DB::transaction(function () use ($order, $amount, $options) {
+            $transaction = $this->recordReceipt([
+                'fund_id' => $options['fund_id'] ?? null,
                 'amount' => $amount,
-                'payment_date' => now()->toDateString(),
-                'payment_method' => $options['payment_method'] ?? null,
-                'created_by' => auth()->id(),
+                'reference_type' => 'order',
+                'reference_id' => $order->id,
+                'description' => "Thu tiền đơn hàng {$order->code}",
+                'payment_method' => $options['payment_method'] ?? $order->payment_method,
             ]);
-        }
 
-        return $transaction;
+            // Update order paid amount
+            $order->paid_amount = (float) $order->paid_amount + $amount;
+            $order->remaining_amount = (float) $order->total_amount - (float) $order->paid_amount;
+            $order->save();
+
+            // Update AR if exists
+            if ($order->receivable) {
+                $order->receivable->recordPayment($amount);
+
+                DebtPayment::create([
+                    'debt_type' => DebtPayment::TYPE_AR,
+                    'debt_id' => $order->receivable->id,
+                    'finance_transaction_id' => $transaction->id,
+                    'amount' => $amount,
+                    'payment_date' => now()->toDateString(),
+                    'payment_method' => $options['payment_method'] ?? null,
+                    'created_by' => auth()->id(),
+                ]);
+            }
+
+            return $transaction;
+        });
     }
 
+    // ==================== FUND METHODS ====================
+
     /**
-     * Get all funds
+     * Get all active funds
      */
     public function getFunds(): array
     {
@@ -160,13 +162,99 @@ class FinanceService
     }
 
     /**
+     * Resolve fund by ID or get default
+     * 
+     * @throws NotFoundException
+     */
+    private function resolveFund(?int $fundId): Fund
+    {
+        if ($fundId) {
+            $fund = $this->financeRepository->findFundById($fundId);
+            if (!$fund) {
+                throw new NotFoundException("Quỹ với ID {$fundId} không tồn tại!");
+            }
+            return $fund;
+        }
+
+        return $this->getDefaultFund();
+    }
+
+    /**
+     * Get default fund (cached)
+     * 
+     * @throws BusinessLogicException
+     */
+    private function getDefaultFund(): Fund
+    {
+        if ($this->cachedDefaultFundId) {
+            $fund = $this->financeRepository->findFundById($this->cachedDefaultFundId);
+            if ($fund) return $fund;
+        }
+
+        $fund = $this->financeRepository->getDefaultFund();
+        
+        if (!$fund) {
+            throw new BusinessLogicException('Chưa có quỹ tiền nào!');
+        }
+
+        $this->cachedDefaultFundId = $fund->id;
+        return $fund;
+    }
+
+    // ==================== TRANSACTION QUERY METHODS ====================
+
+    /**
+     * Get expense/transaction by ID
+     * 
+     * @throws NotFoundException
+     */
+    public function getExpenseById(int $id): FinanceTransaction
+    {
+        $expense = $this->financeRepository->findTransactionById($id);
+        
+        if (!$expense) {
+            throw new NotFoundException("Transaction with ID {$id} not found");
+        }
+        
+        return $expense;
+    }
+
+    /**
      * Get transactions with filters
      */
-    public function getTransactions(array $filters = [], int $perPage = 15)
+    public function getTransactions(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
-        $query = FinanceTransaction::with(['fund', 'category', 'creator'])
+        return $this->financeRepository->getTransactions($filters, $perPage);
+    }
+
+    /**
+     * Get expenses list with extended filters
+     */
+    public function getExpenses(array $filters = [], int $perPage = 15): LengthAwarePaginator
+    {
+        $query = FinanceTransaction::with(['fund', 'category', 'warehouse', 'creator'])
             ->orderBy('transaction_date', 'desc');
 
+        // Map expense/income to payment/receipt
+        if (!empty($filters['type'])) {
+            $filters['type'] = match($filters['type']) {
+                'expense' => 'payment',
+                'income' => 'receipt',
+                default => $filters['type'],
+            };
+        }
+
+        $this->applyBasicFilters($query, $filters);
+        $this->applyExtendedFilters($query, $filters);
+
+        return $query->paginate($perPage);
+    }
+
+    /**
+     * Apply basic filters to query
+     */
+    private function applyBasicFilters($query, array $filters): void
+    {
         if (!empty($filters['type'])) {
             $query->where('type', $filters['type']);
         }
@@ -178,50 +266,13 @@ class FinanceService
         if (!empty($filters['from_date']) && !empty($filters['to_date'])) {
             $query->whereBetween('transaction_date', [$filters['from_date'], $filters['to_date']]);
         }
-
-        return $query->paginate($perPage);
     }
 
     /**
-     * Get summary
+     * Apply extended filters (for expenses)
      */
-    public function getSummary(string $fromDate, string $toDate): array
+    private function applyExtendedFilters($query, array $filters): void
     {
-        $transactions = FinanceTransaction::whereBetween('transaction_date', [$fromDate, $toDate])
-            ->where('status', FinanceTransaction::STATUS_APPROVED)
-            ->selectRaw('type, SUM(amount) as total')
-            ->groupBy('type')
-            ->get();
-
-        $totalReceipt = $transactions->where('type', 'receipt')->first()?->total ?? 0;
-        $totalPayment = $transactions->where('type', 'payment')->first()?->total ?? 0;
-
-        $fundBalances = Fund::active()->get(['id', 'name', 'code', 'balance']);
-
-        return [
-            'total_receipt' => (float) $totalReceipt,
-            'total_payment' => (float) $totalPayment,
-            'net' => (float) $totalReceipt - (float) $totalPayment,
-            'fund_balances' => $fundBalances,
-        ];
-    }
-
-    // ===== EXPENSE METHODS (Consolidated from ExpenseService) =====
-
-    /**
-     * Get expenses list (replaces ExpenseService::getAll)
-     */
-    public function getExpenses(array $filters = [], int $perPage = 15)
-    {
-        $query = FinanceTransaction::with(['fund', 'category', 'warehouse', 'creator'])
-            ->orderBy('transaction_date', 'desc');
-
-        if (!empty($filters['type'])) {
-            $type = $filters['type'] === 'expense' ? 'payment' :
-                ($filters['type'] === 'income' ? 'receipt' : $filters['type']);
-            $query->where('type', $type);
-        }
-
         if (!empty($filters['category_id'])) {
             $query->byCategory($filters['category_id']);
         }
@@ -230,29 +281,89 @@ class FinanceService
             $query->where('warehouse_id', $filters['warehouse_id']);
         }
 
-        if (!empty($filters['fund_id'])) {
-            $query->where('fund_id', $filters['fund_id']);
-        }
-
-        if (!empty($filters['from_date']) && !empty($filters['to_date'])) {
-            $query->betweenDates($filters['from_date'], $filters['to_date']);
-        }
-
         if (!empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
+    }
 
-        return $query->paginate($perPage);
+    // ==================== SUMMARY METHODS ====================
+
+    /**
+     * Get financial summary for date range
+     */
+    public function getSummary(string $fromDate, string $toDate): array
+    {
+        $totals = $this->getTransactionTotals($fromDate, $toDate);
+        $fundBalances = Fund::active()->get(['id', 'name', 'code', 'balance']);
+
+        return [
+            'total_receipt' => $totals['receipt'],
+            'total_payment' => $totals['payment'],
+            'net' => $totals['receipt'] - $totals['payment'],
+            'fund_balances' => $fundBalances,
+        ];
     }
 
     /**
-     * Create expense/income (replaces ExpenseService::create)
+     * Get expense summary by category
+     */
+    public function getExpenseSummary(string $fromDate, string $toDate, ?int $warehouseId = null): array
+    {
+        $baseQuery = fn() => FinanceTransaction::betweenDates($fromDate, $toDate)
+            ->approved()
+            ->when($warehouseId, fn($q) => $q->where('warehouse_id', $warehouseId));
+
+        // Get totals by type
+        $results = $baseQuery()
+            ->selectRaw('type, SUM(amount) as total, COUNT(*) as count')
+            ->groupBy('type')
+            ->get();
+
+        $totalExpense = (float) ($results->where('type', 'payment')->first()?->total ?? 0);
+        $totalIncome = (float) ($results->where('type', 'receipt')->first()?->total ?? 0);
+
+        // Get by category
+        $byCategory = $baseQuery()
+            ->selectRaw('category_id, SUM(amount) as total')
+            ->with('category:id,name,code')
+            ->whereNotNull('category_id')
+            ->groupBy('category_id')
+            ->get();
+
+        return [
+            'total_expense' => $totalExpense,
+            'total_income' => $totalIncome,
+            'net' => $totalIncome - $totalExpense,
+            'by_category' => $byCategory,
+        ];
+    }
+
+    /**
+     * Get transaction totals for date range
+     */
+    private function getTransactionTotals(string $fromDate, string $toDate): array
+    {
+        $transactions = FinanceTransaction::whereBetween('transaction_date', [$fromDate, $toDate])
+            ->where('status', FinanceTransaction::STATUS_APPROVED)
+            ->selectRaw('type, SUM(amount) as total')
+            ->groupBy('type')
+            ->get();
+
+        return [
+            'receipt' => (float) ($transactions->where('type', 'receipt')->first()?->total ?? 0),
+            'payment' => (float) ($transactions->where('type', 'payment')->first()?->total ?? 0),
+        ];
+    }
+
+    // ==================== EXPENSE CRUD METHODS ====================
+
+    /**
+     * Create expense/income transaction
      */
     public function createExpense(array $data): FinanceTransaction
     {
         $type = ($data['type'] ?? 'expense') === 'income' ? 'receipt' : 'payment';
-
-        $methodName = $type === 'receipt' ? 'recordReceipt' : 'recordPayment';
+        $method = $type === 'receipt' ? 'recordReceipt' : 'recordPayment';
 
         $transactionData = [
             'fund_id' => $data['fund_id'] ?? null,
@@ -265,7 +376,7 @@ class FinanceService
             'payment_method' => $data['payment_method'] ?? null,
         ];
 
-        $transaction = $this->$methodName($transactionData);
+        $transaction = $this->$method($transactionData);
 
         // Update with expense-specific fields
         $transaction->update([
@@ -279,105 +390,57 @@ class FinanceService
     }
 
     /**
-     * Update expense (replaces ExpenseService::update)
+     * Update expense transaction
+     * 
+     * @throws NotFoundException
      */
     public function updateExpense(int $id, array $data): FinanceTransaction
     {
-        $transaction = FinanceTransaction::findOrFail($id);
+        $transaction = FinanceTransaction::find($id);
+        
+        if (!$transaction) {
+            throw new NotFoundException("Transaction with ID {$id} not found");
+        }
 
-        $updateData = [];
-        if (isset($data['category_id']))
-            $updateData['category_id'] = $data['category_id'];
-        if (isset($data['warehouse_id']))
-            $updateData['warehouse_id'] = $data['warehouse_id'];
-        if (isset($data['description']))
-            $updateData['description'] = $data['description'];
-        if (isset($data['payment_method']))
-            $updateData['payment_method'] = $data['payment_method'];
-        if (isset($data['reference_number']))
-            $updateData['reference_number'] = $data['reference_number'];
-        if (isset($data['attachment']))
-            $updateData['attachment'] = $data['attachment'];
-        if (isset($data['is_recurring']))
-            $updateData['is_recurring'] = $data['is_recurring'];
-        if (isset($data['recurring_period']))
-            $updateData['recurring_period'] = $data['recurring_period'];
-        if (isset($data['status']))
-            $updateData['status'] = $data['status'];
+        // Only update allowed fields
+        $updateData = array_intersect_key($data, array_flip(self::EXPENSE_UPDATE_FIELDS));
 
-        $transaction->update($updateData);
-
-        Helper::addLog([
-            'action' => 'expense.update',
-            'obj_action' => json_encode([$transaction->id]),
-        ]);
+        if (!empty($updateData)) {
+            $transaction->update($updateData);
+            $this->logAction('expense.update', [$transaction->id]);
+        }
 
         return $transaction->fresh(['category', 'warehouse', 'fund']);
     }
 
     /**
-     * Delete expense (soft delete)
+     * Delete expense transaction (soft delete)
+     * 
+     * @throws NotFoundException
      */
     public function deleteExpense(int $id): bool
     {
-        $transaction = FinanceTransaction::findOrFail($id);
+        $transaction = $this->financeRepository->findTransactionById($id);
+        
+        if (!$transaction) {
+            throw new NotFoundException("Transaction with ID {$id} not found");
+        }
 
-        Helper::addLog([
-            'action' => 'expense.delete',
-            'obj_action' => json_encode([$transaction->id]),
-        ]);
+        $this->logAction('expense.delete', [$transaction->id]);
 
-        return $transaction->delete();
+        return $this->financeRepository->deleteTransaction($id);
     }
+
+    // ==================== HELPER METHODS ====================
 
     /**
-     * Get expense summary by category (replaces ExpenseService::getSummary)
+     * Log action to activity log
      */
-    public function getExpenseSummary(string $fromDate, string $toDate, ?int $warehouseId = null): array
+    private function logAction(string $action, array $data): void
     {
-        $query = FinanceTransaction::selectRaw('type, SUM(amount) as total, COUNT(*) as count')
-            ->betweenDates($fromDate, $toDate)
-            ->approved();
-
-        if ($warehouseId) {
-            $query->where('warehouse_id', $warehouseId);
-        }
-
-        $results = $query->groupBy('type')->get();
-
-        $totalExpense = $results->where('type', 'payment')->first()?->total ?? 0;
-        $totalIncome = $results->where('type', 'receipt')->first()?->total ?? 0;
-
-        // Get by category
-        $categoryQuery = FinanceTransaction::selectRaw('category_id, SUM(amount) as total')
-            ->with('category:id,name,code')
-            ->betweenDates($fromDate, $toDate)
-            ->approved()
-            ->whereNotNull('category_id');
-
-        if ($warehouseId) {
-            $categoryQuery->where('warehouse_id', $warehouseId);
-        }
-
-        $byCategory = $categoryQuery->groupBy('category_id')->get();
-
-        return [
-            'total_expense' => (float) $totalExpense,
-            'total_income' => (float) $totalIncome,
-            'net' => (float) $totalIncome - (float) $totalExpense,
-            'by_category' => $byCategory,
-        ];
-    }
-
-    private function getDefaultFundId(): int
-    {
-        $fund = Fund::where('is_default', true)->first();
-        if (!$fund) {
-            $fund = Fund::first();
-        }
-        if (!$fund) {
-            throw new Exception('Chưa có quỹ tiền nào!');
-        }
-        return $fund->id;
+        Helper::addLog([
+            'action' => $action,
+            'obj_action' => json_encode($data),
+        ]);
     }
 }

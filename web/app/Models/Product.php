@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Product extends Model
 {
+    use HasFactory;
     protected $fillable = [
         'category_id',
         'supplier_id',
@@ -22,6 +24,13 @@ class Product extends Model
         'description',
         'thumbnail',
         'specs',
+        'manufacturer_name',
+        'manufacturer_brand',
+        'stock_quantity',
+        'discount_percentage',
+        'is_active',
+        'published_at',
+        'faqs',
     ];
 
     /**
@@ -40,6 +49,10 @@ class Product extends Model
 
     protected $casts = [
         'specs' => 'array',
+        'faqs' => 'array',
+        'published_at' => 'datetime',
+        'discount_percentage' => 'float',
+        'is_active' => 'boolean',
     ];
 
     public function category(): BelongsTo

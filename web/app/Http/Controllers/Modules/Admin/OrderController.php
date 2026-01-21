@@ -9,6 +9,7 @@ use App\Http\Requests\Modules\Admin\OrderRequest;
 use App\Http\Requests\Modules\Admin\OrderStatusRequest;
 use App\Http\Requests\Modules\Admin\AssignShipperRequest;
 use App\Http\Requests\Modules\Admin\UpdateTrackingRequest;
+use App\Http\Resources\Admin\OrderResource;
 use App\Models\Order;
 use App\Services\Admin\OrderService;
 use App\Traits\StoreApiResponse;
@@ -35,50 +36,44 @@ class OrderController extends Controller
             $perPage = (int) $request->query('per_page', 10);
 
             // Check if request is from Admin API AND user has admin roles
-            $isAdminRequest = $request->is('api/v1/admin/*') || $request->is('v1/admin/*');
+            $isAdminRequest = $request->is('api/*/admin/*') || $request->is('api/v1/admin/*');
             
             $adminRoles = ['admin', 'manager', 'super_admin'];
-            $hasAdminRole = $user && (
-                in_array($user->role, $adminRoles) ||
-                (method_exists($user, 'roles') && $user->roles()->whereIn('name', $adminRoles)->exists())
-            );
+            $hasAdminRole = $user && in_array($user->role, $adminRoles);
 
             if ($isAdminRequest && $hasAdminRole) {
                 // Admin panel: sees all orders with filters
-                $filters = [
-                    'status' => $request->query('status'),
-                    'search' => $request->query('search'),
-                ];
+                $filters = $request->only(['status', 'search']);
                 $orders = $this->orderService->getAll($perPage, $filters);
             } else {
                 // Landing page or non-admin: always sees only their own orders
                 $orders = $this->orderService->getByUserId(Auth::id(), $perPage);
             }
 
-            return $this->paginatedResponse($orders);
+            return $this->paginatedResponse(OrderResource::collection($orders));
         } catch (\Exception $ex) {
-            return $this->serverErrorResponse('error', $ex);
+            return $this->serverErrorResponse('An error occurred while fetching orders', $ex);
         }
     }
 
     /**
      * Get order details
      */
-    public function show(Order $order): JsonResponse
+    public function show(int $id): JsonResponse
     {
         try {
-            $orderData = $this->orderService->getById($order->id);
+            $order = $this->orderService->getById($id);
 
             // If admin, include stock check results
             if (Auth::user() && Auth::user()->role !== 'customer') {
-                $orderData->stock_check = $this->orderService->checkStockAvailability($orderData);
+                $order->stock_check = $this->orderService->checkStockAvailability($order);
             }
 
-            return $this->successResponse($orderData);
+            return $this->successResponse(new OrderResource($order));
         } catch (NotFoundException $ex) {
-            return $this->notFoundResponse('order_not_found');
+            return $this->notFoundResponse($ex->getMessage());
         } catch (\Exception $ex) {
-            return $this->serverErrorResponse('error', $ex);
+            return $this->serverErrorResponse('An error occurred while fetching order details', $ex);
         }
     }
 
@@ -93,173 +88,169 @@ class OrderController extends Controller
 
             $order = $this->orderService->createFromCart($request->validated(), $cart, $userId);
 
-            return $this->createdResponse($order, 'order_created');
+            return $this->createdResponse(new OrderResource($order), 'Order created successfully');
         } catch (BusinessLogicException $ex) {
-            return $this->errorResponse('cart_empty', null, 400);
+            return $this->errorResponse($ex->getMessage(), null, 400);
         } catch (\Exception $ex) {
-            return $this->serverErrorResponse('error', $ex);
+            return $this->serverErrorResponse('An error occurred while creating order', $ex);
         }
     }
 
     /**
      * Update order status
      */
-    public function updateStatus(Order $order, OrderStatusRequest $request): JsonResponse
+    public function updateStatus(int $id, OrderStatusRequest $request): JsonResponse
     {
         try {
-            if (!$order || !$order->id) {
-                return $this->notFoundResponse('order_not_found');
-            }
+            $order = $this->orderService->updateStatus($id, $request->validated()['status']);
 
-            $order->update(['status' => $request->validated()['status']]);
-
-            return $this->updatedResponse($order->fresh(), 'order_updated');
+            return $this->updatedResponse(new OrderResource($order), 'Order status updated');
         } catch (NotFoundException $ex) {
-            return $this->notFoundResponse('order_not_found');
+            return $this->notFoundResponse($ex->getMessage());
         } catch (\Exception $ex) {
-            return $this->serverErrorResponse('error', $ex);
+            return $this->serverErrorResponse('An error occurred while updating order status', $ex);
         }
     }
 
     /**
-     * Cancel order
+     * Cancel order (Legacy/Simple)
      */
-    public function cancel(Order $order): JsonResponse
+    public function cancel(int $id): JsonResponse
     {
         try {
-            if (!$order || !$order->id) {
-                return $this->notFoundResponse('order_not_found');
-            }
+            $order = $this->orderService->getById($id);
+            $updatedOrder = $this->orderService->cancelOrder($order);
 
-            if ($order->status === 'cancelled') {
-                return $this->errorResponse('order_already_cancelled', null, 400);
-            }
-
-            if (in_array($order->status, ['delivered', 'shipped'])) {
-                return $this->errorResponse('order_cannot_cancel', null, 400);
-            }
-
-            $order->update(['status' => 'cancelled']);
-
-            return $this->successResponse($order->fresh(), 'order_cancelled');
+            return $this->successResponse(new OrderResource($updatedOrder), 'Order cancelled');
         } catch (NotFoundException $ex) {
-            return $this->notFoundResponse('order_not_found');
+            return $this->notFoundResponse($ex->getMessage());
+        } catch (BusinessLogicException $ex) {
+            return $this->errorResponse($ex->getMessage(), null, 400);
         } catch (\Exception $ex) {
-            return $this->serverErrorResponse('error', $ex);
+            return $this->serverErrorResponse('An error occurred while cancelling order', $ex);
         }
     }
 
     /**
      * Check stock for an order
      */
-    public function checkStock(Order $order): JsonResponse
+    public function checkStock(int $id): JsonResponse
     {
         try {
-            $orderData = $this->orderService->getById($order->id);
-            $stockInfo = $this->orderService->checkStockAvailability($orderData);
+            $order = $this->orderService->getById($id);
+            $stockInfo = $this->orderService->checkStockAvailability($order);
 
             return $this->successResponse($stockInfo);
+        } catch (NotFoundException $ex) {
+            return $this->notFoundResponse($ex->getMessage());
         } catch (\Exception $ex) {
-            return $this->serverErrorResponse('error', $ex);
+            return $this->serverErrorResponse('An error occurred while checking stock', $ex);
         }
     }
 
     /**
      * Assign shipper to order
      */
-    public function assignShipper(Order $order, AssignShipperRequest $request): JsonResponse
+    public function assignShipper(int $id, AssignShipperRequest $request): JsonResponse
     {
         try {
+            $order = $this->orderService->getById($id);
             $shipment = $this->orderService->assignShipper($order, $request->validated()['shipper_id']);
 
-            return $this->successResponse($shipment, 'shipper_assigned');
+            return $this->successResponse($shipment, 'Shipper assigned successfully');
+        } catch (NotFoundException $ex) {
+            return $this->notFoundResponse($ex->getMessage());
         } catch (\Exception $ex) {
-            return $this->serverErrorResponse('error', $ex);
+            return $this->serverErrorResponse('An error occurred while assigning shipper', $ex);
         }
     }
 
     /**
      * Update shipment tracking/GPS
      */
-    public function updateTracking(Order $order, UpdateTrackingRequest $request): JsonResponse
+    public function updateTracking(int $id, UpdateTrackingRequest $request): JsonResponse
     {
         try {
-            $validated = $request->validated();
-            $shipment = \App\Models\Shipment::where('order_id', $order->id)->firstOrFail();
+            $shipment = $this->orderService->updateTracking($id, $request->validated());
 
-            $shipment->update([
-                'current_lat' => $validated['lat'],
-                'current_lng' => $validated['lng'],
-            ]);
-
-            if (isset($validated['status'])) {
-                $shipment->update(['status' => $validated['status']]);
-            }
-
-            return $this->updatedResponse($shipment, 'tracking_updated');
+            return $this->updatedResponse($shipment, 'Shipment tracking updated');
+        } catch (NotFoundException $ex) {
+            return $this->notFoundResponse($ex->getMessage());
         } catch (\Exception $ex) {
-            return $this->serverErrorResponse('error', $ex);
+            return $this->serverErrorResponse('An error occurred while updating tracking', $ex);
         }
     }
 
     /**
      * Confirm order (BR-SALES-02)
      */
-    public function confirmOrder(Order $order): JsonResponse
+    public function confirmOrder(int $id): JsonResponse
     {
         try {
-            $updatedOrder = $this->orderService->confirmOrder($order);
-            return $this->successResponse($updatedOrder, 'order_confirmed');
+            $order = $this->orderService->getById($id);
+            $updatedOrder = $this->orderService->confirmOrder($id);
+            return $this->successResponse(new OrderResource($updatedOrder), 'Order confirmed');
+        } catch (NotFoundException $ex) {
+            return $this->notFoundResponse($ex->getMessage());
         } catch (BusinessLogicException $ex) {
             return $this->errorResponse($ex->getMessage(), null, 400);
         } catch (\Exception $ex) {
-            return $this->serverErrorResponse('error', $ex);
+            return $this->serverErrorResponse('An error occurred while confirming order', $ex);
         }
     }
 
     /**
      * Mark order as delivered (BR-SALES-02)
      */
-    public function markDelivered(Order $order): JsonResponse
+    public function markDelivered(int $id): JsonResponse
     {
         try {
-            $updatedOrder = $this->orderService->markDelivered($order);
-            return $this->successResponse($updatedOrder, 'order_delivered');
+            $order = $this->orderService->getById($id);
+            $updatedOrder = $this->orderService->markDelivered($id);
+            return $this->successResponse(new OrderResource($updatedOrder), 'Order marked as delivered');
+        } catch (NotFoundException $ex) {
+            return $this->notFoundResponse($ex->getMessage());
         } catch (BusinessLogicException $ex) {
             return $this->errorResponse($ex->getMessage(), null, 400);
         } catch (\Exception $ex) {
-            return $this->serverErrorResponse('error', $ex);
+            return $this->serverErrorResponse('An error occurred while marking as delivered', $ex);
         }
     }
 
     /**
      * Complete order (BR-SALES-03)
      */
-    public function completeOrder(Order $order): JsonResponse
+    public function completeOrder(int $id): JsonResponse
     {
         try {
-            $updatedOrder = $this->orderService->completeOrder($order);
-            return $this->successResponse($updatedOrder, 'order_completed');
+            $order = $this->orderService->getById($id);
+            $updatedOrder = $this->orderService->completeOrder($id);
+            return $this->successResponse(new OrderResource($updatedOrder), 'Order completed');
+        } catch (NotFoundException $ex) {
+            return $this->notFoundResponse($ex->getMessage());
         } catch (BusinessLogicException $ex) {
             return $this->errorResponse($ex->getMessage(), null, 400);
         } catch (\Exception $ex) {
-            return $this->serverErrorResponse('error', $ex);
+            return $this->serverErrorResponse('An error occurred while completing order', $ex);
         }
     }
 
     /**
      * Cancel order with stock return (BR-SALES-05)
      */
-    public function cancelOrder(Order $order, Request $request): JsonResponse
+    public function cancelOrder(int $id, Request $request): JsonResponse
     {
         try {
+            $order = $this->orderService->getById($id);
             $reason = $request->input('reason');
             $updatedOrder = $this->orderService->cancelOrder($order, $reason);
-            return $this->successResponse($updatedOrder, 'order_cancelled');
+            return $this->successResponse(new OrderResource($updatedOrder), 'Order cancelled with stock return');
+        } catch (NotFoundException $ex) {
+            return $this->notFoundResponse($ex->getMessage());
         } catch (BusinessLogicException $ex) {
             return $this->errorResponse($ex->getMessage(), null, 400);
         } catch (\Exception $ex) {
-            return $this->serverErrorResponse('error', $ex);
+            return $this->serverErrorResponse('An error occurred while cancelling order', $ex);
         }
     }
 }

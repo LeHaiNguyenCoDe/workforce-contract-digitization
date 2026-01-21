@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Modules\Admin;
 use App\Http\Controllers\Controller;
 
 use App\Http\Requests\Modules\Admin\TransferStoreRequest;
+use App\Http\Requests\Modules\Admin\TransferReceiveRequest;
 use App\Services\Admin\TransferService;
 use App\Traits\StoreApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -26,14 +27,7 @@ class TransferController extends Controller
             $filters = $request->only(['from_warehouse_id', 'to_warehouse_id', 'status']);
             $transfers = $this->transferService->getAll($filters, $request->input('per_page', 15));
 
-            return $this->successResponse([
-                'items' => $transfers->items(),
-                'meta' => [
-                    'current_page' => $transfers->currentPage(),
-                    'last_page' => $transfers->lastPage(),
-                    'total' => $transfers->total(),
-                ],
-            ]);
+            return $this->paginatedResponse($transfers);
         } catch (Exception $e) {
             return $this->serverErrorResponse('error', $e);
         }
@@ -69,11 +63,10 @@ class TransferController extends Controller
         }
     }
 
-    public function receive(Request $request, int $id): JsonResponse
+    public function receive(TransferReceiveRequest $request, int $id): JsonResponse
     {
         try {
-            $receivedItems = $request->input('items', []);
-            $transfer = $this->transferService->receive($id, $receivedItems);
+            $transfer = $this->transferService->receive($id, $request->validated()['items']);
             return $this->successResponse($transfer, 'transfer_received');
         } catch (Exception $e) {
             return $this->errorResponse($e->getMessage(), null, 422);
@@ -100,6 +93,3 @@ class TransferController extends Controller
         }
     }
 }
-
-
-

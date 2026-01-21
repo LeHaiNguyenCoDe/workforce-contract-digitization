@@ -6,15 +6,21 @@ use App\Exceptions\NotFoundException;
 use App\Repositories\Contracts\ProductRepositoryInterface;
 use App\Repositories\Contracts\ProductImageRepositoryInterface;
 use App\Repositories\Contracts\ProductVariantRepositoryInterface;
+use App\Repositories\Contracts\CategoryRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 
 class ProductService
 {
     public function __construct(
         private ProductRepositoryInterface $productRepository,
         private ProductImageRepositoryInterface $productImageRepository,
-        private ProductVariantRepositoryInterface $productVariantRepository
+        private ProductVariantRepositoryInterface $productVariantRepository,
+        private CategoryRepositoryInterface $categoryRepository
     ) {
     }
 
@@ -30,6 +36,53 @@ class ProductService
     public function getAll(int $perPage = 12, array $filters = []): LengthAwarePaginator
     {
         return $this->productRepository->getAll($perPage, $filters);
+    }
+
+    /**
+     * Get home page data - categories with featured products
+     * Optimized to avoid N+1 and limit per relation issues
+     *
+     * @param int $categoriesLimit
+     * @param int $productsPerCategory
+     * @return array
+     */
+    public function getHomeData(int $categoriesLimit = 6, int $productsPerCategory = 4): array
+    {
+        $cacheKey = "home_data_{$categoriesLimit}_{$productsPerCategory}";
+        
+        return Cache::remember($cacheKey, now()->addHours(6), function () use ($categoriesLimit, $productsPerCategory) {
+            $categories = $this->categoryRepository->getAll([
+                'is_active' => true,
+                'limit' => $categoriesLimit
+            ]);
+
+            $result = [];
+            foreach ($categories as $category) {
+                $products = $this->productRepository->getTopProductsByCategory($category->id, $productsPerCategory);
+                
+                if ($products->count() > 0) {
+                    $result[] = [
+                        'category' => [
+                            'id' => $category->id,
+                            'name' => $category->name,
+                            'slug' => $category->slug,
+                        ],
+                        'products' => $products->map(function ($product) {
+                            return [
+                                'id' => $product->id,
+                                'name' => $product->name,
+                                'slug' => $product->slug,
+                                'price' => $product->price,
+                                'thumbnail' => $product->thumbnail,
+                                'images' => $product->images,
+                            ];
+                        })->values(),
+                    ];
+                }
+            }
+
+            return $result;
+        });
     }
 
     /**
@@ -81,6 +134,12 @@ class ProductService
             'description' => $product->description,
             'thumbnail' => $product->thumbnail,
             'specs' => $product->specs,
+            'manufacturer_name' => $product->manufacturer_name,
+            'manufacturer_brand' => $product->manufacturer_brand,
+            'stock_quantity' => $product->stock_quantity,
+            'discount_percentage' => $product->discount_percentage,
+            'is_active' => $product->is_active,
+            'published_at' => $product->published_at?->toIso8601String(),
             'category' => $product->category,
             'images' => $product->images,
             'variants' => $product->variants,
@@ -89,6 +148,7 @@ class ProductService
                 'count' => $countRating,
             ],
             'latest_reviews' => $product->reviews,
+            'faqs' => $product->faqs,
         ];
     }
 
@@ -100,16 +160,59 @@ class ProductService
      */
     public function create(array $data): array
     {
-        if (empty($data['slug']) && !empty($data['name'])) {
-            $data['slug'] = Str::slug($data['name']) . '-' . time();
-        }
+        return DB::transaction(function () use ($data) {
+            if (empty($data['slug']) && !empty($data['name'])) {
+                $data['slug'] = Str::slug($data['name']) . '-' . time();
+            }
 
-        if (!isset($data['price'])) {
-            $data['price'] = 0;
-        }
+            if (!isset($data['price'])) {
+                $data['price'] = 0;
+            }
 
-        $product = $this->productRepository->create($data);
-        return $product->toArray();
+            // Handle base64 thumbnail
+            if (!empty($data['thumbnail']) && str_starts_with($data['thumbnail'], 'data:image')) {
+                $data['thumbnail'] = $this->uploadBase64Image($data['thumbnail'], 'products');
+            }
+
+            $product = $this->productRepository->create($data);
+
+            // Invalidate home data cache
+            $this->clearHomeDataCache();
+
+            // Handle gallery images
+            if (!empty($data['images']) && is_array($data['images'])) {
+                foreach ($data['images'] as $image) {
+                    if (str_starts_with($image, 'data:image')) {
+                        $imageUrl = $this->uploadBase64Image($image, 'products');
+                        if ($imageUrl) {
+                            $this->productImageRepository->create([
+                                'product_id' => $product->id,
+                                'image_url' => $imageUrl,
+                                'is_main' => false,
+                            ]);
+                        }
+                    }
+                }
+            }
+
+            // Handle variants
+            if (!empty($data['variants']) && is_array($data['variants'])) {
+                foreach ($data['variants'] as $variant) {
+                    $this->productVariantRepository->create([
+                        'product_id' => $product->id,
+                        'variant_type' => $variant['variant_type'] ?? 'storage',
+                        'label' => $variant['label'] ?? '',
+                        'color' => $variant['label'] ?? '', // Legacy field
+                        'price_adjustment' => $variant['price_adjustment'] ?? 0,
+                        'stock' => $variant['stock'] ?? 0,
+                        'is_default' => $variant['is_default'] ?? false,
+                        'color_code' => $variant['color_code'] ?? null,
+                    ]);
+                }
+            }
+
+            return $product->toArray();
+        });
     }
 
     /**
@@ -122,14 +225,82 @@ class ProductService
      */
     public function update(int $id, array $data): array
     {
-        $product = $this->productRepository->findById($id);
+        return DB::transaction(function () use ($id, $data) {
+            $product = $this->productRepository->findById($id);
 
-        if (!$product) {
-            throw new NotFoundException("Product with ID {$id} not found");
-        }
+            if (!$product) {
+                throw new NotFoundException("Product with ID {$id} not found");
+            }
 
-        $product = $this->productRepository->update($product, $data);
-        return $product->toArray();
+            // Handle base64 thumbnail
+            if (!empty($data['thumbnail']) && str_starts_with($data['thumbnail'], 'data:image')) {
+                $data['thumbnail'] = $this->uploadBase64Image($data['thumbnail'], 'products');
+            }
+
+            $product = $this->productRepository->update($product, $data);
+
+            // Invalidate home data cache
+            $this->clearHomeDataCache();
+
+            // Handle gallery images
+            if (isset($data['images']) && is_array($data['images'])) {
+                // 1. Get current image list from DB
+                $currentImages = $product->images;
+                $keptImageUrls = [];
+                $newBase64Images = [];
+
+                // 2. Separate existing URLs and new Base64 images
+                foreach ($data['images'] as $image) {
+                    if (str_starts_with($image, 'data:image')) {
+                        $newBase64Images[] = $image;
+                    } else {
+                        $keptImageUrls[] = $image;
+                    }
+                }
+
+                // 3. Delete images that are not in the kept list
+                foreach ($currentImages as $currImg) {
+                    if (!in_array($currImg->image_url, $keptImageUrls)) {
+                        // Delete DB Record
+                        $this->productImageRepository->delete($currImg);
+                    }
+                }
+
+                // 4. Upload and create new images
+                foreach ($newBase64Images as $base64) {
+                    $imageUrl = $this->uploadBase64Image($base64, 'products');
+                    if ($imageUrl) {
+                        $this->productImageRepository->create([
+                            'product_id' => $product->id,
+                            'image_url' => $imageUrl,
+                            'is_main' => false,
+                        ]);
+                    }
+                }
+            }
+
+            // Handle variants (Sync logic)
+            if (isset($data['variants']) && is_array($data['variants'])) {
+                // For simplicity in this implementation, we delete old variants and create new ones
+                // Alternatively, you could match by ID and update
+                $this->productVariantRepository->deleteByProduct($product->id);
+                
+                foreach ($data['variants'] as $variant) {
+                    $this->productVariantRepository->create([
+                        'product_id' => $product->id,
+                        'variant_type' => $variant['variant_type'] ?? 'storage',
+                        'label' => $variant['label'] ?? '',
+                        'color' => $variant['label'] ?? '', // Legacy field
+                        'price_adjustment' => $variant['price_adjustment'] ?? 0,
+                        'stock' => $variant['stock'] ?? 0,
+                        'is_default' => $variant['is_default'] ?? false,
+                        'color_code' => $variant['color_code'] ?? null,
+                    ]);
+                }
+            }
+
+            return $product->toArray();
+        });
     }
 
     /**
@@ -160,6 +331,21 @@ class ProductService
         \DB::table('inbound_batch_items')->where('product_id', $id)->delete();
 
         $this->productRepository->delete($product);
+        
+        // Invalidate home data cache
+        $this->clearHomeDataCache();
+    }
+
+    /**
+     * Clear home data cache
+     */
+    private function clearHomeDataCache(): void
+    {
+        // We use a wildcard approach or specific keys if known
+        // Since limit could vary, it's safer to use tags if cache driver supports it
+        // but for now we'll just clear common keys or provide a way to clear all home data
+        Cache::forget('home_data_6_4');
+        Cache::forget('home_data_10_4');
     }
 
     /**
@@ -292,6 +478,53 @@ class ProductService
         }
 
         $this->productVariantRepository->delete($variant);
+    }
+
+    /**
+     * Upload base64 image
+     * 
+     * @param string $base64String
+     * @param string $folder
+     * @return string|null
+     */
+    private function uploadBase64Image(string $base64String, string $folder): ?string
+    {
+        try {
+            // Check if it's a valid base64 image
+            if (!preg_match('/^data:image\/(\w+);base64,/', $base64String, $type)) {
+                return null;
+            }
+
+            // Take the mime type
+            $type = strtolower($type[1]); // jpg, png, gif
+
+            // Check if type is supported
+            if (!in_array($type, ['jpg', 'jpeg', 'gif', 'png', 'webp'])) {
+                return null;
+            }
+
+            // Remove the header (data:image/xxx;base64,)
+            $base64String = substr($base64String, strpos($base64String, ',') + 1);
+            
+            // Decode
+            $typeString = base64_decode($base64String);
+
+            if ($typeString === false) {
+                return null;
+            }
+
+            // Generate filename
+            $filename = $folder . '/' . uniqid() . '.' . $type;
+
+            // Store file
+            Storage::disk('public')->put($filename, $typeString);
+
+            // Return full URL
+            return asset('storage/' . $filename);
+        } catch (\Exception $e) {
+            Log::error('Failed to upload base64 image: ' . $e->getMessage());
+            return null;
+        }
     }
 }
 

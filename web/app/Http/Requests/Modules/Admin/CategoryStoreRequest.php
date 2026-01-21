@@ -17,6 +17,8 @@ class CategoryStoreRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255', 'unique:categories,slug'],
             'parent_id' => ['sometimes', 'integer', 'exists:categories,id'],
+            'is_active' => ['sometimes', 'boolean'],
+            'image' => ['sometimes', 'nullable', 'string'],
         ];
     }
 

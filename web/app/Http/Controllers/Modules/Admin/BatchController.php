@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Modules\Admin;
 
+use App\Exceptions\NotFoundException;
 use App\Http\Controllers\Controller;
 
 use App\Http\Requests\Modules\Admin\BatchStoreRequest;
@@ -10,7 +11,6 @@ use App\Services\Admin\BatchService;
 use App\Traits\StoreApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Exception;
 
 class BatchController extends Controller
 {
@@ -29,16 +29,8 @@ class BatchController extends Controller
 
             $batches = $this->batchService->getAll($filters, $perPage);
 
-            return $this->successResponse([
-                'items' => $batches->items(),
-                'meta' => [
-                    'current_page' => $batches->currentPage(),
-                    'last_page' => $batches->lastPage(),
-                    'per_page' => $batches->perPage(),
-                    'total' => $batches->total(),
-                ],
-            ]);
-        } catch (Exception $e) {
+            return $this->paginatedResponse($batches);
+        } catch (\Exception $e) {
             return $this->serverErrorResponse('error', $e);
         }
     }
@@ -49,8 +41,10 @@ class BatchController extends Controller
             $batch = $this->batchService->getById($id);
 
             return $this->successResponse($batch);
-        } catch (Exception $e) {
+        } catch (NotFoundException $e) {
             return $this->notFoundResponse('batch_not_found');
+        } catch (\Exception $e) {
+            return $this->serverErrorResponse('error', $e);
         }
     }
 
@@ -60,7 +54,7 @@ class BatchController extends Controller
             $batch = $this->batchService->create($request->validated());
 
             return $this->createdResponse($batch, 'batch_created');
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), null, 422);
         }
     }
@@ -71,7 +65,9 @@ class BatchController extends Controller
             $batch = $this->batchService->update($id, $request->validated());
 
             return $this->updatedResponse($batch, 'batch_updated');
-        } catch (Exception $e) {
+        } catch (NotFoundException $e) {
+            return $this->notFoundResponse('batch_not_found');
+        } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), null, 422);
         }
     }
@@ -82,7 +78,9 @@ class BatchController extends Controller
             $this->batchService->delete($id);
 
             return $this->deletedResponse('batch_deleted');
-        } catch (Exception $e) {
+        } catch (NotFoundException $e) {
+            return $this->notFoundResponse('batch_not_found');
+        } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), null, 422);
         }
     }
@@ -94,7 +92,7 @@ class BatchController extends Controller
             $batches = $this->batchService->getAvailableBatches($productId, $warehouseId);
 
             return $this->successResponse($batches);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return $this->serverErrorResponse('error', $e);
         }
     }
@@ -106,11 +104,8 @@ class BatchController extends Controller
             $summary = $this->batchService->getExpiringSoonSummary($days);
 
             return $this->successResponse($summary);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return $this->serverErrorResponse('error', $e);
         }
     }
 }
-
-
-

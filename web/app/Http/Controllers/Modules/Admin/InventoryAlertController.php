@@ -28,15 +28,7 @@ class InventoryAlertController extends Controller
 
             $settings = $this->alertService->getAllSettings($filters, $perPage);
 
-            return $this->successResponse([
-                'items' => $settings->items(),
-                'meta' => [
-                    'current_page' => $settings->currentPage(),
-                    'last_page' => $settings->lastPage(),
-                    'per_page' => $settings->perPage(),
-                    'total' => $settings->total(),
-                ],
-            ]);
+            return $this->paginatedResponse($settings);
         } catch (Exception $e) {
             return $this->serverErrorResponse('error', $e);
         }

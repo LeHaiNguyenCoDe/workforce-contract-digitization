@@ -76,14 +76,7 @@ class MembershipController extends Controller
     {
         try {
             $transactions = $this->membershipService->getTransactions($customerId, $request->input('per_page', 20));
-            return $this->successResponse([
-                'items' => $transactions->items(),
-                'meta' => [
-                    'current_page' => $transactions->currentPage(),
-                    'last_page' => $transactions->lastPage(),
-                    'total' => $transactions->total(),
-                ],
-            ]);
+            return $this->paginatedResponse($transactions);
         } catch (Exception $e) {
             return $this->serverErrorResponse('error', $e);
         }

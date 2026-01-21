@@ -68,6 +68,22 @@ class UserController extends Controller
         }
     }
 
+    public function profile(): JsonResponse
+    {
+        try {
+            $user = auth()->user();
+            if (!$user) {
+                return $this->unauthorizedResponse();
+            }
+
+            $userData = $this->userService->getById($user->id);
+            return $this->successResponse($userData);
+        } catch (\Exception $ex) {
+            Helper::trackingError('user', $ex->getMessage());
+            return $this->serverErrorResponse('error', $ex);
+        }
+    }
+
     public function update(UserRequest $req, User $user): JsonResponse
     {
         try {
@@ -76,6 +92,19 @@ class UserController extends Controller
             return $this->updatedResponse($userData, 'user_updated');
         } catch (NotFoundException $ex) {
             return $this->notFoundResponse('user_not_found');
+        } catch (\Exception $ex) {
+            Helper::trackingError('user', $ex->getMessage());
+            return $this->serverErrorResponse('error', $ex);
+        }
+    }
+
+    public function updateProfile(UserRequest $req): JsonResponse
+    {
+        try {
+            $user = auth()->user();
+            $userData = $this->userService->update($user->id, $req->validated());
+
+            return $this->updatedResponse($userData, 'user_updated');
         } catch (\Exception $ex) {
             Helper::trackingError('user', $ex->getMessage());
             return $this->serverErrorResponse('error', $ex);

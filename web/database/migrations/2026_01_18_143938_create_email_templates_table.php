@@ -5,26 +5,13 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::create('email_templates', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('subject')->nullable();
-            $table->longText('content_html');
-            $table->string('category')->nullable(); // marketing, transactional, alert
-            $table->timestamps();
-        });
+        // Table already created in crm_marketing_tables migration
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('email_templates');
+        //
     }
 };
