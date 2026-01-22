@@ -4,6 +4,20 @@ import { useAuthStore } from '@/stores'
 
 // Define routes using auto-loading
 const routes: RouteRecordRaw[] = [
+  // Page Panel - Blank Layout (No Header/Footer)
+  {
+    path: '/page-panel',
+    component: () => import('@/layouts/BlankLayout.vue'),
+    children: [
+      {
+        path: '',
+        name: 'page-panel',
+        component: () => import('@/modules/page-panel/views/index.vue'),
+        meta: { title: 'Page Panel' }
+      }
+    ]
+  },
+
   // Landing (Frontend) routes
   {
     path: '/',

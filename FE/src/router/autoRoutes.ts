@@ -47,6 +47,11 @@ const landingModuleRouters = import.meta.glob<{ routes: RouteRecordRaw[]; defaul
   { eager: true }
 )
 
+const standaloneModuleRouters = import.meta.glob<ModuleExport>(
+  '@/modules/!(admin|landing)/**/router/index.ts',
+  { eager: true }
+)
+
 /**
  * Collect all routes from module routers
  */
@@ -89,6 +94,7 @@ function collectModuleMenus(routers: Record<string, ModuleExport>): MenuItem[] {
 export const erpModuleRoutes = collectModuleRoutes(erpModuleRouters)
 export const adminModuleRoutes = collectModuleRoutes(adminModuleRouters)
 export const landingModuleRoutes = collectModuleRoutes(landingModuleRouters)
+export const standaloneModuleRoutes = collectModuleRoutes(standaloneModuleRouters)
 
 // Export auto-collected menus
 export const adminModuleMenus = collectModuleMenus(adminModuleRouters)
@@ -132,5 +138,5 @@ export function getAdminRoutes(): RouteRecordRaw[] {
  * Get all landing routes (auto-loaded from modules)
  */
 export function getLandingRoutes(): RouteRecordRaw[] {
-  return [...landingModuleRoutes]
+  return [...landingModuleRoutes, ...standaloneModuleRoutes]
 }
