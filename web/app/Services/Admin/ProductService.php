@@ -3,6 +3,7 @@
 namespace App\Services\Admin;
 
 use App\Exceptions\NotFoundException;
+use App\Models\Product;
 use App\Repositories\Contracts\ProductRepositoryInterface;
 use App\Repositories\Contracts\ProductImageRepositoryInterface;
 use App\Repositories\Contracts\ProductVariantRepositoryInterface;
@@ -101,10 +102,10 @@ class ProductService
      * Get product details with relations
      *
      * @param  int  $id
-     * @return array
+     * @return Product
      * @throws NotFoundException
      */
-    public function getDetails(int $id): array
+    public function getDetails(int $id): Product
     {
         $product = $this->productRepository->findById($id);
 
@@ -121,44 +122,16 @@ class ProductService
             }
         ]);
 
-        $avgRating = $product->reviews()->avg('rating');
-        $countRating = $product->reviews()->count();
-
-        return [
-            'id' => $product->id,
-            'name' => $product->name,
-            'slug' => $product->slug,
-            'price' => $product->price,
-            'category_id' => $product->category_id,
-            'short_description' => $product->short_description,
-            'description' => $product->description,
-            'thumbnail' => $product->thumbnail,
-            'specs' => $product->specs,
-            'manufacturer_name' => $product->manufacturer_name,
-            'manufacturer_brand' => $product->manufacturer_brand,
-            'stock_quantity' => $product->stock_quantity,
-            'discount_percentage' => $product->discount_percentage,
-            'is_active' => $product->is_active,
-            'published_at' => $product->published_at?->toIso8601String(),
-            'category' => $product->category,
-            'images' => $product->images,
-            'variants' => $product->variants,
-            'rating' => [
-                'avg' => $avgRating ? round($avgRating, 2) : 0,
-                'count' => $countRating,
-            ],
-            'latest_reviews' => $product->reviews,
-            'faqs' => $product->faqs,
-        ];
+        return $product;
     }
 
     /**
      * Create product
      *
      * @param  array  $data
-     * @return array
+     * @return Product
      */
-    public function create(array $data): array
+    public function create(array $data): Product
     {
         return DB::transaction(function () use ($data) {
             if (empty($data['slug']) && !empty($data['name'])) {
@@ -211,7 +184,7 @@ class ProductService
                 }
             }
 
-            return $product->toArray();
+            return $product;
         });
     }
 
@@ -220,10 +193,10 @@ class ProductService
      *
      * @param  int  $id
      * @param  array  $data
-     * @return array
+     * @return Product
      * @throws NotFoundException
      */
-    public function update(int $id, array $data): array
+    public function update(int $id, array $data): Product
     {
         return DB::transaction(function () use ($id, $data) {
             $product = $this->productRepository->findById($id);
@@ -299,7 +272,7 @@ class ProductService
                 }
             }
 
-            return $product->toArray();
+            return $product;
         });
     }
 

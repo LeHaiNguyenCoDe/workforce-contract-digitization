@@ -29,7 +29,7 @@ export const useArticleStore = defineStore('landing-articles', () => {
       if (params?.search) queryParams.search = params.search
       if (params?.category) queryParams.category = params.category
 
-      const response = await httpClient.get<any>('/frontend/articles', { params: queryParams })
+      const response = await httpClient.get<any>('/articles', { params: queryParams })
       const data = response.data as any
 
       if (data?.data?.data && Array.isArray(data.data.data)) {
@@ -49,7 +49,7 @@ export const useArticleStore = defineStore('landing-articles', () => {
   async function fetchArticleById(id: number | string): Promise<Article | null> {
     isLoading.value = true
     try {
-      const response = await httpClient.get<any>(`/frontend/articles/${id}`)
+      const response = await httpClient.get<any>(`/articles/${id}`)
       const data = response.data as any
       currentArticle.value = data?.data || data
       return currentArticle.value

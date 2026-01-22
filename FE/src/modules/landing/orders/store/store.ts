@@ -31,7 +31,7 @@ export const useLandingOrderStore = defineStore('landing-orders', () => {
       }
       if (params?.status) queryParams.status = params.status
 
-      const response = await httpClient.get<any>('/frontend/orders', { params: queryParams })
+      const response = await httpClient.get<any>('/orders', { params: queryParams })
       const data = response.data as any
 
       // Support for wrapped data.items or direct data array
@@ -59,7 +59,7 @@ export const useLandingOrderStore = defineStore('landing-orders', () => {
   async function fetchOrderById(id: number | string): Promise<Order | null> {
     isLoading.value = true
     try {
-      const response = await httpClient.get<any>(`/frontend/orders/${id}`)
+      const response = await httpClient.get<any>(`/orders/${id}`)
       const data = response.data as any
       currentOrder.value = data?.data || data
       return currentOrder.value
@@ -74,7 +74,7 @@ export const useLandingOrderStore = defineStore('landing-orders', () => {
   async function createOrder(payload: CreateOrderPayload): Promise<Order | null> {
     isSubmitting.value = true
     try {
-      const response = await httpClient.post<any>('/frontend/orders', payload)
+      const response = await httpClient.post<any>('/orders', payload)
       const data = response.data as any
       const newOrder = data?.data || data
       orders.value.unshift(newOrder)
@@ -89,7 +89,7 @@ export const useLandingOrderStore = defineStore('landing-orders', () => {
 
   async function cancelOrder(id: number): Promise<boolean> {
     try {
-      await httpClient.put(`/frontend/orders/${id}/cancel`)
+      await httpClient.put(`/orders/${id}/cancel`)
       const order = orders.value.find((o: Order) => o.id === id)
       if (order) order.status = 'cancelled'
       return true

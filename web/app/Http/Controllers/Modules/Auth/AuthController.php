@@ -41,6 +41,23 @@ class AuthController extends Controller
         }
     }
 
+    public function register(AuthRequest $request): JsonResponse
+    {
+        try {
+            $credentials = $request->only('name', 'email', 'password', 'password_confirmation');
+            $result = $this->authService->register($credentials);
+
+            return $this->successResponse([
+                'user' => $result['user'],
+            ], 'register_success');
+        } catch (AuthenticationException $ex) {
+            return $this->errorResponse($ex->getMessage(), null, $ex->getCode());
+        } catch (\Exception $ex) {
+            Helper::trackingError('auth', $ex->getMessage());
+            return $this->serverErrorResponse('error', $ex);
+        }
+    }
+
     public function logout(AuthRequest $request): JsonResponse
     {
         try {

@@ -19,7 +19,7 @@ export function useHome() {
   async function fetchFeaturedProducts() {
     try {
       // Single optimized API call - replaces N+1 queries
-      const response = await httpClient.get('/frontend/home-data', {
+      const response = await httpClient.get('/home-data', {
         params: { categories_limit: 6, products_per_category: 4 }
       })
       const data = response.data as any
@@ -37,7 +37,7 @@ export function useHome() {
 
   async function fetchFeaturedCategories() {
     try {
-      const response = await httpClient.get('/frontend/categories', { 
+      const response = await httpClient.get('/categories', { 
         params: { per_page: 6, is_active: 1 } 
       })
       const data = response.data as any

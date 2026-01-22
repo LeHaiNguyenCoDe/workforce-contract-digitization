@@ -74,13 +74,13 @@ const fetchProduct = async () => {
     isLoading.value = true
     const productId = route.params.id
     try {
-        const response = await httpClient.get(`/frontend/products/${productId}`)
+        const response = await httpClient.get(`/products/${productId}`)
         const data = response.data as any
         product.value = data?.data || data
 
         // Fetch reviews
         try {
-            const reviewsRes = await httpClient.get(`/frontend/products/${productId}/reviews`)
+            const reviewsRes = await httpClient.get(`/products/${productId}/reviews`)
             const reviewsData = reviewsRes.data as any
             if (reviewsData?.data?.items) {
                 reviews.value = reviewsData.data.items
@@ -96,7 +96,7 @@ const fetchProduct = async () => {
         // Fetch similar products
         if (product.value?.category_id) {
             try {
-                const similarRes = await httpClient.get('/frontend/products', {
+                const similarRes = await httpClient.get('/products', {
                     params: { category_id: product.value.category_id, per_page: 5 }
                 })
                 const similarData = similarRes.data as any
@@ -151,7 +151,7 @@ const handleAddToCart = async (payload: any) => {
     }
     isAddingToCart.value = true
     try {
-        await httpClient.post('/frontend/cart/items', {
+        await httpClient.post('/cart/items', {
             product_id: product.value.id,
             qty: 1
         })
@@ -175,7 +175,7 @@ const handleSubmitReview = async (payload: { rating: number, content: string }) 
         return
     }
     try {
-        await httpClient.post(`/frontend/products/${product.value.id}/reviews`, {
+        await httpClient.post(`/products/${product.value.id}/reviews`, {
             rating: payload.rating,
             content: payload.content
         })

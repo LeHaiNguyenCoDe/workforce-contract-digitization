@@ -23,7 +23,7 @@ export const useLoyaltyStore = defineStore('landing-loyalty', () => {
   async function fetchLoyaltyData() {
     isLoading.value = true
     try {
-      const response = await httpClient.get<any>('/frontend/loyalty')
+      const response = await httpClient.get<any>('/loyalty')
       const data = response.data as any
       
       if (data?.data) {
@@ -41,7 +41,7 @@ export const useLoyaltyStore = defineStore('landing-loyalty', () => {
 
   async function fetchTransactions(page = 1) {
     try {
-      const response = await httpClient.get<any>('/frontend/loyalty/transactions', {
+      const response = await httpClient.get<any>('/loyalty/transactions', {
         params: { page }
       })
       const data = response.data as any

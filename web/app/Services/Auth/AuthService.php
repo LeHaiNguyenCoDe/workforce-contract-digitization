@@ -66,6 +66,35 @@ class AuthService
     }
 
     /**
+     * Register a new user
+     *
+     * @param  array  $credentials
+     * @return array
+     * @throws AuthenticationException
+     */
+    public function register(array $credentials): array
+    {
+        // Create new user
+        $user = new \App\Models\User();
+        $user->name = $credentials['name'];
+        $user->email = $credentials['email'];
+        $user->password = Hash::make($credentials['password']);
+        $user->active = true;
+        $user->language = 'vi';
+        $user->save();
+
+        // Log activity
+        $this->logActivity('register', $user->id, ['email' => $user->email]);
+
+        // Load roles relationship
+        $user->load('roles');
+
+        return [
+            'user' => $this->formatUser($user),
+        ];
+    }
+
+    /**
      * Logout user
      *
      * @param  Request  $request

@@ -201,7 +201,7 @@ export function useCheckout() {
     
     isLoadingAddresses.value = true
     try {
-      const response = await httpClient.get('/frontend/addresses')
+      const response = await httpClient.get('/addresses')
       const data = response.data as any
       savedAddresses.value = data?.data || data || []
       
@@ -237,7 +237,7 @@ export function useCheckout() {
     submitError.value = null
     
     try {
-      const response = await httpClient.post('/frontend/orders', form.value)
+      const response = await httpClient.post('/orders', form.value)
       const order = response.data as any
       
       authStore.setCartCount(0)

@@ -39,7 +39,7 @@ export function useArticles() {
   async function fetchArticles() {
     isLoading.value = true
     try {
-      const response = await httpClient.get('/frontend/articles', { params: { per_page: 12 } })
+      const response = await httpClient.get('/articles', { params: { per_page: 12 } })
       const data = response.data as any
       
       if (data?.data?.items && Array.isArray(data.data.items)) {
@@ -62,7 +62,7 @@ export function useArticles() {
   async function fetchArticleById(idOrSlug: string | number) {
     isLoading.value = true
     try {
-      const response = await httpClient.get(`/frontend/articles/${idOrSlug}`)
+      const response = await httpClient.get(`/articles/${idOrSlug}`)
       const data = response.data as any
       currentArticle.value = data?.data || data
     } catch (error) {

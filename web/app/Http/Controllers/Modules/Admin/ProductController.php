@@ -48,7 +48,7 @@ class ProductController extends Controller
 
             $products = $this->productService->getAll($perPage, $filters);
 
-            return $this->paginatedResponse(ProductResource::collection($products));
+            return $this->paginatedResponse($products, null, [], ProductResource::class);
         } catch (\Exception $ex) {
             return $this->serverErrorResponse('error', $ex);
         }
@@ -80,7 +80,7 @@ class ProductController extends Controller
             $perPage = $request->query('per_page', 12);
             $products = $this->productService->getByCategory($category->id, $perPage);
 
-            return $this->paginatedResponse(ProductResource::collection($products));
+            return $this->paginatedResponse($products, null, [], ProductResource::class);
         } catch (\Exception $ex) {
             return $this->serverErrorResponse('error', $ex);
         }

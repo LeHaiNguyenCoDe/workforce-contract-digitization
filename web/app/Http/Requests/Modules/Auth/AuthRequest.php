@@ -29,6 +29,7 @@ class AuthRequest extends FormRequest
 
         return match($action) {
             'login' => $this->loginRules(),
+            'register' => $this->registerRules(),
             'logout' => $this->logoutRules(),
             'me' => $this->meRules(),
             default => [],
@@ -46,6 +47,21 @@ class AuthRequest extends FormRequest
             'email' => 'required|email',
             'password' => 'required|string',
             'remember' => 'sometimes|boolean',
+        ];
+    }
+
+    /**
+     * Validation rules for register action
+     *
+     * @return array
+     */
+    protected function registerRules()
+    {
+        return [
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:8|confirmed',
+            'password_confirmation' => 'required|string',
         ];
     }
 

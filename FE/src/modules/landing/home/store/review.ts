@@ -75,7 +75,7 @@ export const useReviewStore = defineStore('landing-review', () => {
         try {
             // Single optimized API call - replaces N+1 queries
             const response = await httpClient.get<{ status: string; data: Review[] }>(
-                '/frontend/featured-reviews',
+                '/featured-reviews',
                 { params: { limit } }
             )
 
@@ -99,7 +99,7 @@ export const useReviewStore = defineStore('landing-review', () => {
 
         try {
             const response = await httpClient.get<{ status: string; data: ReviewsResponse }>(
-                `/frontend/products/${productId}/reviews`,
+                `/products/${productId}/reviews`,
                 { params: { per_page: perPage } }
             )
 

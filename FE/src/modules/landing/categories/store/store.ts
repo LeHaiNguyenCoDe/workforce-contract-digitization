@@ -21,7 +21,7 @@ export const useLandingCategoryStore = defineStore('landing-categories', () => {
   async function fetchCategories() {
     isLoading.value = true
     try {
-      const response = await httpClient.get<any>('/frontend/categories', {
+      const response = await httpClient.get<any>('/categories', {
         params: { is_active: 1 }
       })
       const data = response.data as any
@@ -35,7 +35,7 @@ export const useLandingCategoryStore = defineStore('landing-categories', () => {
 
   async function fetchCategoryById(id: number | string): Promise<CategoryWithProducts | null> {
     try {
-      const response = await httpClient.get<any>(`/frontend/categories/${id}`)
+      const response = await httpClient.get<any>(`/categories/${id}`)
       const data = response.data as any
       return data?.data || null
     } catch (error) {

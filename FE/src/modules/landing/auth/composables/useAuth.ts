@@ -33,7 +33,7 @@ export function useAuth() {
     error.value = null
     try {
       // Direct API call for registration if store doesn't handle it well
-      const response = await httpClient.post('/auth/register', userData)
+      const response = await httpClient.post('/frontend/register', userData)
       return response.status === 200 || response.status === 201
     } catch (err: any) {
       error.value = err.response?.data?.message || 'Đăng ký thất bại. Vui lòng thử lại.'
@@ -59,7 +59,7 @@ export function useAuth() {
   async function forgotPassword(email: string) {
     isLoading.value = true
     try {
-      await httpClient.post('/auth/forgot-password', { email })
+      await httpClient.post('/frontend/forgot-password', { email })
       return true
     } catch (err: any) {
       error.value = err.response?.data?.message || 'Yêu cầu đặt lại mật khẩu thất bại.'

@@ -99,7 +99,7 @@ export function useCart() {
 
     isLoading.value = true
     try {
-      const response = await httpClient.get('/frontend/cart')
+      const response = await httpClient.get('/cart')
       const data = response.data as any
       cart.value = data?.data || data
     } catch (error) {
@@ -113,7 +113,7 @@ export function useCart() {
   // Debounced update quantity
   const debouncedUpdateApi = debounce(async (itemId: number, qty: number) => {
     try {
-      await httpClient.put(`/frontend/cart/items/${itemId}`, { qty })
+      await httpClient.put(`/cart/items/${itemId}`, { qty })
       await fetchCart()
       showNotification('success', t('cart.quantityUpdated'))
     } catch (error) {
@@ -152,7 +152,7 @@ export function useCart() {
     }
     
     try {
-      await httpClient.delete(`/frontend/cart/items/${itemId}`)
+      await httpClient.delete(`/cart/items/${itemId}`)
       authStore.decrementCartCount()
       showNotification('success', t('cart.removedFromCart'))
     } catch (error) {
@@ -166,7 +166,7 @@ export function useCart() {
     if (!cart.value?.items?.length) return
     
     try {
-      await httpClient.delete('/frontend/cart')
+      await httpClient.delete('/cart')
       authStore.setCartCount(0)
       cart.value = null
       showNotification('success', t('cart.cartCleared'))
@@ -187,7 +187,7 @@ export function useCart() {
     promoSuccess.value = null
     
     try {
-      await httpClient.post('/frontend/cart/promo', { code: code.trim() })
+      await httpClient.post('/cart/promo', { code: code.trim() })
       await fetchCart()
       promoSuccess.value = t('cart.promoApplied')
       promoCode.value = code.trim()
@@ -202,7 +202,7 @@ export function useCart() {
 
   async function removePromoCode() {
     try {
-      await httpClient.delete('/frontend/cart/promo')
+      await httpClient.delete('/cart/promo')
       await fetchCart()
       promoCode.value = ''
       promoSuccess.value = null

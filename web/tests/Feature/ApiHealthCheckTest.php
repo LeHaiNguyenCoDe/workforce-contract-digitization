@@ -28,30 +28,30 @@ class ApiHealthCheckTest extends TestCase
     public function test_frontend_public_endpoints(): void
     {
         // Language
-        $this->getJson("{$this->baseUrl}/frontend/language")
+        $this->getJson("{$this->baseUrl}/language")
             ->assertStatus(200);
         
-        $this->getJson("{$this->baseUrl}/frontend/language/supported")
+        $this->getJson("{$this->baseUrl}/language/supported")
             ->assertStatus(200);
 
         // Categories
-        $this->getJson("{$this->baseUrl}/frontend/categories")
+        $this->getJson("{$this->baseUrl}/categories")
             ->assertStatus(200);
 
         // Products
-        $this->getJson("{$this->baseUrl}/frontend/products")
+        $this->getJson("{$this->baseUrl}/products")
             ->assertStatus(200);
 
         // Articles
-        $this->getJson("{$this->baseUrl}/frontend/articles")
+        $this->getJson("{$this->baseUrl}/articles")
             ->assertStatus(200);
 
         // Promotions
-        $this->getJson("{$this->baseUrl}/frontend/promotions")
+        $this->getJson("{$this->baseUrl}/promotions")
             ->assertStatus(200);
 
         // Cart
-        $this->getJson("{$this->baseUrl}/frontend/cart")
+        $this->getJson("{$this->baseUrl}/cart")
             ->assertStatus(200);
     }
 
@@ -67,7 +67,7 @@ class ApiHealthCheckTest extends TestCase
         ]);
 
         // Login
-        $response = $this->postJson("{$this->baseUrl}/frontend/login", [
+        $response = $this->postJson("{$this->baseUrl}/login", [
             'email' => 'test@example.com',
             'password' => 'Password123!',
         ]);
@@ -76,11 +76,11 @@ class ApiHealthCheckTest extends TestCase
             ->assertJsonStructure(['status', 'message', 'data']);
 
         // Get current user
-        $this->getJson("{$this->baseUrl}/frontend/me")
+        $this->getJson("{$this->baseUrl}/me")
             ->assertStatus(200);
 
         // Logout
-        $this->postJson("{$this->baseUrl}/frontend/logout")
+        $this->postJson("{$this->baseUrl}/logout")
             ->assertStatus(200);
     }
 
@@ -111,38 +111,38 @@ class ApiHealthCheckTest extends TestCase
         ]);
 
         // Login first
-        $this->postJson("{$this->baseUrl}/frontend/login", [
+        $this->postJson("{$this->baseUrl}/login", [
             'email' => 'test@example.com',
             'password' => 'Password123!',
         ]);
 
         // Profile
-        $this->getJson("{$this->baseUrl}/frontend/profile")
+        $this->getJson("{$this->baseUrl}/profile")
             ->assertStatus(200);
 
         // Orders
-        $this->getJson("{$this->baseUrl}/frontend/orders")
+        $this->getJson("{$this->baseUrl}/orders")
             ->assertStatus(200);
 
         // Wishlist
-        $this->getJson("{$this->baseUrl}/frontend/wishlist")
+        $this->getJson("{$this->baseUrl}/wishlist")
             ->assertStatus(200);
 
-        $this->postJson("{$this->baseUrl}/frontend/wishlist", [
+        $this->postJson("{$this->baseUrl}/wishlist", [
             'product_id' => $product->id,
         ])->assertStatus(201);
 
         // Loyalty
-        $this->getJson("{$this->baseUrl}/frontend/loyalty")
+        $this->getJson("{$this->baseUrl}/loyalty")
             ->assertStatus(200);
 
         // Language preference
-        $this->postJson("{$this->baseUrl}/frontend/language", [
+        $this->postJson("{$this->baseUrl}/language", [
             'locale' => 'vi',
         ])->assertStatus(200);
 
         // Reviews
-        $this->postJson("{$this->baseUrl}/frontend/products/{$product->id}/reviews", [
+        $this->postJson("{$this->baseUrl}/products/{$product->id}/reviews", [
             'rating' => 5,
             'content' => 'Great product!',
         ])->assertStatus(201);
@@ -168,7 +168,7 @@ class ApiHealthCheckTest extends TestCase
         $admin->roles()->sync([$adminRole->id]);
 
         // Login as admin
-        $this->postJson("{$this->baseUrl}/frontend/login", [
+        $this->postJson("{$this->baseUrl}/login", [
             'email' => 'admin@example.com',
             'password' => 'Password123!',
         ]);
@@ -211,7 +211,7 @@ class ApiHealthCheckTest extends TestCase
         ]);
 
         // Login as regular user
-        $this->postJson("{$this->baseUrl}/frontend/login", [
+        $this->postJson("{$this->baseUrl}/login", [
             'email' => 'customer@example.com',
             'password' => 'Password123!',
         ]);
@@ -227,15 +227,15 @@ class ApiHealthCheckTest extends TestCase
     public function test_error_responses(): void
     {
         // 404 Not Found
-        $this->getJson("{$this->baseUrl}/frontend/products/99999")
+        $this->getJson("{$this->baseUrl}/products/99999")
             ->assertStatus(404);
 
         // 401 Unauthorized
-        $this->getJson("{$this->baseUrl}/frontend/me")
+        $this->getJson("{$this->baseUrl}/me")
             ->assertStatus(401);
 
         // 422 Validation Error
-        $this->postJson("{$this->baseUrl}/frontend/register", [])
+        $this->postJson("{$this->baseUrl}/register", [])
             ->assertStatus(422);
     }
 }

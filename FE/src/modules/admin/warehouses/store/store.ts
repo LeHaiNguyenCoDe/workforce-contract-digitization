@@ -219,7 +219,7 @@ export const useWarehouseStore = defineStore('warehouse-products', () => {
   async function fetchMetadata() {
     try {
       const [catRes, supRes, warehousesRes] = await Promise.all([
-        httpClient.get('/frontend/categories'),
+        httpClient.get('/categories'),
         httpClient.get('/admin/suppliers'),
         httpClient.get('/admin/warehouses').catch(() => null)
       ])

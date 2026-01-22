@@ -40,7 +40,7 @@ export const useLandingProductStore = defineStore('landing-products', () => {
       if (params?.sort_by) queryParams.sort_by = params.sort_by
       if (params?.sort_order) queryParams.sort_order = params.sort_order
 
-      const response = await httpClient.get<any>('/frontend/products', { params: queryParams })
+      const response = await httpClient.get<any>('/products', { params: queryParams })
       const data = response.data as any
 
       if (data?.data?.data && Array.isArray(data.data.data)) {
@@ -63,7 +63,7 @@ export const useLandingProductStore = defineStore('landing-products', () => {
 
   async function fetchFeaturedProducts(limit = 8) {
     try {
-      const response = await httpClient.get<any>('/frontend/products', {
+      const response = await httpClient.get<any>('/products', {
         params: { per_page: limit, featured: true }
       })
       const data = response.data as any
@@ -80,7 +80,7 @@ export const useLandingProductStore = defineStore('landing-products', () => {
   async function fetchProductById(id: number | string): Promise<Product | null> {
     isLoading.value = true
     try {
-      const response = await httpClient.get<any>(`/frontend/products/${id}`)
+      const response = await httpClient.get<any>(`/products/${id}`)
       const data = response.data as any
       currentProduct.value = data?.data || data
       return currentProduct.value
@@ -94,7 +94,7 @@ export const useLandingProductStore = defineStore('landing-products', () => {
 
   async function fetchCategories() {
     try {
-      const response = await httpClient.get<any>('/frontend/categories')
+      const response = await httpClient.get<any>('/categories')
       const data = response.data as any
       categories.value = Array.isArray(data?.data) ? data.data : []
     } catch (error) {
@@ -105,7 +105,7 @@ export const useLandingProductStore = defineStore('landing-products', () => {
   async function fetchProductsByCategory(categoryId: number, params?: { page?: number; per_page?: number }) {
     isLoading.value = true
     try {
-      const response = await httpClient.get<any>(`/frontend/categories/${categoryId}/products`, {
+      const response = await httpClient.get<any>(`/categories/${categoryId}/products`, {
         params: { page: params?.page || 1, per_page: params?.per_page || 12 }
       })
       const data = response.data as any

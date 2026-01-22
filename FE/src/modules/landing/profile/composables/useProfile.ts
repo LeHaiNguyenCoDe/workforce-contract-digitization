@@ -32,7 +32,7 @@ export function useProfile() {
   async function fetchProfile() {
     isLoading.value = true
     try {
-      const response = await httpClient.get('/frontend/profile')
+      const response = await httpClient.get('/profile')
       const data = response.data as any
       if (data?.data) {
         store.setUser(data.data)
@@ -50,7 +50,7 @@ export function useProfile() {
     isSaving.value = true
     message.value = ''
     try {
-      const response = await httpClient.put('/frontend/profile', data)
+      const response = await httpClient.put('/profile', data)
       const updatedUser = (response.data as any)?.data || response.data
       store.setUser(updatedUser)
       isEditing.value = false
@@ -68,7 +68,7 @@ export function useProfile() {
     isSaving.value = true
     message.value = ''
     try {
-      await httpClient.put('/frontend/profile/password', {
+      await httpClient.put('/profile/password', {
         current_password: data.current_password,
         password: data.new_password,
         password_confirmation: data.confirm_password || data.password_confirmation
@@ -87,7 +87,7 @@ export function useProfile() {
     isSaving.value = true
     message.value = ''
     try {
-      await httpClient.put('/frontend/profile/address', data)
+      await httpClient.put('/profile/address', data)
       message.value = t('common.updateAddressSuccess')
       // Optionally re-fetch user to get updated address info if stored there
       await fetchProfile()

@@ -85,7 +85,7 @@ export const useAdminProductStore = defineStore('admin-products', () => {
 
   async function fetchCategories() {
     try {
-      const response = await httpClient.get<{ data: Category[] }>('/frontend/categories')
+      const response = await httpClient.get<{ data: Category[] }>('/categories')
       const data = response.data as any
       if (Array.isArray(data?.data)) {
         categories.value = data.data

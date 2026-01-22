@@ -19,7 +19,7 @@ const isLoading = ref(true)
 
 const fetchPromotion = async () => {
     try {
-        const response = await httpClient.get(`/frontend/promotions/${route.params.id}`)
+        const response = await httpClient.get(`/promotions/${route.params.id}`)
         const data = response.data as any
         promo.value = data?.data || data
     } catch (error) {

@@ -25,9 +25,9 @@ export const useHomeStore = defineStore('landing-home', () => {
     try {
       // Fetch all home data in parallel
       const [productsRes, categoriesRes, promotionsRes] = await Promise.all([
-        httpClient.get<any>('/frontend/products', { params: { per_page: 8, featured: true } }),
-        httpClient.get<any>('/frontend/categories'),
-        httpClient.get<any>('/frontend/promotions', { params: { per_page: 4 } })
+        httpClient.get<any>('/products', { params: { per_page: 8, featured: true } }),
+        httpClient.get<any>('/categories'),
+        httpClient.get<any>('/promotions', { params: { per_page: 4 } })
       ])
 
       const productsData = productsRes.data as any

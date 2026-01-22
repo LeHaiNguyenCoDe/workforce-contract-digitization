@@ -21,7 +21,7 @@ export function useLandingPromotions() {
   async function fetchPromotions() {
     isLoading.value = true
     try {
-      const response = await httpClient.get('/frontend/promotions', { params: { per_page: 12 } })
+      const response = await httpClient.get('/promotions', { params: { per_page: 12 } })
       const data = response.data as any
 
       if (data?.data?.items && Array.isArray(data.data.items)) {

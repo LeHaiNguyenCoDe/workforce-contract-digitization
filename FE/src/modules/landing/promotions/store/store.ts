@@ -24,7 +24,7 @@ export const useLandingPromotionStore = defineStore('landing-promotions', () => 
   async function fetchPromotions(params?: { page?: number }) {
     isLoading.value = true
     try {
-      const response = await httpClient.get<any>('/frontend/promotions', {
+      const response = await httpClient.get<any>('/promotions', {
         params: { page: params?.page || currentPage.value }
       })
       const data = response.data as any
@@ -46,7 +46,7 @@ export const useLandingPromotionStore = defineStore('landing-promotions', () => 
   async function fetchPromotionById(id: number | string): Promise<Promotion | null> {
     isLoading.value = true
     try {
-      const response = await httpClient.get<any>(`/frontend/promotions/${id}`)
+      const response = await httpClient.get<any>(`/promotions/${id}`)
       const data = response.data as any
       currentPromotion.value = data?.data || data
       return currentPromotion.value
@@ -60,7 +60,7 @@ export const useLandingPromotionStore = defineStore('landing-promotions', () => 
 
   async function applyPromoCode(code: string): Promise<Promotion | null> {
     try {
-      const response = await httpClient.post<any>('/frontend/promotions/apply', { code })
+      const response = await httpClient.post<any>('/promotions/apply', { code })
       const data = response.data as any
       return data?.data || null
     } catch (error) {

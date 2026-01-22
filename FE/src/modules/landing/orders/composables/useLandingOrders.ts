@@ -57,7 +57,7 @@ export function useLandingOrders() {
   async function fetchOrders() {
     isLoading.value = true
     try {
-      const response = await httpClient.get('/frontend/orders')
+      const response = await httpClient.get('/orders')
       const data = response.data as any
       
       const responseData = data?.data || data
@@ -87,7 +87,7 @@ export function useLandingOrders() {
   async function fetchOrderById(id: string | number) {
     isLoading.value = true
     try {
-      const response = await httpClient.get(`/frontend/orders/${id}`)
+      const response = await httpClient.get(`/orders/${id}`)
       const data = response.data as any
       currentOrder.value = data?.data || data
     } catch (error) {

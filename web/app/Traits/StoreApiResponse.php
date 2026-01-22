@@ -270,17 +270,28 @@ trait StoreApiResponse
      * @param LengthAwarePaginator $paginator
      * @param string|null $messageKey Translation key or raw message
      * @param array $replace Replacement parameters for translation
+     * @param string|null $resourceClass Resource class to transform items
      * @return JsonResponse
      */
     protected function paginatedResponse(
         LengthAwarePaginator $paginator,
         ?string $messageKey = null,
-        array $replace = []
+        array $replace = [],
+        ?string $resourceClass = null
     ): JsonResponse {
+        $items = $paginator->items();
+        
+        // Transform items with resource class if provided
+        if ($resourceClass && class_exists($resourceClass)) {
+            $items = array_map(function ($item) use ($resourceClass) {
+                return (new $resourceClass($item))->resolve(request());
+            }, $items);
+        }
+        
         $response = [
             'status' => 'success',
             'data' => [
-                'items' => $paginator->items(),
+                'items' => $items,
                 'meta' => [
                     'current_page' => $paginator->currentPage(),
                     'from' => $paginator->firstItem(),

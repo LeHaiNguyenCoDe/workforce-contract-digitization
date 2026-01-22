@@ -15,7 +15,7 @@ class AuthService {
     await httpClient.get('/sanctum/csrf-cookie', { baseURL: '/' })
 
     const response = await httpClient.post<ApiResponse<LoginResponse>>(
-      '/login',
+      `${this.basePath}/login`,
       credentials
     )
     
@@ -36,11 +36,11 @@ class AuthService {
   }
 
   async logout(): Promise<void> {
-    await httpClient.post('/logout')
+    await httpClient.post(`${this.basePath}/logout`)
   }
 
   async getCurrentUser(): Promise<User> {
-    const response = await httpClient.get<ApiResponse<User>>('/me')
+    const response = await httpClient.get<ApiResponse<User>>(`${this.basePath}/me`)
     return response.data.data!
   }
 

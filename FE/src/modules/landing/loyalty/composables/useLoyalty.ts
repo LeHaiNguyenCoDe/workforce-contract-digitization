@@ -31,7 +31,7 @@ export function useLoyalty() {
   async function loadLoyaltyInfo() {
     isLoading.value = true
     try {
-      const response = await httpClient.get('/frontend/loyalty')
+      const response = await httpClient.get('/loyalty')
       const data = response.data as any
       
       if (data?.data) {
@@ -48,7 +48,7 @@ export function useLoyalty() {
 
   async function loadHistory() {
     try {
-      const response = await httpClient.get('/frontend/loyalty/history')
+      const response = await httpClient.get('/loyalty/history')
       const data = response.data as any
       
       if (data?.data?.data) {

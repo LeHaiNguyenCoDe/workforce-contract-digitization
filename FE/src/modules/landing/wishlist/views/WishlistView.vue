@@ -31,7 +31,7 @@ const formatPrice = (price: number) => {
 const fetchWishlist = async () => {
     isLoading.value = true
     try {
-        const response = await httpClient.get('/frontend/wishlist')
+        const response = await httpClient.get('/wishlist')
         const data = response.data as any
         // Update store with fetched data
         if (data?.data?.data) {
@@ -52,7 +52,7 @@ const removeItem = async (id: number) => {
     
     removingIds.value.add(id)
     try {
-        await httpClient.delete(`/frontend/wishlist/${id}`)
+        await httpClient.delete(`/wishlist/${id}`)
         removeFromWishlist(id)
     } catch (error) {
         console.error('Failed to remove from wishlist:', error)

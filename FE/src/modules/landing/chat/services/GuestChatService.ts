@@ -46,7 +46,7 @@ export interface IGuestSessionResponse {
   conversation_id: number
 }
 
-const API_BASE = '/frontend/guest-chat'
+const API_BASE = '/guest-chat'
 
 export const GuestChatService = {
   /**

@@ -21,7 +21,7 @@ export const useWishlistStore = defineStore('landing-wishlist', () => {
   async function fetchWishlist() {
     isLoading.value = true
     try {
-      const response = await httpClient.get<any>('/frontend/wishlist')
+      const response = await httpClient.get<any>('/wishlist')
       const data = response.data as any
       items.value = Array.isArray(data?.data) ? data.data : []
     } catch (error) {
@@ -33,7 +33,7 @@ export const useWishlistStore = defineStore('landing-wishlist', () => {
 
   async function addToWishlist(productId: number): Promise<boolean> {
     try {
-      await httpClient.post('/frontend/wishlist', { product_id: productId })
+      await httpClient.post('/wishlist', { product_id: productId })
       await fetchWishlist()
       return true
     } catch (error) {
@@ -44,7 +44,7 @@ export const useWishlistStore = defineStore('landing-wishlist', () => {
 
   async function removeFromWishlist(productId: number): Promise<boolean> {
     try {
-      await httpClient.delete(`/frontend/wishlist/${productId}`)
+      await httpClient.delete(`/wishlist/${productId}`)
       items.value = items.value.filter(i => i.product_id !== productId)
       return true
     } catch (error) {

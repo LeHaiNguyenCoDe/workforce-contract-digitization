@@ -26,7 +26,7 @@ export const useCartStore = defineStore('landing-cart', () => {
   async function fetchCart() {
     isLoading.value = true
     try {
-      const response = await httpClient.get<any>('/frontend/cart')
+      const response = await httpClient.get<any>('/cart')
       const data = response.data as any
       
       if (data?.data?.items) {
@@ -46,7 +46,7 @@ export const useCartStore = defineStore('landing-cart', () => {
   async function addToCart(payload: AddToCartPayload): Promise<boolean> {
     isLoading.value = true
     try {
-      await httpClient.post('/frontend/cart', payload)
+      await httpClient.post('/cart', payload)
       await fetchCart()
       return true
     } catch (error) {
@@ -59,7 +59,7 @@ export const useCartStore = defineStore('landing-cart', () => {
 
   async function updateCartItem(itemId: number, payload: UpdateCartPayload): Promise<boolean> {
     try {
-      await httpClient.put(`/frontend/cart/${itemId}`, payload)
+      await httpClient.put(`/cart/${itemId}`, payload)
       await fetchCart()
       return true
     } catch (error) {
@@ -70,7 +70,7 @@ export const useCartStore = defineStore('landing-cart', () => {
 
   async function removeFromCart(itemId: number): Promise<boolean> {
     try {
-      await httpClient.delete(`/frontend/cart/${itemId}`)
+      await httpClient.delete(`/cart/${itemId}`)
       items.value = items.value.filter(item => item.id !== itemId)
       return true
     } catch (error) {
@@ -81,7 +81,7 @@ export const useCartStore = defineStore('landing-cart', () => {
 
   async function clearCart(): Promise<boolean> {
     try {
-      await httpClient.delete('/frontend/cart')
+      await httpClient.delete('/cart')
       items.value = []
       return true
     } catch (error) {

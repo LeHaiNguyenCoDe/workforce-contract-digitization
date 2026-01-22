@@ -66,7 +66,7 @@ function getPaymentMethodLabel(method: string) {
 async function fetchOrder() {
     isLoading.value = true
     try {
-        const response = await httpClient.get(`/frontend/orders/${route.params.id}`)
+        const response = await httpClient.get(`/orders/${route.params.id}`)
         const data = response.data as any
         order.value = data?.data || data
     } catch (error) {

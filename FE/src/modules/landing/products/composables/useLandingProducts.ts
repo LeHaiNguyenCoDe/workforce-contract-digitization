@@ -114,7 +114,7 @@ export function useLandingProducts() {
         queryParams.sort_by = 'latest' // Fallback for now
       }
 
-      const response = await httpClient.get('/frontend/products', { params: queryParams })
+      const response = await httpClient.get('/products', { params: queryParams })
       const data = response.data as any
 
       if (data?.data?.items && Array.isArray(data.data.items)) {
@@ -141,7 +141,7 @@ export function useLandingProducts() {
 
   async function fetchCategories() {
     try {
-      const response = await httpClient.get('/frontend/categories', { params: { per_page: 50, is_active: 1 } })
+      const response = await httpClient.get('/categories', { params: { per_page: 50, is_active: 1 } })
       const data = response.data as any
       categories.value = Array.isArray(data?.data) ? data.data : []
     } catch (error) {

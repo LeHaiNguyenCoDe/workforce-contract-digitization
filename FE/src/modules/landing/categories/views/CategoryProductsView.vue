@@ -36,12 +36,12 @@ const fetchCategoryAndProducts = async () => {
 
     try {
         // Fetch category info
-        const catResponse = await httpClient.get(`/frontend/categories/${categoryId}`)
+        const catResponse = await httpClient.get(`/categories/${categoryId}`)
         const catData = catResponse.data as any
         category.value = catData?.data || catData
 
         // Fetch products in category
-        const productsResponse = await httpClient.get('/frontend/products', {
+        const productsResponse = await httpClient.get('/products', {
             params: { category_id: categoryId, page: currentPage.value, per_page: 12 }
         })
         const productsData = productsResponse.data as any
