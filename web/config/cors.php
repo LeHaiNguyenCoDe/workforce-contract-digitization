@@ -17,7 +17,7 @@ return [
 
     'paths' => ['api/*', 'api/v1/*', 'sanctum/csrf-cookie', 'broadcasting/auth'],
 
-    'allowed_methods' => ['*'],
+    'allowed_methods' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
 
     'allowed_origins' => array_filter([
         'http://localhost:3000',
@@ -35,7 +35,15 @@ return [
         '/^http:\/\/192\.168\.\d+\.\d+(:\d+)?$/',
     ] : [],
 
-    'allowed_headers' => ['*'],
+    'allowed_headers' => [
+        'Content-Type',
+        'Accept',
+        'Accept-Language',
+        'Authorization',
+        'X-Requested-With',
+        'X-XSRF-TOKEN',
+        'X-CSRF-TOKEN',
+    ],
 
     'exposed_headers' => [],
 

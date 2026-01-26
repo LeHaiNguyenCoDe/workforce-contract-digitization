@@ -13,19 +13,19 @@
                     </svg>
                 </button>
                 <div class="relative flex-shrink-0">
-                    <img v-if="getAvatar()" :src="getAvatar() || undefined" :alt="getName()"
+                    <img v-if="conversationAvatar" :src="conversationAvatar || undefined" :alt="conversationName"
                         class="w-10 h-10 rounded-full object-cover" />
                     <div v-else
-                        :class="['w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-medium', getAvatarColor()]">
-                        {{ getInitials(getName()) }}
+                        :class="['w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-medium', conversationAvatarColor]">
+                        {{ conversationInitials }}
                     </div>
                     <div v-if="isUserOnline"
                         class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
                 </div>
                 <div class="min-w-0">
-                    <h3 class="text-sm font-semibold text-gray-800 truncate">{{ getName() }}</h3>
-                    <p v-if="typingUsers.length > 0" class="text-xs text-teal-500 animate-pulse">
-                        {{ getTypingText() }}
+                    <h3 class="text-sm font-semibold text-gray-800 truncate">{{ conversationName }}</h3>
+                    <p v-if="isTyping" class="text-xs text-teal-500 animate-pulse">
+                        {{ typingText }}
                     </p>
                     <p v-else class="text-xs text-gray-400">
                         {{ isGuestChat ? 'Khách hàng' : (isUserOnline ? t('common.chat.online') : (conversation.type ===
@@ -159,7 +159,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick } from 'vue'
+import { ref, computed, watch, nextTick, toRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { IConversation, IMessage } from '../models/Chat'
 import MessageBubble from './MessageBubble.vue'
@@ -168,6 +168,7 @@ import StaffAssignmentModal from './StaffAssignmentModal.vue'
 
 import { useAuthStore } from '@/stores/auth'
 import { useChatStore } from '../stores/chatStore'
+import { useConversationInfo, useTypingIndicator } from '../composables/useConversationInfo'
 
 const props = defineProps<{
     conversation: IConversation
@@ -194,24 +195,26 @@ const { t } = useI18n()
 const authStore = useAuthStore()
 const chatStore = useChatStore()
 
-const avatarColors = ['bg-teal-500', 'bg-blue-500', 'bg-purple-500', 'bg-pink-500', 'bg-orange-500']
+// Use shared conversation info composable
+const conversationRef = toRef(props, 'conversation')
+const {
+    name: conversationName,
+    avatar: conversationAvatar,
+    initials: conversationInitials,
+    avatarColor: conversationAvatarColor,
+    isOnline: isUserOnline,
+    isGuestChat
+} = useConversationInfo(conversationRef as any)
+
+// Use typing indicator composable
+const typingUsersRef = toRef(props, 'typingUsers')
+const { typingText, isTyping } = useTypingIndicator(typingUsersRef)
 
 const messagesContainer = ref<HTMLElement>()
 const replyToMessage = ref<IMessage | null>(null)
 
 const currentUserId = computed(() => {
     return authStore.user?.id || 0
-})
-
-const isUserOnline = computed(() => {
-    if (props.conversation.type === 'private' && props.conversation.users?.length === 1) {
-        return props.conversation.users[0].is_online || false
-    }
-    return false
-})
-
-const isGuestChat = computed(() => {
-    return !!props.conversation.is_guest
 })
 
 const canAssign = computed(() => {
@@ -238,35 +241,6 @@ async function onStaffSelected(userId: number) {
     } catch (error) {
         console.error('Failed to assign staff:', error)
     }
-}
-
-function getName(): string {
-    if (props.conversation.name) return props.conversation.name
-    if (!props.conversation.users || props.conversation.users.length === 0) return t('common.chat.no_name')
-    if (props.conversation.users.length === 1) return props.conversation.users[0].name
-    return props.conversation.users.map(u => u.name.split(' ')[0]).join(', ')
-}
-
-function getAvatar(): string | null {
-    if (props.conversation.avatar) return props.conversation.avatar
-    if (props.conversation.type === 'private' && props.conversation.users?.length === 1) {
-        return props.conversation.users[0].avatar || null
-    }
-    return null
-}
-
-function getAvatarColor(): string {
-    return avatarColors[props.conversation.id % avatarColors.length]
-}
-
-function getInitials(name: string): string {
-    return name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase()
-}
-
-function getTypingText(): string {
-    if (props.typingUsers.length === 1) return `${props.typingUsers[0]} ${t('common.chat.is_typing')}`
-    if (props.typingUsers.length === 2) return `${props.typingUsers.join(' & ')} ${t('common.chat.are_typing')}`
-    return t('common.chat.several_typing')
 }
 
 function shouldShowDate(index: number): boolean {

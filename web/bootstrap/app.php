@@ -21,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
             \Illuminate\Session\Middleware\StartSession::class,
             \App\Http\Middleware\SetLocale::class,
+            \App\Http\Middleware\AuditLogger::class,
         ]);
 
         // Add security headers to all responses
@@ -30,11 +31,14 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
             'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
+            'sanitize' => \App\Http\Middleware\SanitizeInput::class,
         ]);
 
-        // Exclude API routes from CSRF verification
+        // CSRF Protection: Only exclude truly stateless endpoints
+        // Sanctum handles CSRF for stateful requests via EnsureFrontendRequestsAreStateful
         $middleware->validateCsrfTokens(except: [
-            'api/*',
+            'api/v1/frontend/guest-chat/*',  // Stateless guest chat only
+            'sanctum/csrf-cookie',            // CSRF cookie endpoint itself
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
@@ -116,12 +120,22 @@ return Application::configure(basePath: dirname(__DIR__))
                 }
 
                 // Return error response for all other exceptions
+                // SECURITY: Never expose debug info in production
                 return response()->json([
                     'status' => 'error',
-                    'message' => config('app.debug') ? $e->getMessage() : 'Internal server error',
-                    'exception' => config('app.debug') ? get_class($e) : null,
-                    'file' => config('app.debug') ? $e->getFile() : null,
-                    'line' => config('app.debug') ? $e->getLine() : null,
+                    'message' => (config('app.debug') && config('app.env') !== 'production')
+                        ? $e->getMessage()
+                        : 'Internal server error',
+                    'exception' => (config('app.debug') && config('app.env') !== 'production')
+                        ? get_class($e)
+                        : null,
+                    'file' => (config('app.debug') && config('app.env') !== 'production')
+                        ? $e->getFile()
+                        : null,
+                    'line' => (config('app.debug') && config('app.env') !== 'production')
+                        ? $e->getLine()
+                        : null,
+                    'trace_id' => \Illuminate\Support\Str::uuid()->toString(), // For support debugging
                 ], 500);
             }
         });

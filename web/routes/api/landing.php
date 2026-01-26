@@ -21,8 +21,8 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-// Guest Chat (Public - no auth required)
-Route::prefix('guest-chat')->group(function () {
+// Guest Chat (Public - no auth required, rate limited to prevent spam)
+Route::prefix('guest-chat')->middleware(['throttle:guest-chat'])->group(function () {
     Route::post('session', [GuestChatController::class, 'startSession']);
     Route::get('{sessionToken}/info', [GuestChatController::class, 'getSessionInfo']);
     Route::get('{sessionToken}/messages', [GuestChatController::class, 'getMessages']);
@@ -55,11 +55,13 @@ Route::get('articles/{article}', [ArticleController::class, 'show']);
 Route::get('promotions', [PromotionController::class, 'index']);
 Route::get('promotions/{promotion}', [PromotionController::class, 'show']);
 
-// Cart (Session-based, no login required)
-Route::get('cart', [CartController::class, 'show']);
-Route::post('cart/items', [CartController::class, 'addItem']);
-Route::put('cart/items/{item}', [CartController::class, 'updateItem']);
-Route::delete('cart/items/{item}', [CartController::class, 'removeItem']);
+// Cart (Session-based, no login required, rate limited)
+Route::middleware(['throttle:cart'])->group(function () {
+    Route::get('cart', [CartController::class, 'show']);
+    Route::post('cart/items', [CartController::class, 'addItem']);
+    Route::put('cart/items/{item}', [CartController::class, 'updateItem']);
+    Route::delete('cart/items/{item}', [CartController::class, 'removeItem']);
+});
 
 // Register
 Route::post('register', [UserController::class, 'store']);
@@ -76,7 +78,7 @@ Route::middleware([Authenticate::class])->group(function () {
 
     // Orders (Customer)
     Route::get('orders', [OrderController::class, 'index']);
-    Route::post('orders', [OrderController::class, 'store']);
+    Route::post('orders', [OrderController::class, 'store'])->middleware('throttle:order-create'); // Rate limit order creation
     Route::get('orders/{order}', [OrderController::class, 'show']);
 
     // Wishlist

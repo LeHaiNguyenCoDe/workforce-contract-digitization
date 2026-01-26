@@ -38,17 +38,25 @@ class SecurityHeaders
         $response->headers->remove('X-Powered-By');
         $response->headers->remove('Server');
 
-        // Content Security Policy
+        // Content Security Policy with nonce-based protection
+        $nonce = \App\Helpers\CspNonceHelper::generate();
+
         $csp = "default-src 'self'; " .
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " .
-            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " .
+            "script-src 'self' 'nonce-{$nonce}'; " .
+            "style-src 'self' 'nonce-{$nonce}' https://fonts.googleapis.com; " .
             "img-src 'self' data: https: *.giphy.com; " .
             "font-src 'self' data: https://fonts.gstatic.com; " .
             "connect-src 'self' ws: wss: https://api.giphy.com; " .
             "media-src 'self' blob:; " .
-            "frame-src 'self';";
+            "frame-src 'self'; " .
+            "object-src 'none'; " .
+            "base-uri 'self'; " .
+            "form-action 'self';";
 
         $response->headers->set('Content-Security-Policy', $csp);
+
+        // Store nonce in request for frontend use
+        $request->attributes->set('csp-nonce', $nonce);
 
         // HSTS - Only enable in production with HTTPS
         if (config('app.env') === 'production' && $request->secure()) {

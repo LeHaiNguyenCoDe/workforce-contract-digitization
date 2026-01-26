@@ -81,6 +81,9 @@ export const useAuthStore = defineStore('auth', () => {
       user.value = null
       cartCount.value = 0
       isInitialized.value = true
+
+      // Dispatch event for other stores to reset
+      window.dispatchEvent(new CustomEvent('auth:logout'))
     }
   }
 

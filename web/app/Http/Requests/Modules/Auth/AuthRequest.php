@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Modules\Auth;
 
+use App\Rules\SecurePassword;
 use Illuminate\Foundation\Http\FormRequest;
 
 class AuthRequest extends FormRequest
@@ -60,7 +61,7 @@ class AuthRequest extends FormRequest
         return [
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => ['required', 'string', 'confirmed', new SecurePassword()],
             'password_confirmation' => 'required|string',
         ];
     }

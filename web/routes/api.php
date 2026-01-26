@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\Authenticate;
+use App\Http\Middleware\DeprecatedRoutes;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -16,11 +17,11 @@ $v1Groups = [
     'landing.php' => ['prefix' => 'frontend', 'middleware' => []],
     'admin.php' => [
         'prefix' => 'admin',
-        'middleware' => [Authenticate::class, AdminMiddleware::class]
+        'middleware' => [Authenticate::class, AdminMiddleware::class, 'throttle:admin']
     ],
     'chat.php' => [
         'prefix' => '',
-        'middleware' => [Authenticate::class]
+        'middleware' => [Authenticate::class, 'throttle:chat']
     ],
 ];
 
@@ -34,67 +35,25 @@ Route::prefix('v1')->group(function () use ($v1Groups) {
         }
     }
 
-    // Custom broadcasting auth route (keep inside v1 group)
+    // Broadcasting authentication route - moved to dedicated controller
     Route::middleware([Authenticate::class])->group(function () {
-        Route::post('broadcasting/auth', function (\Illuminate\Http\Request $request) {
-            // ... (keep the existing logic for broadcasting auth)
-            $user = $request->user();
-            $channelName = $request->channel_name;
-
-            if (!$user) {
-                return response()->json(['message' => 'Unauthenticated'], 401);
-            }
-
-            $normalizedName = $channelName;
-            $isPresence = false;
-            if (str_starts_with($channelName, 'private-')) {
-                $normalizedName = substr($channelName, 8);
-            } elseif (str_starts_with($channelName, 'presence-')) {
-                $normalizedName = substr($channelName, 9);
-                $isPresence = true;
-            }
-
-            $authorized = false;
-            $presenceData = null;
-
-            if (preg_match('/^user\.(\d+)$/', $normalizedName, $matches)) {
-                if ((int) $user->id === (int) $matches[1]) { $authorized = true; }
-            } elseif (preg_match('/^conversation\.(\d+)$/', $normalizedName, $matches)) {
-                $authorized = \DB::table('conversation_user')->where('conversation_id', (int)$matches[1])->where('user_id', $user->id)->exists();
-            } elseif (preg_match('/^presence\.conversation\.(\d+)$/', $normalizedName, $matches)) {
-                $authorized = \DB::table('conversation_user')->where('conversation_id', (int)$matches[1])->where('user_id', $user->id)->exists();
-                if ($authorized) { $presenceData = ['id' => $user->id, 'name' => $user->name, 'avatar' => $user->avatar]; }
-            } elseif ($normalizedName === 'admin.guest-chats') {
-                $adminRoles = ['admin', 'manager', 'super_admin'];
-                $authorized = in_array($user->role, $adminRoles);
-            }
-
-            if ($authorized) {
-                $socketId = $request->socket_id;
-                $appKey = config('broadcasting.connections.reverb.key');
-                $appSecret = config('broadcasting.connections.reverb.secret');
-                $stringToSign = $socketId . ':' . $channelName;
-                if ($isPresence && $presenceData) {
-                    $channelData = json_encode(['user_id' => (string)$presenceData['id'], 'user_info' => $presenceData]);
-                    $stringToSign .= ':' . $channelData;
-                }
-                $signature = hash_hmac('sha256', $stringToSign, $appSecret);
-                $response = ['auth' => $appKey . ':' . $signature];
-                if ($isPresence && $presenceData) { $response['channel_data'] = $channelData; }
-                return response()->json($response);
-            }
-
-            return response()->json(['message' => 'Forbidden'], 403);
-        });
+        Route::post('broadcasting/auth', [\App\Http\Controllers\BroadcastingController::class, 'authenticate']);
     });
 });
 
 /*
 |--------------------------------------------------------------------------
-| BACKWARD COMPATIBILITY (Legacy Routes)
+| BACKWARD COMPATIBILITY (Legacy Routes) - DEPRECATED
+|--------------------------------------------------------------------------
+| These routes are deprecated and will be removed after 90 days.
+| Please migrate to the new modular structure:
+|   - Use /api/v1/frontend/* for landing routes
+|   - Use /api/v1/admin/* for admin routes
+|
+| TODO: Remove after [2026-04-26] (90 days from 2026-01-26)
 |--------------------------------------------------------------------------
 */
-Route::prefix('v1')->group(function () {
+Route::prefix('v1')->middleware([DeprecatedRoutes::class])->group(function () {
     require __DIR__ . '/api/landing.php';
 
     Route::middleware([Authenticate::class, AdminMiddleware::class])->group(function () {

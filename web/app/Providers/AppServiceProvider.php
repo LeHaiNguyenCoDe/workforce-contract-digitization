@@ -115,5 +115,49 @@ class AppServiceProvider extends ServiceProvider
         \Illuminate\Support\Facades\RateLimiter::for('api', function ($request) {
             return \Illuminate\Cache\RateLimiting\Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
+
+        // Admin operations - more permissive for staff
+        \Illuminate\Support\Facades\RateLimiter::for('admin', function ($request) {
+            return \Illuminate\Cache\RateLimiting\Limit::perMinute(120)->by($request->user()?->id ?: $request->ip());
+        });
+
+        // Sensitive admin operations (delete, bulk operations)
+        \Illuminate\Support\Facades\RateLimiter::for('admin-sensitive', function ($request) {
+            return \Illuminate\Cache\RateLimiting\Limit::perMinute(30)->by($request->user()?->id ?: $request->ip());
+        });
+
+        // Cart operations
+        \Illuminate\Support\Facades\RateLimiter::for('cart', function ($request) {
+            return \Illuminate\Cache\RateLimiting\Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
+        });
+
+        // Order creation (prevent spam orders)
+        \Illuminate\Support\Facades\RateLimiter::for('order-create', function ($request) {
+            return \Illuminate\Cache\RateLimiting\Limit::perMinute(10)->by($request->user()?->id ?: $request->ip());
+        });
+
+        // Chat/messaging
+        \Illuminate\Support\Facades\RateLimiter::for('chat', function ($request) {
+            return \Illuminate\Cache\RateLimiting\Limit::perMinute(100)->by($request->user()?->id ?: $request->ip());
+        });
+
+        // Guest chat (more restrictive)
+        \Illuminate\Support\Facades\RateLimiter::for('guest-chat', function ($request) {
+            return \Illuminate\Cache\RateLimiting\Limit::perMinute(20)->by($request->ip());
+        });
+
+        // File uploads
+        \Illuminate\Support\Facades\RateLimiter::for('upload', function ($request) {
+            return \Illuminate\Cache\RateLimiting\Limit::perMinute(20)->by($request->user()?->id ?: $request->ip());
+        });
+
+        // Configure global pagination defaults
+        $this->app->bind('pagination.default_per_page', function () {
+            return 15;
+        });
+
+        $this->app->bind('pagination.max_per_page', function () {
+            return 100;
+        });
     }
 }

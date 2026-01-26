@@ -1,10 +1,15 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, onUnmounted } from 'vue'
 import type { IConversation, IMessage } from '../models/Chat'
 import { ChatService } from '../services/ChatService'
 import { GuestChatService } from '@/modules/landing/chat/services/GuestChatService'
 
 export const useChatStore = defineStore('chat', () => {
+  // Listen for logout events to reset store
+  const logoutHandler = () => {
+    $reset()
+  }
+  window.addEventListener('auth:logout', logoutHandler)
   // State
   const conversations = ref<IConversation[]>([])
   const currentConversation = ref<IConversation | null>(null)

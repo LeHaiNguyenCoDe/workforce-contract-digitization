@@ -222,10 +222,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { toRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { IConversation } from '../models/Chat'
 import CollapsibleSection from './CollapsibleSection.vue'
+import { useConversationInfo } from '../composables/useConversationInfo'
 
 const props = defineProps<{
     conversation: IConversation
@@ -237,38 +238,13 @@ defineEmits<{
 
 const { t } = useI18n()
 
-const name = computed(() => {
-    if (props.conversation.name) return props.conversation.name
-    if (props.conversation.type === 'private' && props.conversation.users?.length === 1) {
-        return props.conversation.users[0].name
-    }
-    return t('common.chat.no_name')
-})
-
-const avatar = computed(() => {
-    if (props.conversation.avatar) return props.conversation.avatar
-    if (props.conversation.type === 'private' && props.conversation.users?.length === 1) {
-        return props.conversation.users[0].avatar || null
-    }
-    return null
-})
-
-const status = computed(() => {
-    if (props.conversation.type === 'private' && props.conversation.users?.length === 1) {
-        return props.conversation.users[0].is_online ? t('common.chat.online') : t('common.chat.offline')
-    }
-    if (props.conversation.type === 'group') {
-        return `${props.conversation.users?.length || 0} ${t('common.chat.members')}`
-    }
-    return ''
-})
-
-const initials = computed(() => {
-    return name.value.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase()
-})
-
-const avatarColors = ['bg-teal-500', 'bg-blue-500', 'bg-purple-500', 'bg-pink-500', 'bg-orange-500']
-const avatarColor = computed(() => {
-    return avatarColors[props.conversation.id % avatarColors.length]
-})
+// Use shared conversation info composable - eliminates duplicate code
+const conversationRef = toRef(props, 'conversation')
+const {
+    name,
+    avatar,
+    initials,
+    avatarColor,
+    status
+} = useConversationInfo(conversationRef as any)
 </script>
