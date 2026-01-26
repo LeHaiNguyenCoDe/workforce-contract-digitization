@@ -15,7 +15,10 @@ export const useLayoutStore = defineStore('layout', {
     preloader: 'disable',
     visibility: 'show',
     layoutTheme: 'default',
-    themeColor: 'default'
+    themeColor: 'default',
+    isMarketplaceSidebarOpen: false,
+    isMarketplaceCartOpen: false,
+    isMarketplaceUserOpen: false
   }),
   actions: {
     changeLayoutType(layoutType: string) {
@@ -60,6 +63,15 @@ export const useLayoutStore = defineStore('layout', {
     },
     changeThemesColor(themeColor: string) {
       this.themeColor = themeColor;
+    },
+    toggleMarketplaceSidebar() {
+      this.isMarketplaceSidebarOpen = !this.isMarketplaceSidebarOpen;
+    },
+    toggleMarketplaceCart() {
+      this.isMarketplaceCartOpen = !this.isMarketplaceCartOpen;
+    },
+    toggleMarketplaceUser() {
+      this.isMarketplaceUserOpen = !this.isMarketplaceUserOpen;
     }
   }
 });

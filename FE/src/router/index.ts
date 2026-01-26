@@ -17,6 +17,44 @@ const routes: RouteRecordRaw[] = [
       }
     ]
   },
+  
+  // Marketplace Module - Independent Layout
+  {
+    path: '/marketplace',
+    component: () => import('@/layouts/marketplace/MarketplaceLayout.vue'),
+    children: [
+      {
+        path: '',
+        name: 'marketplace',
+        component: () => import('@/modules/marketplace/views/index.vue'),
+        meta: { title: 'Marketplace' }
+      },
+      {
+        path: 'shop',
+        name: 'marketplace-shop',
+        component: () => import('@/modules/marketplace/views/ShopPage.vue'),
+        meta: { title: 'Marketplace - Shop' }
+      },
+      {
+        path: 'cart',
+        name: 'marketplace-cart',
+        component: () => import('@/modules/marketplace/views/CartPage.vue'),
+        meta: { title: 'Marketplace - Cart' }
+      },
+      {
+        path: 'checkout',
+        name: 'marketplace-checkout',
+        component: () => import('@/modules/marketplace/views/CheckoutPage.vue'),
+        meta: { title: 'Marketplace - Checkout' }
+      },
+      {
+        path: 'product/:id',
+        name: 'marketplace-product',
+        component: () => import('@/modules/marketplace/views/ProductDetailPage.vue'),
+        meta: { title: 'Marketplace - Product' }
+      }
+    ]
+  },
 
   // Landing (Frontend) routes
   {

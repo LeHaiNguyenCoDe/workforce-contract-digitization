@@ -10,6 +10,7 @@
 @use 'modals' as *;
 @use 'checkout' as *;
 @use 'articles' as *;
+@use 'marketplace' as *;
 
 // Files that use variables (they import variables themselves)
 @use 'base' as *;
