@@ -1,0 +1,14 @@
+{
+  "home": "Beranda",
+  "products": "Produk",
+  "categories": "Kategori",
+  "articles": "Artikel",
+  "promotions": "Promo",
+  "cart": "Keranjang",
+  "wishlist": "Favorit",
+  "orders": "Pesanan",
+  "profile": "Akun",
+  "login": "Masuk",
+  "register": "Daftar",
+  "logout": "Keluar"
+}

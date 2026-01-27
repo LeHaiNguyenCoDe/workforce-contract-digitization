@@ -1,0 +1,14 @@
+{
+  "home": "홈",
+  "products": "상품",
+  "categories": "카테고리",
+  "articles": "기사",
+  "promotions": "프로모션",
+  "cart": "장바구니",
+  "wishlist": "위시리스트",
+  "orders": "주문",
+  "profile": "계정",
+  "login": "로그인",
+  "register": "회원가입",
+  "logout": "로그아웃"
+}

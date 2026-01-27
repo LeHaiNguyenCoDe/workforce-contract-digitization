@@ -1,0 +1,9 @@
+{
+  "required": "この項目は必須です",
+  "email": "有効なメールアドレスを入力してください",
+  "minLength": "{min}文字以上で入力してください",
+  "maxLength": "{max}文字以内で入力してください",
+  "passwordMismatch": "パスワードが一致しません",
+  "passwordWeak": "パスワードには文字、数字、特殊文字を含める必要があります",
+  "loginFailed": "ログインに失敗しました"
+}

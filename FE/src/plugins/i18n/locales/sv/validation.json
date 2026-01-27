@@ -1,0 +1,9 @@
+{
+  "required": "Detta fält är obligatoriskt",
+  "email": "Ogiltig e-postadress",
+  "minLength": "Minst {min} tecken",
+  "maxLength": "Högst {max} tecken",
+  "passwordMismatch": "Lösenorden matchar inte",
+  "passwordWeak": "Lösenordet måste innehålla bokstäver, siffror och specialtecken",
+  "loginFailed": "Inloggningen misslyckades"
+}

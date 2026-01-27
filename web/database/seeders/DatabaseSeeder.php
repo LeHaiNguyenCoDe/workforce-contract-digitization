@@ -29,58 +29,61 @@ class DatabaseSeeder extends Seeder
             CategorySeeder::class,
         ]);
 
-        // Seed products (requires categories)
+        // Seed expense categories (for finance module)
+        $this->call([
+            ExpenseCategorySeeder::class,
+        ]);
+
+        // Seed suppliers (NEW)
+        $this->call([
+            SupplierSeeder::class,
+        ]);
+
+        // Seed products (requires categories and suppliers)
         $this->call([
             ProductSeeder::class,
         ]);
 
-        // Seed reviews (requires products and users)
-        $this->call([
-            ReviewSeeder::class,
-        ]);
-
-        // Seed articles
-        $this->call([
-            ArticleSeeder::class,
-        ]);
-
-        // Seed orders (requires users and products)
-        $this->call([
-            OrderSeeder::class,
-        ]);
-
-        // Seed wishlist (requires users and products)
-        $this->call([
-            WishlistSeeder::class,
-        ]);
-
-        // Seed promotions (requires products and categories)
-        $this->call([
-            PromotionSeeder::class,
-        ]);
-
-        // Seed warehouses and stocks (requires products)
+        // Seed warehouses (requires products)
         $this->call([
             WarehouseSeeder::class,
         ]);
 
-        // Seed loyalty (requires users and orders)
+        // Seed inbound batches (NEW)
         $this->call([
+            InboundBatchSeeder::class,
+        ]);
+
+        // Seed stock data (NEW)
+        $this->call([
+            StockDataSeeder::class,
+        ]);
+
+        // Seed warehouse details (QC, Stocktake, Transfers)
+        $this->call([
+            WarehouseDetailSeeder::class,
+        ]);
+
+        // Seed finance (Transactions, Debt, Expenses)
+        $this->call([
+            FinanceSeeder::class,
+        ]);
+
+        // Seed funds (NEW)
+        $this->call([
+            FundSeeder::class,
+        ]);
+
+        // Seed other modules...
+        $this->call([
+            ReviewSeeder::class,
+            ArticleSeeder::class,
+            OrderSeeder::class,
+            WishlistSeeder::class,
+            PromotionSeeder::class,
             LoyaltySeeder::class,
-        ]);
-
-        // Seed payments (requires orders)
-        $this->call([
             PaymentSeeder::class,
-        ]);
-
-        // Seed shipments (requires orders)
-        $this->call([
             ShipmentSeeder::class,
-        ]);
-
-        // Seed carts (requires users and products)
-        $this->call([
             CartSeeder::class,
         ]);
     }

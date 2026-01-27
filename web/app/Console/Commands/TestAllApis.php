@@ -55,13 +55,13 @@ class TestAllApis extends Command
     private function testFrontendPublic($baseUrl, &$results)
     {
         $endpoints = [
-            'GET /api/v1/frontend/language' => '/api/v1/frontend/language',
-            'GET /api/v1/frontend/language/supported' => '/api/v1/frontend/language/supported',
-            'GET /api/v1/frontend/categories' => '/api/v1/frontend/categories',
-            'GET /api/v1/frontend/products' => '/api/v1/frontend/products',
-            'GET /api/v1/frontend/articles' => '/api/v1/frontend/articles',
-            'GET /api/v1/frontend/promotions' => '/api/v1/frontend/promotions',
-            'GET /api/v1/frontend/cart' => '/api/v1/frontend/cart',
+            'GET /api/v1/language' => '/api/v1/language',
+            'GET /api/v1/language/supported' => '/api/v1/language/supported',
+            'GET /api/v1/categories' => '/api/v1/categories',
+            'GET /api/v1/products' => '/api/v1/products',
+            'GET /api/v1/articles' => '/api/v1/articles',
+            'GET /api/v1/promotions' => '/api/v1/promotions',
+            'GET /api/v1/cart' => '/api/v1/cart',
         ];
 
         foreach ($endpoints as $name => $endpoint) {
@@ -84,25 +84,25 @@ class TestAllApis extends Command
     private function testFrontendAuth($baseUrl, &$results)
     {
         try {
-            $response = Http::timeout(5)->post($baseUrl . '/api/v1/frontend/login', [
+            $response = Http::timeout(5)->post($baseUrl . '/api/v1/login', [
                 'email' => 'customer1@example.com',
                 'password' => 'password123',
             ]);
 
             if ($response->successful()) {
-                $results['passed'][] = 'POST /api/v1/frontend/login';
-                $this->info("  ✓ POST /api/v1/frontend/login");
+                $results['passed'][] = 'POST /api/v1/login';
+                $this->info("  ✓ POST /api/v1/login");
                 
                 // Extract session cookie
                 $cookies = $response->cookies();
                 return $cookies['laravel_session'] ?? null;
             } else {
-                $results['failed']['POST /api/v1/frontend/login'] = "Status: {$response->status()}";
-                $this->error("  ✗ POST /api/v1/frontend/login - Status: {$response->status()}");
+                $results['failed']['POST /api/v1/login'] = "Status: {$response->status()}";
+                $this->error("  ✗ POST /api/v1/login - Status: {$response->status()}");
             }
         } catch (\Exception $e) {
-            $results['failed']['POST /api/v1/frontend/login'] = $e->getMessage();
-            $this->error("  ✗ POST /api/v1/frontend/login - {$e->getMessage()}");
+            $results['failed']['POST /api/v1/login'] = $e->getMessage();
+            $this->error("  ✗ POST /api/v1/login - {$e->getMessage()}");
         }
 
         return null;
@@ -111,11 +111,11 @@ class TestAllApis extends Command
     private function testFrontendAuthenticated($baseUrl, $cookie, &$results)
     {
         $endpoints = [
-            'GET /api/v1/frontend/me' => '/api/v1/frontend/me',
-            'GET /api/v1/frontend/profile' => '/api/v1/frontend/profile',
-            'GET /api/v1/frontend/orders' => '/api/v1/frontend/orders',
-            'GET /api/v1/frontend/wishlist' => '/api/v1/frontend/wishlist',
-            'GET /api/v1/frontend/loyalty' => '/api/v1/frontend/loyalty',
+            'GET /api/v1/me' => '/api/v1/me',
+            'GET /api/v1/profile' => '/api/v1/profile',
+            'GET /api/v1/orders' => '/api/v1/orders',
+            'GET /api/v1/wishlist' => '/api/v1/wishlist',
+            'GET /api/v1/loyalty' => '/api/v1/loyalty',
         ];
 
         foreach ($endpoints as $name => $endpoint) {
@@ -141,24 +141,24 @@ class TestAllApis extends Command
     private function testAdminAuth($baseUrl, &$results)
     {
         try {
-            $response = Http::timeout(5)->post($baseUrl . '/api/v1/frontend/login', [
+            $response = Http::timeout(5)->post($baseUrl . '/api/v1/login', [
                 'email' => 'admin@example.com',
                 'password' => 'password123',
             ]);
 
             if ($response->successful()) {
-                $results['passed'][] = 'POST /api/v1/frontend/login (admin)';
-                $this->info("  ✓ POST /api/v1/frontend/login (admin)");
+                $results['passed'][] = 'POST /api/v1/login (admin)';
+                $this->info("  ✓ POST /api/v1/login (admin)");
                 
                 $cookies = $response->cookies();
                 return $cookies['laravel_session'] ?? null;
             } else {
-                $results['failed']['POST /api/v1/frontend/login (admin)'] = "Status: {$response->status()}";
-                $this->error("  ✗ POST /api/v1/frontend/login (admin) - Status: {$response->status()}");
+                $results['failed']['POST /api/v1/login (admin)'] = "Status: {$response->status()}";
+                $this->error("  ✗ POST /api/v1/login (admin) - Status: {$response->status()}");
             }
         } catch (\Exception $e) {
-            $results['failed']['POST /api/v1/frontend/login (admin)'] = $e->getMessage();
-            $this->error("  ✗ POST /api/v1/frontend/login (admin) - {$e->getMessage()}");
+            $results['failed']['POST /api/v1/login (admin)'] = $e->getMessage();
+            $this->error("  ✗ POST /api/v1/login (admin) - {$e->getMessage()}");
         }
 
         return null;

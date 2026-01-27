@@ -1,0 +1,17 @@
+{
+  "title": "Bestellingen",
+  "myOrders": "Mijn bestellingen",
+  "orderNumber": "Bestelnummer",
+  "status": "Status",
+  "date": "Datum",
+  "shippingAddress": "Verzendadres",
+  "phone": "Telefoon",
+  "paymentMethod": "Betaalmethode",
+  "notes": "Opmerkingen",
+  "placeOrder": "Bestelling plaatsen",
+  "pending": "In behandeling",
+  "processing": "Wordt verwerkt",
+  "shipped": "Verzonden",
+  "delivered": "Geleverd",
+  "cancelled": "Geannuleerd"
+}

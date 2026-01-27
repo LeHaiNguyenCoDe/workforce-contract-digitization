@@ -1,0 +1,17 @@
+{
+  "title": "Заказы",
+  "myOrders": "Мои заказы",
+  "orderNumber": "Номер заказа",
+  "status": "Статус",
+  "date": "Дата",
+  "shippingAddress": "Адрес доставки",
+  "phone": "Телефон",
+  "paymentMethod": "Способ оплаты",
+  "notes": "Примечания",
+  "placeOrder": "Оформить заказ",
+  "pending": "В ожидании",
+  "processing": "Обрабатывается",
+  "shipped": "Отправлен",
+  "delivered": "Доставлен",
+  "cancelled": "Отменен"
+}

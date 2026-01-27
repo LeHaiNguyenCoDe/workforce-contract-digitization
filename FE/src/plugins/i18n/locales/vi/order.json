@@ -1,0 +1,17 @@
+{
+  "title": "Đơn hàng",
+  "myOrders": "Đơn hàng của tôi",
+  "orderNumber": "Mã đơn hàng",
+  "status": "Trạng thái",
+  "date": "Ngày đặt",
+  "shippingAddress": "Địa chỉ giao hàng",
+  "phone": "Số điện thoại",
+  "paymentMethod": "Phương thức thanh toán",
+  "notes": "Ghi chú",
+  "placeOrder": "Đặt hàng",
+  "pending": "Chờ xử lý",
+  "processing": "Đang xử lý",
+  "shipped": "Đang giao",
+  "delivered": "Đã giao",
+  "cancelled": "Đã hủy"
+}

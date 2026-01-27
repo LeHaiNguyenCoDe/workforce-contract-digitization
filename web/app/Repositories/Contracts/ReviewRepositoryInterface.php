@@ -39,5 +39,13 @@ interface ReviewRepositoryInterface
      * @return Review|null
      */
     public function findById(int $id): ?Review;
+
+    /**
+     * Get featured reviews (rating >= 4) with product info
+     *
+     * @param  int  $limit
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getFeaturedReviews(int $limit = 10);
 }
 

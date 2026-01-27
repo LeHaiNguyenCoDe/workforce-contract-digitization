@@ -23,7 +23,7 @@ class WishlistSeeder extends Seeder
             $selectedProducts = $products->random(min($wishlistCount, $products->count()));
 
             foreach ($selectedProducts as $product) {
-                WishlistItem::create([
+                WishlistItem::firstOrCreate([
                     'user_id' => $user->id,
                     'product_id' => $product->id,
                 ]);

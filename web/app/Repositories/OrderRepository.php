@@ -9,6 +9,33 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 class OrderRepository implements OrderRepositoryInterface
 {
     /**
+     * Get all orders with pagination
+     *
+     * @param  int  $perPage
+     * @param  array  $filters
+     * @return LengthAwarePaginator
+     */
+    public function getAll(int $perPage = 10, array $filters = []): LengthAwarePaginator
+    {
+        $query = Order::query()->with('items', 'user');
+
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function ($q) use ($search) {
+                $q->where('code', 'ilike', "%{$search}%")
+                  ->orWhere('full_name', 'ilike', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%");
+            });
+        }
+
+        return $query->latest()->paginate($perPage);
+    }
+
+    /**
      * Get orders by user ID
      *
      * @param  int|null  $userId
@@ -23,7 +50,7 @@ class OrderRepository implements OrderRepositoryInterface
             $query->where('user_id', $userId);
         }
 
-        return $query->latest()->paginate($perPage);
+        return $query->with('items')->latest()->paginate($perPage);
     }
 
     /**

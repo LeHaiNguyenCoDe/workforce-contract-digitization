@@ -1,0 +1,12 @@
+{
+  "title": "Kundvagn",
+  "empty": "Din kundvagn är tom",
+  "continueShopping": "Fortsätt handla",
+  "checkout": "Till kassan",
+  "subtotal": "Delsumma",
+  "shipping": "Frakt",
+  "total": "Totalt",
+  "freeShipping": "Gratis",
+  "addToCart": "Lägg i kundvagn",
+  "summary": "Ordersammanfattning"
+}

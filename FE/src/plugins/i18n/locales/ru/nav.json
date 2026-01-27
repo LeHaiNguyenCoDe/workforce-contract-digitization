@@ -1,0 +1,14 @@
+{
+  "home": "Главная",
+  "products": "Товары",
+  "categories": "Категории",
+  "articles": "Статьи",
+  "promotions": "Акции",
+  "cart": "Корзина",
+  "wishlist": "Избранное",
+  "orders": "Заказы",
+  "profile": "Аккаунт",
+  "login": "Войти",
+  "register": "Регистрация",
+  "logout": "Выйти"
+}

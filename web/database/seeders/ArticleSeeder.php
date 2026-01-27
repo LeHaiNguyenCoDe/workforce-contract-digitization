@@ -15,44 +15,40 @@ class ArticleSeeder extends Seeder
     {
         $articles = [
             [
-                'title' => 'Welcome to Our Store',
-                'content' => 'Welcome to our online store! We are excited to offer you a wide range of high-quality products at competitive prices. Our mission is to provide excellent customer service and ensure your satisfaction with every purchase.',
+                'title' => 'Nghệ Thuật Làm Gốm Thủ Công: Hành Trình Của Đất Và Lửa',
+                'content' => 'Gốm sứ không chỉ là những vật dụng hàng ngày, mà còn là tâm hồn của nghệ nhân gửi gắm vào từng khối đất. Từ khâu chọn đất, nhào nặn trên bàn xoay cho đến khi nung trong lò ở nhiệt độ hàng nghìn độ C, mỗi sản phẩm gốm là một tác phẩm nghệ thuật độc bản.',
+                'image' => 'https://www.elledecoration.vn/wp-content/uploads/2024/08/Kutani-yaki-1536x1024.jpeg',
                 'published_at' => now()->subDays(30),
             ],
             [
-                'title' => 'How to Choose the Right Product',
-                'content' => 'Choosing the right product can be challenging. In this article, we will guide you through the process of selecting products that meet your needs and budget. Consider factors such as quality, price, reviews, and warranty when making your decision.',
+                'title' => 'Cách Chọn Bình Gốm Trang Trí Cho Không Gian Hiện Đại',
+                'content' => 'Một chiếc bình gốm phù hợp có thể làm bừng sáng cả căn phòng. Xu hướng hiện nay là sự kết hợp giữa nét mộc mạc của gốm thô và những đường nét tối giản của kiến trúc hiện đại. Hãy cùng khám phá cách phối hợp màu sắc và hình dáng để tạo điểm nhấn cho ngôi nhà của bạn.',
+                'image' => 'https://www.elledecoration.vn/wp-content/uploads/2024/08/Kutani-yaki-1536x1024.jpeg',
                 'published_at' => now()->subDays(25),
             ],
             [
-                'title' => 'Tips for Online Shopping',
-                'content' => 'Online shopping has become increasingly popular. Here are some tips to make your online shopping experience better: Always read product reviews, check return policies, compare prices, and ensure secure payment methods.',
+                'title' => 'Gốm Sứ Bát Tràng: Di Sản Ngàn Năm Văn Hóa Việt',
+                'content' => 'Làng gốm Bát Tràng với lịch sử lâu đời đã khẳng định được vị thế của mình qua những dòng men quý và hoa văn tinh xảo. Từ men rạn cổ kính đến men ngọc thanh tao, mỗi sản phẩm đều mang đậm hơi thở của làng quê Việt Nam.',
+                'image' => 'https://www.elledecoration.vn/wp-content/uploads/2024/08/Kutani-yaki-1536x1024.jpeg',
                 'published_at' => now()->subDays(20),
             ],
             [
-                'title' => 'New Product Launch',
-                'content' => 'We are thrilled to announce the launch of our new product line! These products feature the latest technology and innovative designs. Stay tuned for special launch promotions and discounts.',
+                'title' => 'Trà Đạo Và Nghệ Thuật Thưởng Thức Gốm Sứ',
+                'content' => 'Thưởng trà không chỉ là uống nước, mà còn là cảm nhận sự tinh tế từ bộ ấm chén gốm sứ. Một chiếc ấm thoát nhiệt tốt, giữ hương lâu và cảm giác ấm áp khi cầm trên tay sẽ làm trọn vẹn trải nghiệm của người yêu trà.',
+                'image' => 'https://www.elledecoration.vn/wp-content/uploads/2024/08/Kutani-yaki-1536x1024.jpeg',
                 'published_at' => now()->subDays(15),
             ],
             [
-                'title' => 'Customer Service Excellence',
-                'content' => 'At our store, customer satisfaction is our top priority. Our dedicated customer service team is available 24/7 to assist you with any questions or concerns. We strive to provide the best shopping experience possible.',
+                'title' => 'Khám Phá Quy Trình Nung Gốm Ở Nhiệt Độ Cao',
+                'content' => 'Nhiệt độ đóng vai trò quyết định đến độ bền và màu sắc của gốm. Nung ở nhiệt độ từ 1200 đến 1300 độ C giúp lớp men chảy đều, tạo độ bóng và đảm bảo sản phẩm không còn tạp chất hóa học, an toàn cho người sử dụng.',
+                'image' => 'https://www.elledecoration.vn/wp-content/uploads/2024/08/Kutani-yaki-1536x1024.jpeg',
                 'published_at' => now()->subDays(10),
             ],
             [
-                'title' => 'Seasonal Sale Announcement',
-                'content' => 'Don\'t miss our seasonal sale! Get up to 50% off on selected items. This is the perfect time to stock up on your favorite products or try something new. Sale ends soon, so shop now!',
+                'title' => 'Xu Hướng Gốm Sứ Tối Giản Năm 2024',
+                'content' => 'Sự đơn giản lên ngôi với các thiết kế gốm không họa tiết, tập trung vào hình khối và chất liệu men lì. Những gam màu trung tính như kem, xám, và nâu đất mang lại cảm giác bình yên và gần gũi với thiên nhiên.',
+                'image' => 'https://www.elledecoration.vn/wp-content/uploads/2024/08/Kutani-yaki-1536x1024.jpeg',
                 'published_at' => now()->subDays(5),
-            ],
-            [
-                'title' => 'Product Care and Maintenance',
-                'content' => 'Proper care and maintenance can extend the life of your products significantly. Follow our care instructions to keep your items in perfect condition. Regular maintenance ensures optimal performance and longevity.',
-                'published_at' => now()->subDays(2),
-            ],
-            [
-                'title' => 'Shipping and Delivery Information',
-                'content' => 'We offer fast and reliable shipping to locations worldwide. Standard shipping takes 3-5 business days, while express shipping is available for urgent orders. Track your order in real-time through our website.',
-                'published_at' => now(),
             ],
         ];
 
@@ -60,7 +56,7 @@ class ArticleSeeder extends Seeder
             Article::create([
                 'title' => $article['title'],
                 'slug' => Str::slug($article['title']) . '-' . uniqid(),
-                'thumbnail' => "https://picsum.photos/800/400?random=" . rand(1, 1000),
+                'thumbnail' => $article['image'],
                 'content' => $article['content'],
                 'published_at' => $article['published_at'],
             ]);

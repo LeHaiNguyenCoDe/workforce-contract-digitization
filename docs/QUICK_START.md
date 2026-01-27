@@ -109,7 +109,7 @@ Route::get('frontend/products/featured', [ProductController::class, 'featured'])
 #### Bước 6: Test
 ```bash
 # Test bằng curl
-curl http://localhost:8000/api/v1/frontend/products/featured
+curl http://localhost:8000/api/v1/products/featured
 ```
 
 ## 🔍 Các File Quan Trọng Cần Nhớ

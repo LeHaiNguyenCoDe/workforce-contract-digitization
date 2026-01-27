@@ -1,0 +1,14 @@
+{
+  "home": "首页",
+  "products": "商品",
+  "categories": "分类",
+  "articles": "文章",
+  "promotions": "促销",
+  "cart": "购物车",
+  "wishlist": "收藏",
+  "orders": "订单",
+  "profile": "账户",
+  "login": "登录",
+  "register": "注册",
+  "logout": "退出"
+}

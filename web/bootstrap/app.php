@@ -6,20 +6,39 @@ use Illuminate\Foundation\Configuration\Middleware;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
-        web: __DIR__.'/../routes/web.php',
-        api: __DIR__.'/../routes/api.php',
-        commands: __DIR__.'/../routes/console.php',
+        channels: __DIR__ . '/../routes/channels.php',
+        web: __DIR__ . '/../routes/web.php',
+        api: __DIR__ . '/../routes/api.php',
+        commands: __DIR__ . '/../routes/console.php',
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Add session and cookie middlewares to API group for SPA authentication
         $middleware->api(prepend: [
+            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
             \Illuminate\Http\Middleware\HandleCors::class,
+            \Illuminate\Cookie\Middleware\EncryptCookies::class,
+            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+            \Illuminate\Session\Middleware\StartSession::class,
             \App\Http\Middleware\SetLocale::class,
+            \App\Http\Middleware\AuditLogger::class,
         ]);
-        
-        // Register admin middleware alias
+
+        // Add security headers to all responses
+        $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
+
+        // Register middleware aliases
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
+            'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
+            'sanitize' => \App\Http\Middleware\SanitizeInput::class,
+        ]);
+
+        // CSRF Protection: Exclude API endpoints that use Sanctum session auth
+        // These routes are protected by Sanctum authentication instead
+        $middleware->validateCsrfTokens(except: [
+            'api/*',                          // All API routes use Sanctum session/token auth
+            'sanctum/csrf-cookie',            // CSRF cookie endpoint itself
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
@@ -57,6 +76,15 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         });
 
+        $exceptions->render(function (\Illuminate\Database\Eloquent\ModelNotFoundException $e, \Illuminate\Http\Request $request) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Resource not found',
+                ], 404);
+            }
+        });
+
         $exceptions->render(function (\App\Exceptions\BusinessLogicException $e, \Illuminate\Http\Request $request) {
             if ($request->expectsJson() || $request->is('api/*')) {
                 return $e->render($request);
@@ -82,13 +110,43 @@ return Application::configure(basePath: dirname(__DIR__))
                     'trace' => $e->getTraceAsString(),
                 ]);
 
+                // Handle 404 errors (including ModelNotFoundException which usually gets converted)
+                if ($e instanceof \Symfony\Component\HttpKernel\Exception\NotFoundHttpException || 
+                    $e instanceof \Illuminate\Database\Eloquent\ModelNotFoundException) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Resource not found',
+                    ], 404);
+                }
+
+                // Handle Symfony/Laravel HTTP exceptions (like abort(403))
+                $status = 500;
+                if ($e instanceof \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface) {
+                    $status = $e->getStatusCode();
+                } elseif (method_exists($e, 'getStatusCode')) {
+                    $status = $e->getStatusCode();
+                } elseif ($e->getCode() >= 400 && $e->getCode() < 600) {
+                    $status = $e->getCode();
+                }
+
                 // Return error response
+                // SECURITY: Never expose debug info in production
                 return response()->json([
                     'status' => 'error',
-                    'message' => config('app.debug') ? $e->getMessage() : 'Internal server error',
-                    'file' => config('app.debug') ? $e->getFile() : null,
-                    'line' => config('app.debug') ? $e->getLine() : null,
-                ], 500);
+                    'message' => (config('app.debug') && config('app.env') !== 'production')
+                        ? $e->getMessage()
+                        : (($status >= 500) ? 'Internal server error' : $e->getMessage()),
+                    'exception' => (config('app.debug') && config('app.env') !== 'production')
+                        ? get_class($e)
+                        : null,
+                    'file' => (config('app.debug') && config('app.env') !== 'production')
+                        ? $e->getFile()
+                        : null,
+                    'line' => (config('app.debug') && config('app.env') !== 'production')
+                        ? $e->getLine()
+                        : null,
+                    'trace_id' => \Illuminate\Support\Str::uuid()->toString(), // For support debugging
+                ], $status);
             }
         });
     })->create();

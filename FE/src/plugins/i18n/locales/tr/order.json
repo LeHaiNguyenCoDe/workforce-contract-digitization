@@ -1,0 +1,17 @@
+{
+  "title": "Siparişler",
+  "myOrders": "Siparişlerim",
+  "orderNumber": "Sipariş Numarası",
+  "status": "Durum",
+  "date": "Tarih",
+  "shippingAddress": "Teslimat Adresi",
+  "phone": "Telefon",
+  "paymentMethod": "Ödeme Yöntemi",
+  "notes": "Notlar",
+  "placeOrder": "Sipariş Ver",
+  "pending": "Beklemede",
+  "processing": "İşleniyor",
+  "shipped": "Kargoda",
+  "delivered": "Teslim edildi",
+  "cancelled": "İptal edildi"
+}

@@ -1,0 +1,280 @@
+/* Main CSS with Tailwind */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base Layer */
+@layer base {
+    body {
+        @apply min-h-screen font-body text-base text-slate-100 bg-dark-900 antialiased;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        @apply font-display font-bold leading-tight text-white;
+    }
+
+    h1 {
+        @apply text-4xl md:text-5xl;
+    }
+
+    h2 {
+        @apply text-3xl md:text-4xl;
+    }
+
+    h3 {
+        @apply text-2xl;
+    }
+
+    h4 {
+        @apply text-xl;
+    }
+
+    a {
+        @apply text-inherit no-underline transition-colors duration-150;
+    }
+
+    a:hover {
+        @apply text-primary-light;
+    }
+}
+
+/* Component Layer */
+@layer components {
+
+    /* Container */
+    .container {
+        @apply w-full max-w-7xl mx-auto px-4 md:px-6;
+    }
+
+    /* Gradient Text */
+    .gradient-text {
+        @apply bg-gradient-primary bg-clip-text text-transparent;
+    }
+
+    /* Glass Effect */
+    .glass {
+        @apply bg-dark-800/80 backdrop-blur-xl border border-white/10;
+    }
+
+    /* Cards */
+    .card {
+        @apply bg-dark-800 border border-white/10 rounded-2xl p-6 transition-all duration-300;
+    }
+
+    .card:hover {
+        @apply border-primary/30 shadow-lg shadow-primary/10;
+    }
+
+    /* Buttons */
+    .btn {
+        @apply inline-flex items-center justify-center gap-2 px-6 py-3 text-base font-semibold rounded-xl cursor-pointer transition-all duration-150 border-none disabled:opacity-50 disabled:cursor-not-allowed;
+    }
+
+    .btn-primary {
+        @apply text-white bg-gradient-primary hover:scale-105 hover:shadow-lg hover:shadow-primary/25;
+    }
+
+    .btn-secondary {
+        @apply text-slate-100 bg-dark-700 hover:bg-primary/20 hover:text-primary-light;
+    }
+
+    .btn-outline {
+        @apply text-slate-300 bg-transparent border border-white/20 hover:border-primary hover:text-primary-light;
+    }
+
+    .btn-sm {
+        @apply px-4 py-2 text-sm;
+    }
+
+    .btn-lg {
+        @apply px-8 py-4 text-lg;
+    }
+
+    /* Forms */
+    .form-group {
+        @apply flex flex-col gap-2 mb-4;
+    }
+
+    .form-label {
+        @apply text-sm font-medium text-slate-400;
+    }
+
+    .form-input {
+        @apply w-full px-4 py-3 text-base text-white bg-dark-700 border border-white/10 rounded-xl transition-all duration-150 placeholder:text-slate-500 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20;
+    }
+
+    .form-input.input-error {
+        @apply border-error;
+    }
+
+    .error-text {
+        @apply text-xs text-error mt-1;
+    }
+
+    .form-error {
+        @apply bg-error/10 border border-error text-error p-3 rounded-lg text-sm mb-4;
+    }
+
+    /* Language Switcher */
+    .language-switcher {
+        @apply relative;
+    }
+
+    .switcher-btn {
+        @apply flex items-center gap-1 px-3 py-2 text-sm text-slate-400 bg-transparent border border-white/10 rounded-lg cursor-pointer transition-all duration-150 hover:border-primary hover:text-white;
+    }
+
+    .dropdown {
+        @apply absolute top-full right-0 mt-2 min-w-[150px] bg-dark-800 border border-white/10 rounded-lg shadow-xl z-50 overflow-hidden;
+    }
+
+    .dropdown-item {
+        @apply flex items-center gap-2 w-full px-4 py-3 text-sm text-slate-400 bg-transparent border-none cursor-pointer transition-all duration-150 hover:bg-primary/10 hover:text-white;
+    }
+
+    .dropdown-item.active {
+        @apply text-primary;
+    }
+
+    /* Product Grid */
+    .products-grid {
+        @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6;
+    }
+
+    /* Hero Section */
+    .hero {
+        @apply relative py-20 md:py-32 text-center overflow-hidden;
+    }
+
+    .hero::before {
+        content: '';
+        @apply absolute inset-0 bg-gradient-glow pointer-events-none;
+    }
+
+    /* Section */
+    .section {
+        @apply py-16 md:py-20;
+    }
+
+    .section-title {
+        @apply text-3xl md:text-4xl font-bold text-center mb-4;
+    }
+
+    .section-subtitle {
+        @apply text-lg text-slate-400 text-center mb-12 max-w-2xl mx-auto;
+    }
+}
+
+/* Utility Layer */
+@layer utilities {
+    .animate-fade-in {
+        animation: fadeIn 0.5s ease-out forwards;
+    }
+
+    .animate-slide-up {
+        animation: slideUp 0.5s ease-out forwards;
+    }
+
+    .text-gradient {
+        @apply bg-gradient-primary bg-clip-text text-transparent;
+    }
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* Custom Scrollbar - Dark Theme */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(30, 41, 59, 0.5);
+    border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #8b5cf6 0%, #6366f1 100%);
+    border-radius: 8px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #a78bfa 0%, #818cf8 100%);
+    background-clip: padding-box;
+}
+
+::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
+/* Firefox scrollbar */
+* {
+    scrollbar-width: thin;
+}
+
+/* Thin scrollbar variant */
+.scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+    background: rgba(139, 92, 246, 0.6);
+    border-radius: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: rgba(139, 92, 246, 0.8);
+}
+
+/* Hide scrollbar but keep functionality */
+.scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+}
+
+.scrollbar-hidden {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}

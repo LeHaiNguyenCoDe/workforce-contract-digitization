@@ -1,0 +1,17 @@
+{
+  "title": "주문",
+  "myOrders": "내 주문",
+  "orderNumber": "주문번호",
+  "status": "상태",
+  "date": "날짜",
+  "shippingAddress": "배송 주소",
+  "phone": "전화번호",
+  "paymentMethod": "결제 방법",
+  "notes": "메모",
+  "placeOrder": "주문하기",
+  "pending": "대기 중",
+  "processing": "처리 중",
+  "shipped": "배송 중",
+  "delivered": "배송 완료",
+  "cancelled": "취소됨"
+}

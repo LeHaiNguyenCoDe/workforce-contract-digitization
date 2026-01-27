@@ -1,0 +1,12 @@
+{
+  "title": "Nákupní košík",
+  "empty": "Košík je prázdný",
+  "continueShopping": "Pokračovat v nákupu",
+  "checkout": "Pokladna",
+  "subtotal": "Mezisoučet",
+  "shipping": "Doprava",
+  "total": "Celkem",
+  "freeShipping": "Zdarma",
+  "addToCart": "Přidat do košíku",
+  "summary": "Souhrn objednávky"
+}

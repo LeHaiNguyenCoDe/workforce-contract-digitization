@@ -1,0 +1,14 @@
+{
+  "title": "Ürünler",
+  "detail": "Ürün Detayı",
+  "price": "Fiyat",
+  "quantity": "Miktar",
+  "addToCart": "Sepete Ekle",
+  "addToWishlist": "İstek Listesine Ekle",
+  "outOfStock": "Stokta Yok",
+  "inStock": "Stokta",
+  "reviews": "Yorumlar",
+  "noReviews": "Henüz yorum yok",
+  "variants": "Varyantlar",
+  "category": "Kategori"
+}

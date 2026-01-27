@@ -1,0 +1,14 @@
+{
+  "title": "สินค้า",
+  "detail": "รายละเอียดสินค้า",
+  "price": "ราคา",
+  "quantity": "จำนวน",
+  "addToCart": "เพิ่มลงตะกร้า",
+  "addToWishlist": "เพิ่มในรายการโปรด",
+  "outOfStock": "สินค้าหมด",
+  "inStock": "มีสินค้า",
+  "reviews": "รีวิว",
+  "noReviews": "ยังไม่มีรีวิว",
+  "variants": "ตัวเลือก",
+  "category": "หมวดหมู่"
+}
