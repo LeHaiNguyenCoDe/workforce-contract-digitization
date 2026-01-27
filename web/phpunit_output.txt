@@ -1,0 +1,135 @@
+PHPUnit 11.5.46 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.4.9
+Configuration: D:\WorkFiles\www\workforce-contract-digitization\web\phpunit.xml
+
+EE                                                                  2 / 2 (100%)
+
+Time: 00:00.780, Memory: 48.00 MB
+
+There were 2 errors:
+
+1) Tests\Unit\Services\WarehouseServiceTest::test_adjust_stock_updates_quantity_and_logs_change
+Illuminate\Database\QueryException: SQLSTATE[23000]: Integrity constraint violation: 19 CHECK constraint failed: warehouse_type (Connection: sqlite, SQL: insert into "products" ("name", "slug", "sku", "price", "min_stock_level", "is_active", "warehouse_type", "stock_quantity", "category_id", "supplier_id", "updated_at", "created_at") values (saepe ad maiores, saepe-ad-maiores, PROD-7852-TVWX, 4230000, 10, 1, normal, 0, 1, 1, 2026-01-21 05:00:19, 2026-01-21 05:00:19))
+
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Connection.php:826
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Connection.php:780
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Connection.php:559
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Connection.php:523
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3853
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2235
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:370
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Collections\Traits\EnumeratesValues.php:271
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:365
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:321
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:560
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Collections\Arr.php:788
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Collections\Collection.php:819
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:552
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:506
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:490
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Concerns\GuardsAttributes.php:157
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:489
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:429
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:318
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:315
+D:\WorkFiles\www\workforce-contract-digitization\web\tests\Unit\Services\WarehouseServiceTest.php:48
+
+Caused by
+PDOException: SQLSTATE[23000]: Integrity constraint violation: 19 CHECK constraint failed: warehouse_type
+
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Connection.php:570
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Connection.php:813
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Connection.php:780
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Connection.php:559
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Connection.php:523
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3853
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2235
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:370
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Collections\Traits\EnumeratesValues.php:271
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:365
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:321
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:560
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Collections\Arr.php:788
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Collections\Collection.php:819
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:552
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:506
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:490
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Concerns\GuardsAttributes.php:157
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:489
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:429
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:318
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:315
+D:\WorkFiles\www\workforce-contract-digitization\web\tests\Unit\Services\WarehouseServiceTest.php:48
+
+2) Tests\Unit\Services\WarehouseServiceTest::test_outbound_stock_throws_exception_if_insufficient_available_quantity
+Illuminate\Database\QueryException: SQLSTATE[23000]: Integrity constraint violation: 19 CHECK constraint failed: warehouse_type (Connection: sqlite, SQL: insert into "products" ("name", "slug", "sku", "price", "min_stock_level", "is_active", "warehouse_type", "stock_quantity", "category_id", "supplier_id", "updated_at", "created_at") values (sit et debitis, sit-et-debitis, PROD-8178-ZPXO, 652000, 10, 1, normal, 0, 1, 1, 2026-01-21 05:00:19, 2026-01-21 05:00:19))
+
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Connection.php:826
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Connection.php:780
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Connection.php:559
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Connection.php:523
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3853
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2235
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:370
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Collections\Traits\EnumeratesValues.php:271
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:365
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:321
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:560
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Collections\Arr.php:788
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Collections\Collection.php:819
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:552
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:506
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:490
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Concerns\GuardsAttributes.php:157
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:489
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:429
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:318
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:315
+D:\WorkFiles\www\workforce-contract-digitization\web\tests\Unit\Services\WarehouseServiceTest.php:86
+
+Caused by
+PDOException: SQLSTATE[23000]: Integrity constraint violation: 19 CHECK constraint failed: warehouse_type
+
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Connection.php:570
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Connection.php:813
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Connection.php:780
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Connection.php:559
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Connection.php:523
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3853
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2235
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:370
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Collections\Traits\EnumeratesValues.php:271
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:365
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:321
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:560
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Collections\Arr.php:788
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Collections\Collection.php:819
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:552
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:506
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:490
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Concerns\GuardsAttributes.php:157
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:489
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:429
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:318
+D:\WorkFiles\www\workforce-contract-digitization\web\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:315
+D:\WorkFiles\www\workforce-contract-digitization\web\tests\Unit\Services\WarehouseServiceTest.php:86
+
+ERRORS!
+Tests: 2, Assertions: 0, Errors: 2.

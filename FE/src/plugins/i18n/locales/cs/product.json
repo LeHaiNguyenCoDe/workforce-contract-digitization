@@ -1,0 +1,14 @@
+{
+  "title": "Produkty",
+  "detail": "Detail produktu",
+  "price": "Cena",
+  "quantity": "Množství",
+  "addToCart": "Přidat do košíku",
+  "addToWishlist": "Přidat do oblíbených",
+  "outOfStock": "Vyprodáno",
+  "inStock": "Skladem",
+  "reviews": "Recenze",
+  "noReviews": "Zatím žádné recenze",
+  "variants": "Varianty",
+  "category": "Kategorie"
+}

@@ -25,8 +25,8 @@ class AdminMiddleware
             ], 401);
         }
 
-        // Check if user has admin or manager role
-        $hasAdminRole = $user->roles()->whereIn('name', ['admin', 'manager'])->exists();
+        // Check if user has any admin roles (admin, manager, staff, warehouse)
+        $hasAdminRole = $user->roles()->whereIn('name', ['admin', 'manager', 'staff', 'warehouse'])->exists();
 
         if (!$hasAdminRole) {
             return response()->json([

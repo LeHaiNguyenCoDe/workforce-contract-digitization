@@ -1,0 +1,9 @@
+{
+  "required": "Bu alan zorunludur",
+  "email": "Geçersiz e-posta adresi",
+  "minLength": "En az {min} karakter",
+  "maxLength": "En fazla {max} karakter",
+  "passwordMismatch": "Şifreler eşleşmiyor",
+  "passwordWeak": "Şifre harf, rakam ve özel karakterler içermelidir",
+  "loginFailed": "Giriş başarısız"
+}

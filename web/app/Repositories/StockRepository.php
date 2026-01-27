@@ -32,9 +32,28 @@ class StockRepository implements StockRepositoryInterface
      */
     public function getByWarehouse(int $warehouseId): Collection
     {
-        return Stock::with('product:id,name,slug')
+        try {
+            return Stock::with([
+                'product:id,name,slug,price,description,category_id,supplier_id,min_stock_level,warehouse_type,storage_location',
+                'product.category:id,name',
+                'product.supplier:id,name',
+                'productVariant:id,product_id,color,stock',
+                'warehouse:id,name,code',
+                'inboundBatch:id,batch_number,status',
+                'qualityCheck:id,status,check_date'
+            ])
             ->where('warehouse_id', $warehouseId)
+            ->where('available_quantity', '>', 0) // BR-06.1: Chỉ hiển thị Available Inventory
+            ->orderBy('updated_at', 'desc')
             ->get();
+        } catch (\Exception $e) {
+            \Log::error('Error getting stocks by warehouse: ' . $e->getMessage(), [
+                'warehouse_id' => $warehouseId,
+                'exception' => $e,
+                'trace' => $e->getTraceAsString(),
+            ]);
+            throw $e;
+        }
     }
 
     /**

@@ -1,0 +1,14 @@
+{
+  "home": "Home",
+  "products": "Producten",
+  "categories": "Categorieën",
+  "articles": "Artikelen",
+  "promotions": "Acties",
+  "cart": "Winkelwagen",
+  "wishlist": "Verlanglijst",
+  "orders": "Bestellingen",
+  "profile": "Account",
+  "login": "Inloggen",
+  "register": "Registreren",
+  "logout": "Uitloggen"
+}

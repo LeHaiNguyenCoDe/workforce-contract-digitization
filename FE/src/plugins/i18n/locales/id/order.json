@@ -1,0 +1,17 @@
+{
+  "title": "Pesanan",
+  "myOrders": "Pesanan Saya",
+  "orderNumber": "Nomor Pesanan",
+  "status": "Status",
+  "date": "Tanggal",
+  "shippingAddress": "Alamat Pengiriman",
+  "phone": "Telepon",
+  "paymentMethod": "Metode Pembayaran",
+  "notes": "Catatan",
+  "placeOrder": "Pesan",
+  "pending": "Menunggu",
+  "processing": "Diproses",
+  "shipped": "Dikirim",
+  "delivered": "Diterima",
+  "cancelled": "Dibatalkan"
+}

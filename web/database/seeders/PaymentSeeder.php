@@ -19,14 +19,14 @@ class PaymentSeeder extends Seeder
 
         foreach ($orders as $order) {
             // Mỗi order có một payment
-            $status = $order->payment_method === 'cod' 
+            $status = $order->payment_method === 'cod'
                 ? ($order->status === 'delivered' ? 'success' : 'pending')
                 : ($order->status === 'cancelled' ? 'failed' : ($order->status === 'delivered' ? 'success' : 'pending'));
 
             Payment::create([
                 'order_id' => $order->id,
                 'provider' => $order->payment_method === 'cod' ? 'cod' : $providers[array_rand($providers)],
-                'amount' => $order->total_amount,
+                'amount' => (int) $order->total_amount,
                 'status' => $status,
                 'transaction_id' => $status === 'success' ? 'TXN' . strtoupper(uniqid()) : null,
                 'payload' => $status === 'success' ? [

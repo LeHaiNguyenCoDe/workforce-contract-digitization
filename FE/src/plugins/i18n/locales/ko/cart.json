@@ -1,0 +1,12 @@
+{
+  "title": "장바구니",
+  "empty": "장바구니가 비어있습니다",
+  "continueShopping": "쇼핑 계속하기",
+  "checkout": "결제하기",
+  "subtotal": "소계",
+  "shipping": "배송비",
+  "total": "합계",
+  "freeShipping": "무료",
+  "addToCart": "장바구니에 추가",
+  "summary": "주문 요약"
+}

@@ -1,0 +1,12 @@
+{
+  "title": "Koszyk",
+  "empty": "Twój koszyk jest pusty",
+  "continueShopping": "Kontynuuj zakupy",
+  "checkout": "Do kasy",
+  "subtotal": "Suma częściowa",
+  "shipping": "Wysyłka",
+  "total": "Razem",
+  "freeShipping": "Bezpłatna",
+  "addToCart": "Dodaj do koszyka",
+  "summary": "Podsumowanie zamówienia"
+}

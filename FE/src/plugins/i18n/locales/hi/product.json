@@ -1,0 +1,14 @@
+{
+  "title": "उत्पाद",
+  "detail": "उत्पाद विवरण",
+  "price": "मूल्य",
+  "quantity": "मात्रा",
+  "addToCart": "कार्ट में डालें",
+  "addToWishlist": "इच्छा सूची में डालें",
+  "outOfStock": "स्टॉक में नहीं",
+  "inStock": "स्टॉक में",
+  "reviews": "समीक्षाएं",
+  "noReviews": "अभी तक कोई समीक्षा नहीं",
+  "variants": "वेरिएंट",
+  "category": "श्रेणी"
+}

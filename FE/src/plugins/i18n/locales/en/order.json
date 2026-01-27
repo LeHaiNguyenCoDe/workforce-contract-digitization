@@ -1,0 +1,17 @@
+{
+  "title": "Orders",
+  "myOrders": "My Orders",
+  "orderNumber": "Order Number",
+  "status": "Status",
+  "date": "Date",
+  "shippingAddress": "Shipping Address",
+  "phone": "Phone",
+  "paymentMethod": "Payment Method",
+  "notes": "Notes",
+  "placeOrder": "Place Order",
+  "pending": "Pending",
+  "processing": "Processing",
+  "shipped": "Shipped",
+  "delivered": "Delivered",
+  "cancelled": "Cancelled"
+}

@@ -1,0 +1,17 @@
+{
+  "title": "الطلبات",
+  "myOrders": "طلباتي",
+  "orderNumber": "رقم الطلب",
+  "status": "الحالة",
+  "date": "التاريخ",
+  "shippingAddress": "عنوان الشحن",
+  "phone": "الهاتف",
+  "paymentMethod": "طريقة الدفع",
+  "notes": "ملاحظات",
+  "placeOrder": "تقديم الطلب",
+  "pending": "قيد الانتظار",
+  "processing": "قيد المعالجة",
+  "shipped": "تم الشحن",
+  "delivered": "تم التسليم",
+  "cancelled": "ملغى"
+}

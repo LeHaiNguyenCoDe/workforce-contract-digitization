@@ -52,5 +52,16 @@ class ProductVariantRepository implements ProductVariantRepositoryInterface
     {
         return $variant->delete();
     }
+
+    /**
+     * Delete all variants for a product
+     *
+     * @param  int  $productId
+     * @return void
+     */
+    public function deleteByProduct(int $productId): void
+    {
+        ProductVariant::where('product_id', $productId)->delete();
+    }
 }
 

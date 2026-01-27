@@ -1,0 +1,9 @@
+{
+  "required": "Bidang ini wajib diisi",
+  "email": "Alamat email tidak valid",
+  "minLength": "Minimal {min} karakter",
+  "maxLength": "Maksimal {max} karakter",
+  "passwordMismatch": "Kata sandi tidak cocok",
+  "passwordWeak": "Kata sandi harus berisi huruf, angka, dan karakter khusus",
+  "loginFailed": "Gagal masuk"
+}

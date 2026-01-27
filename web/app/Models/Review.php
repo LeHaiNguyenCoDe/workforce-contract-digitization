@@ -12,6 +12,8 @@ class Review extends Model
         'user_id',
         'rating',
         'content',
+        'parent_id',
+        'is_admin_reply',
     ];
 
     public function product(): BelongsTo
@@ -22,6 +24,16 @@ class Review extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function replies(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Review::class, 'parent_id');
+    }
+
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(Review::class, 'parent_id');
     }
 }
 

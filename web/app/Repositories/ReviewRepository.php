@@ -19,7 +19,13 @@ class ReviewRepository implements ReviewRepositoryInterface
     {
         return Review::query()
             ->where('product_id', $productId)
-            ->with('user:id,name')
+            ->whereNull('parent_id') // Get only top-level reviews
+            ->with([
+                'user:id,name',
+                'replies' => function ($query) {
+                    $query->with('user:id,name');
+                }
+            ])
             ->latest()
             ->paginate($perPage);
     }
@@ -58,6 +64,32 @@ class ReviewRepository implements ReviewRepositoryInterface
     public function findById(int $id): ?Review
     {
         return Review::with(['user:id,name,email', 'product:id,name'])->find($id);
+    }
+
+    /**
+     * Get featured reviews (rating >= 4) with product info
+     *
+     * @param  int  $limit
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getFeaturedReviews(int $limit = 10)
+    {
+        return Review::query()
+            ->where('rating', '>=', 4)
+            ->whereNull('parent_id') // Only top-level reviews
+            ->where('is_admin_reply', false) // Exclude admin replies
+            ->with([
+                'user:id,name',
+                'product:id,name,slug,thumbnail',
+                'product.images' => function ($query) {
+                    $query->select('id', 'product_id', 'image_url', 'is_main')
+                        ->orderByDesc('is_main')
+                        ->limit(1);
+                }
+            ])
+            ->latest()
+            ->limit($limit)
+            ->get();
     }
 }
 
