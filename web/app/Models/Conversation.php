@@ -16,6 +16,8 @@ class Conversation extends Model
         'avatar',
         'created_by',
         'metadata',
+        'messaging_permissions',
+        'disappearing_messages_ttl',
     ];
 
     protected $appends = ['is_guest', 'guest_session'];

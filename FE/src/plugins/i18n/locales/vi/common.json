@@ -19,6 +19,8 @@
   "noData": "Không có dữ liệu",
   "no_data": "Không có dữ liệu",
   "all": "Tất cả",
+  "on": "Bật",
+  "off": "Tắt",
   "shopNow": "Mua ngay",
   "download": "Tải về",
   "reply": "Trả lời",
@@ -274,11 +276,22 @@
       "messaging_permissions": "Quyền nhắn tin",
       "disappearing_messages": "Tin nhắn tự hủy",
       "read_receipts": "Thông báo đã đọc",
+      "pin_conversation": "Ghim cuộc trò chuyện",
+      "unpin_conversation": "Bỏ ghim",
+      "pinned": "Đã ghim",
+      "unpinned": "Chưa ghim",
       "end_to_end_encryption": "Xác minh mã hóa đầu cuối",
       "restrict": "Hạn chế",
       "block": "Chặn",
-      "report": "Báo cáo"
-    }
+      "unblock": "Bỏ chặn",
+      "report": "Báo cáo",
+      "all_members": "Tất cả thành viên",
+      "admin_only": "Chỉ Admin"
+    },
+    "blocked_message": "Bạn không thể gửi tin nhắn vì người này đã bị chặn hoặc đã chặn bạn.",
+    "blocked_by_me": "Bạn đã chặn người dùng này.",
+    "blocked_by_them": "Người dùng này đã chặn bạn.",
+    "blocked_mutually": "Cả hai đã chặn nhau."
   },
 
   "friend": {

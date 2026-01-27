@@ -56,9 +56,27 @@
         <VoiceRecordingUI v-if="isRecording" :formattedDuration="voiceRecorder.formattedDuration.value"
             :audioLevels="voiceRecorder.audioLevels.value" @cancel="cancelVoiceRecording" @send="sendVoiceMessage" />
 
-        <!-- Normal Input Row -->
-        <div v-else class="flex items-end gap-2 sm:gap-3 input-row">
-            <!-- Action Bar (Left Side) -->
+        <!-- Blocked Status Notice (Only for blocker - blocked_by_me or blocked_mutually) -->
+        <div v-if="friendshipStatus === 'blocked_by_me' || friendshipStatus === 'blocked_mutually'"
+            class="flex items-center justify-between px-4 py-2 bg-gray-50 border-t border-gray-100 gap-3">
+            <div class="flex items-center gap-2">
+                <div class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="15" y1="9" x2="9" y2="15" />
+                    </svg>
+                </div>
+                <p class="text-[11px] text-gray-500 font-medium m-0">{{ t(`common.chat.${friendshipStatus}`) }}</p>
+            </div>
+            <button @click="$emit('unblock')"
+                class="text-[11px] text-teal-600 hover:text-teal-700 font-bold px-2 py-1 rounded hover:bg-teal-50 transition-colors">
+                {{ t('common.chat.details.unblock') }}
+            </button>
+        </div>
+
+        <!-- Normal Input Row - Always enabled for user experience -->
+        <div class="flex items-end gap-2 sm:gap-3 input-row">
             <div class="flex items-center gap-1">
                 <!-- Voice Recording Button -->
                 <button @click="startVoiceRecording" :disabled="!voiceRecorder.isSupported.value" class="action-btn"
@@ -121,6 +139,7 @@
             <!-- Text Input -->
             <div class="flex-1 relative">
                 <input ref="inputRef" v-model="message" @keydown.enter.exact.prevent="handleSend" @input="handleTyping"
+                    @paste="handlePaste"
                     type="text" :placeholder="t('common.chat.type_message')"
                     class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-full text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-100 transition-all" />
             </div>
@@ -148,8 +167,8 @@
                 </Teleport>
             </div>
 
-            <!-- Send Button -->
-            <button @click="handleSend" :disabled="disabled || (!message.trim() && attachments.length === 0)"
+            <!-- Send Button - Always enabled if there's content (error handling done by backend) -->
+            <button @click="handleSend" :disabled="!message.trim() && attachments.length === 0"
                 class="flex-shrink-0 w-10 h-10 rounded-full bg-teal-500 hover:bg-teal-600 text-white flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
@@ -166,17 +185,19 @@ import type { IMessage } from '../models/Chat'
 import EmojiPicker from './EmojiPicker.vue'
 import GifPicker from './GifPicker.vue'
 import VoiceRecordingUI from './VoiceRecordingUI.vue'
-import { useVoiceRecorder } from '../composables/useVoiceRecorder'
+import { useVoiceRecorder } from '../composables'
 
 const props = defineProps<{
     disabled: boolean
     replyTo?: IMessage | null
+    friendshipStatus?: 'none' | 'pending' | 'sent' | 'accepted' | 'blocked' | 'blocked_by_me' | 'blocked_by_them' | 'blocked_mutually' | null
 }>()
 
 const emit = defineEmits<{
-    (e: 'send', content: string, attachments?: File[]): void
+    (e: 'send', content: string, attachments?: File[], replyToId?: number): void
     (e: 'typing', isTyping: boolean): void
     (e: 'cancel-reply'): void
+    (e: 'unblock'): void
 }>()
 
 const { t } = useI18n()
@@ -197,8 +218,14 @@ let typingTimeout: ReturnType<typeof setTimeout> | null = null
 // Methods
 function handleSend() {
     const content = message.value.trim()
-    if (!content && attachments.value.length === 0) return
+    console.log('[MessageInput] handleSend called, content:', content, 'attachments:', attachments.value.length)
 
+    if (!content && attachments.value.length === 0) {
+        console.log('[MessageInput] No content and no attachments, returning')
+        return
+    }
+
+    console.log('[MessageInput] Emitting send event')
     emit('send', content, attachments.value.length > 0 ? attachments.value : undefined)
     message.value = ''
     attachments.value = []
@@ -228,6 +255,37 @@ function handleImageSelect(event: Event) {
         const imageFiles = Array.from(target.files).filter(f => f.type.startsWith('image/'))
         attachments.value = [...attachments.value, ...imageFiles]
         target.value = ''
+    }
+}
+
+function handlePaste(event: ClipboardEvent) {
+    const clipboardData = event.clipboardData
+    if (!clipboardData) return
+
+    // Check for files in clipboard (images)
+    const files = clipboardData.files
+    if (files.length > 0) {
+        event.preventDefault() // Prevent default paste behavior
+        const imageFiles = Array.from(files).filter(f => f.type.startsWith('image/'))
+        if (imageFiles.length > 0) {
+            attachments.value = [...attachments.value, ...imageFiles]
+        }
+        return
+    }
+
+    // Check for image data in items (for screenshots)
+    const items = clipboardData.items
+    for (let i = 0; i < items.length; i++) {
+        const item = items[i]
+        if (item.type.startsWith('image/')) {
+            event.preventDefault()
+            const blob = item.getAsFile()
+            if (blob) {
+                const file = new File([blob], `pasted-image-${Date.now()}.png`, { type: blob.type })
+                attachments.value = [...attachments.value, file]
+            }
+            return
+        }
     }
 }
 

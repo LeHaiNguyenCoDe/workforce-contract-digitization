@@ -2,6 +2,7 @@ import { httpClient } from '@/plugins/api/httpClient'
 import type {
   IConversation,
   IMessage,
+  IMessageAttachment,
   IPaginatedResponse
 } from '../models/Chat'
 
@@ -15,7 +16,7 @@ export const ChatService = {
   async getConversations(page = 1, perPage = 20, type?: 'guest' | 'private' | 'group'): Promise<IPaginatedResponse<IConversation>> {
     const response = await httpClient.get(`${API_BASE}/conversations`, {
       params: { page, per_page: perPage, type }
-    })
+    }) as { data: { data: IPaginatedResponse<IConversation> } }
     return response.data.data
   },
 
@@ -23,7 +24,7 @@ export const ChatService = {
    * Get a single conversation
    */
   async getConversation(conversationId: number): Promise<IConversation> {
-    const response = await httpClient.get(`${API_BASE}/conversations/${conversationId}`)
+    const response = await httpClient.get(`${API_BASE}/conversations/${conversationId}`) as { data: { data: IConversation } }
     return response.data.data
   },
 
@@ -33,7 +34,7 @@ export const ChatService = {
   async startPrivateChat(userId: number): Promise<IConversation> {
     const response = await httpClient.post(`${API_BASE}/conversations/private`, {
       user_id: userId
-    })
+    }) as { data: { data: IConversation } }
     return response.data.data
   },
 
@@ -50,7 +51,7 @@ export const ChatService = {
 
     const response = await httpClient.post(`${API_BASE}/conversations/group`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
-    })
+    }) as { data: { data: IConversation } }
     return response.data.data
   },
 
@@ -64,7 +65,7 @@ export const ChatService = {
   ): Promise<IMessage[]> {
     const response = await httpClient.get(`${API_BASE}/conversations/${conversationId}/messages`, {
       params: { limit, before_id: beforeId }
-    })
+    }) as { data: { data: IMessage[] } }
     return response.data.data
   },
 
@@ -90,15 +91,17 @@ export const ChatService = {
       `${API_BASE}/conversations/${conversationId}/messages`,
       formData,
       { headers: { 'Content-Type': 'multipart/form-data' } }
-    )
+    ) as { data: { data: IMessage } }
     return response.data.data
   },
 
   /**
    * Mark messages as read
    */
-  async markAsRead(conversationId: number): Promise<void> {
-    await httpClient.post(`${API_BASE}/conversations/${conversationId}/read`)
+  async markAsRead(conversationId: number, messageId?: number): Promise<void> {
+    await httpClient.post(`${API_BASE}/conversations/${conversationId}/read`, {
+      message_id: messageId
+    })
   },
 
   /**
@@ -136,5 +139,119 @@ export const ChatService = {
    */
   async deleteMessage(messageId: number): Promise<void> {
     await httpClient.delete(`${API_BASE}/messages/${messageId}`)
+  },
+
+  /**
+   * Update conversation settings (mute, pin, etc.)
+   */
+  async updateConversationSettings(
+    conversationId: number,
+    settings: { 
+      is_muted?: boolean; 
+      is_pinned?: boolean;
+      read_receipts_enabled?: boolean;
+      messaging_permissions?: 'all' | 'admin_only';
+      disappearing_messages_ttl?: number | null;
+    }
+  ): Promise<void> {
+    await httpClient.patch(`${API_BASE}/conversations/${conversationId}/settings`, settings)
+  },
+
+  /**
+   * Search messages in a conversation
+   */
+  async searchMessages(
+    conversationId: number,
+    query: string,
+    limit = 50
+  ): Promise<IMessage[]> {
+    const response = await httpClient.get(`${API_BASE}/conversations/${conversationId}/messages/search`, {
+      params: { q: query, limit }
+    }) as { data: { data: IMessage[] } }
+    return response.data.data
+  },
+
+  /**
+   * Get conversation media (images, videos, or files)
+   * @param type - 'media' for images/videos, 'files' for documents
+   */
+  async getConversationMedia(
+    conversationId: number,
+    type: 'media' | 'files' = 'media',
+    limit = 50
+  ): Promise<Array<IMessageAttachment & { message_id?: number; created_at?: string }>> {
+    const response = await httpClient.get(`${API_BASE}/conversations/${conversationId}/attachments`, {
+      params: { type, limit }
+    }) as { data: { data: Array<IMessageAttachment & { message_id?: number; created_at?: string }> } }
+    return response.data.data
+  },
+
+  /**
+   * Get pinned messages in a conversation
+   */
+  async getPinnedMessages(conversationId: number): Promise<IMessage[]> {
+    const response = await httpClient.get(`${API_BASE}/conversations/${conversationId}/messages/pinned`) as { data: { data: IMessage[] } }
+    return response.data.data
+  },
+
+  /**
+   * Pin/unpin a message
+   */
+  async togglePinMessage(messageId: number, isPinned: boolean): Promise<void> {
+    await httpClient.patch(`${API_BASE}/messages/${messageId}/pin`, { is_pinned: isPinned })
+  },
+
+  /**
+   * Block a user in a conversation
+   */
+  async blockUser(conversationId: number): Promise<void> {
+    await httpClient.post(`${API_BASE}/conversations/${conversationId}/block`)
+  },
+
+  /**
+   * Unblock a user in a conversation
+   */
+  async unblockUser(conversationId: number): Promise<void> {
+    await httpClient.delete(`${API_BASE}/conversations/${conversationId}/block`)
+  },
+
+  /**
+   * Report a conversation
+   */
+  async reportConversation(conversationId: number, reason: string): Promise<void> {
+    await httpClient.post(`${API_BASE}/conversations/${conversationId}/report`, { reason })
+  },
+
+  /**
+   * Initiate a call
+   */
+  async initiateCall(conversationId: number, toUserId: number, type: 'audio' | 'video'): Promise<void> {
+    await httpClient.post(`${API_BASE}/conversations/${conversationId}/call/initiate`, {
+      to_user_id: toUserId,
+      call_type: type
+    })
+  },
+
+  /**
+   * Send WebRTC signal
+   */
+  async sendCallSignal(conversationId: number, toUserId: number, type: 'offer' | 'answer' | 'ice-candidate', payload: any): Promise<void> {
+    await httpClient.post(`${API_BASE}/conversations/${conversationId}/call/signal`, {
+      to_user_id: toUserId,
+      type,
+      payload
+    })
+  },
+
+  /**
+   * Update call status
+   */
+  async updateCallStatus(conversationId: number, status: string, callType: 'audio' | 'video', toUserId?: number, metadata: any = {}): Promise<void> {
+    await httpClient.post(`${API_BASE}/conversations/${conversationId}/call/status`, {
+      to_user_id: toUserId,
+      status,
+      call_type: callType,
+      metadata
+    })
   }
 }

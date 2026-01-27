@@ -99,8 +99,11 @@ class ChatController extends Controller
             $request->input('before_id')
         );
 
-        // Mark as read
-        $this->chatService->markAsRead($conversationId, Auth::id());
+        // Mark as read (use the latest message in this batch)
+        $latestInBatch = $messages->last()?->id;
+        if ($latestInBatch) {
+            $this->chatService->markAsRead($conversationId, Auth::id(), $latestInBatch);
+        }
 
         return $this->successResponse($messages, __('messages.success'));
     }
@@ -144,9 +147,9 @@ class ChatController extends Controller
     /**
      * Mark conversation as read.
      */
-    public function markAsRead(int $conversationId): JsonResponse
+    public function markAsRead(Request $request, int $conversationId): JsonResponse
     {
-        $this->chatService->markAsRead($conversationId, Auth::id());
+        $this->chatService->markAsRead($conversationId, Auth::id(), $request->input('message_id'));
 
         return $this->successResponse(null, __('messages.success'));
     }
@@ -220,5 +223,170 @@ class ChatController extends Controller
         }
 
         return $this->successResponse(null, __('messages.deleted'));
+    }
+
+    /**
+     * Get attachments for a conversation.
+     */
+    public function getAttachments(Request $request, int $conversationId): JsonResponse
+    {
+        $type = $request->input('type', 'media');
+        $limit = $request->input('limit', 50);
+        $attachments = $this->chatService->getConversationAttachments($conversationId, $type, $limit);
+
+        return $this->successResponse($attachments, __('messages.success'));
+    }
+
+    /**
+     * Search messages in a conversation.
+     */
+    public function search(Request $request, int $conversationId): JsonResponse
+    {
+        $query = $request->input('q');
+        if (empty($query)) {
+            return $this->successResponse([], __('messages.success'));
+        }
+
+        $limit = $request->input('limit', 50);
+        $messages = $this->chatService->searchMessages($conversationId, $query, $limit);
+
+        return $this->successResponse($messages, __('messages.success'));
+    }
+
+    /**
+     * Update conversation settings.
+     */
+    public function updateSettings(Request $request, int $conversationId): JsonResponse
+    {
+        $request->validate([
+            'is_muted' => 'nullable|boolean',
+            'is_pinned' => 'nullable|boolean',
+            'read_receipts_enabled' => 'nullable|boolean',
+            'messaging_permissions' => 'nullable|string|in:all,admin_only',
+            'disappearing_messages_ttl' => 'nullable|integer',
+        ]);
+
+        $this->chatService->updateConversationSettings(
+            $conversationId, 
+            Auth::id(), 
+            $request->only([
+                'is_muted', 
+                'is_pinned', 
+                'read_receipts_enabled', 
+                'messaging_permissions', 
+                'disappearing_messages_ttl'
+            ])
+        );
+
+        return $this->successResponse(null, __('messages.success'));
+    }
+
+    /**
+     * Block the other user in a private conversation.
+     */
+    public function block(int $conversationId): JsonResponse
+    {
+        $conversation = $this->chatService->getConversation($conversationId, Auth::id());
+        
+        if ($conversation->type !== 'private') {
+            return $this->errorResponse('Blocking is only supported for private conversations.', 400);
+        }
+
+        $otherUser = $conversation->users->where('id', '!=', Auth::id())->first();
+        if (!$otherUser) {
+            return $this->errorResponse('Other user not found.', 404);
+        }
+
+        $this->chatService->blockUser(Auth::id(), $otherUser->id);
+
+        return $this->successResponse(null, 'User blocked successfully.');
+    }
+
+    /**
+     * Unblock the other user in a private conversation.
+     */
+    public function unblock(int $conversationId): JsonResponse
+    {
+        $conversation = $this->chatService->getConversation($conversationId, Auth::id());
+        
+        if ($conversation->type !== 'private') {
+            return $this->errorResponse('Blocking is only supported for private conversations.', 400);
+        }
+
+        $otherUser = $conversation->users->where('id', '!=', Auth::id())->first();
+        if (!$otherUser) {
+            return $this->errorResponse('Other user not found.', 404);
+        }
+
+        $this->chatService->unblockUser(Auth::id(), $otherUser->id);
+
+        return $this->successResponse(null, 'User unblocked successfully.');
+    }
+
+    /**
+     * Initiate a call (ringing).
+     */
+    public function initiateCall(Request $request, int $conversationId): JsonResponse
+    {
+        $request->validate([
+            'to_user_id' => 'required|integer|exists:users,id',
+            'call_type' => 'required|string|in:audio,video',
+        ]);
+
+        broadcast(new \App\Events\CallStatusChanged(
+            $conversationId,
+            Auth::id(),
+            $request->input('to_user_id'),
+            'ringing',
+            $request->input('call_type')
+        ))->toOthers();
+
+        return $this->successResponse(null, __('messages.success'));
+    }
+
+    /**
+     * Send WebRTC signal data.
+     */
+    public function sendCallSignal(Request $request, int $conversationId): JsonResponse
+    {
+        $request->validate([
+            'to_user_id' => 'required|integer|exists:users,id',
+            'type' => 'required|string|in:offer,answer,ice-candidate',
+            'payload' => 'required|array',
+        ]);
+
+        broadcast(new \App\Events\CallSignal(
+            $conversationId,
+            Auth::id(),
+            $request->input('to_user_id'),
+            $request->input('type'),
+            $request->input('payload')
+        ))->toOthers();
+
+        return $this->successResponse(null, __('messages.success'));
+    }
+
+    /**
+     * Update call status (accepted, rejected, ended, busy).
+     */
+    public function updateCallStatus(Request $request, int $conversationId): JsonResponse
+    {
+        $request->validate([
+            'to_user_id' => 'nullable|integer|exists:users,id',
+            'status' => 'required|string|in:ringing,accepted,rejected,busy,ended',
+            'call_type' => 'required|string|in:audio,video',
+            'metadata' => 'nullable|array',
+        ]);
+
+        broadcast(new \App\Events\CallStatusChanged(
+            $conversationId,
+            Auth::id(),
+            $request->input('to_user_id'),
+            $request->input('status'),
+            $request->input('call_type'),
+            $request->input('metadata', [])
+        ))->toOthers();
+
+        return $this->successResponse(null, __('messages.success'));
     }
 }

@@ -23,8 +23,18 @@ Route::prefix('chat')->group(function () {
     Route::post('conversations/{conversationId}/members', [ChatController::class, 'addMembers']);
     Route::delete('conversations/{conversationId}/members/{userId}', [ChatController::class, 'removeMember']);
     Route::post('conversations/{conversationId}/leave', [ChatController::class, 'leave']);
+    Route::patch('conversations/{conversationId}/settings', [ChatController::class, 'updateSettings']);
+    Route::get('conversations/{conversationId}/messages/search', [ChatController::class, 'search']);
+    Route::get('conversations/{conversationId}/attachments', [ChatController::class, 'getAttachments']);
+    Route::post('conversations/{conversationId}/block', [ChatController::class, 'block']);
+    Route::delete('conversations/{conversationId}/block', [ChatController::class, 'unblock']);
     Route::delete('conversations/{conversationId}', [ChatController::class, 'deleteConversation']);
     Route::delete('messages/{messageId}', [ChatController::class, 'deleteMessage']);
+    
+    // Call routes
+    Route::post('conversations/{conversationId}/call/initiate', [ChatController::class, 'initiateCall']);
+    Route::post('conversations/{conversationId}/call/signal', [ChatController::class, 'sendCallSignal']);
+    Route::post('conversations/{conversationId}/call/status', [ChatController::class, 'updateCallStatus']);
 });
 
 // Friend routes

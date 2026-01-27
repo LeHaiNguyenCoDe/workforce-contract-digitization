@@ -1,17 +1,22 @@
 /**
  * Chat Composables Index
  * Export all chat-related composables for easy importing
+ *
+ * Note: Only export public composables that are used by components.
+ * Internal utilities (useGlobalPolling, useRealtimeCore, useRealtimeEvents)
+ * are not exported to avoid duplicate imports.
  */
 
 // Core realtime functionality
-export { useRealtime, useAutoConnect, useGlobalPolling } from './useRealtime'
-export { useRealtimeCore, getEcho, disconnectEcho } from './useRealtimeCore'
-export { useRealtimeEvents, dispatchMessageToast, dispatchGuestChatToast, dispatchSelectConversation, dispatchNewMessageArrived } from './useRealtimeEvents'
-export { useGlobalPolling as useGlobalPollingStandalone } from './useGlobalPolling'
+export { useRealtime, useAutoConnect } from './useRealtime'
 
 // Conversation info shared composable
-export { useConversationInfo, useTypingIndicator, getInitials, getAvatarColorById, formatTypingText } from './useConversationInfo'
+export { useConversationInfo, useTypingIndicator } from './useConversationInfo'
 export type { ConversationInfo, TypingInfo } from './useConversationInfo'
 
 // Voice recorder
 export { useVoiceRecorder } from './useVoiceRecorder'
+
+// Conversation details sidebar functionality
+export { useConversationDetails } from './useConversationDetails'
+export type { ConversationDetailsState, SharedMedia } from './useConversationDetails'

@@ -19,6 +19,8 @@ export const useChatStore = defineStore('chat', () => {
   const isSendingMessage = ref(false)
   const hasMoreMessages = ref(true)
   const typingUsers = ref<Map<number, { userId: number; userName: string }>>(new Map())
+  const onlineUserIds = ref<Set<number>>(new Set())
+  const userReadMessageIds = ref<Map<number, number>>(new Map()) // userId -> messageId
 
   // Getters
   const totalUnreadCount = computed(() => {
@@ -48,6 +50,23 @@ export const useChatStore = defineStore('chat', () => {
     return currentConversation.value.users.find(u => u.id !== currentUserId) || null
   })
 
+  // Helpers for local persistence of non-DB messages (like block notices)
+  function getLocalSystemMessages(conversationId: number): IMessage[] {
+    const key = `chat_system_msgs_${conversationId}`
+    try {
+      return JSON.parse(localStorage.getItem(key) || '[]')
+    } catch {
+      return []
+    }
+  }
+
+  function saveLocalSystemMessage(conversationId: number, msg: IMessage) {
+    const key = `chat_system_msgs_${conversationId}`
+    const msgs = getLocalSystemMessages(conversationId)
+    msgs.push(msg)
+    localStorage.setItem(key, JSON.stringify(msgs))
+  }
+
   // Actions
   async function fetchConversations(page = 1, silent = false) {
     if (!silent) isLoadingConversations.value = true
@@ -72,6 +91,12 @@ export const useChatStore = defineStore('chat', () => {
         messages.value = [...newMessages, ...messages.value]
       } else {
         messages.value = newMessages
+        
+        // Append locally persisted system messages
+        const localMsgs = getLocalSystemMessages(conversationId)
+        if (localMsgs.length > 0) {
+          messages.value.push(...localMsgs)
+        }
       }
       hasMoreMessages.value = newMessages.length >= 50
       return newMessages
@@ -96,7 +121,50 @@ export const useChatStore = defineStore('chat', () => {
       if (!isDuplicate) {
           messages.value.push(message)
       }
+
+      // Update self read status
+      const currentUserId = parseInt(localStorage.getItem('userId') || '0')
+      if (currentUserId) {
+        handleMessageRead(currentUserId, message.id)
+      }
+
+      // Broadcast local event for scroll (same as blocked message handling)
+      window.dispatchEvent(new CustomEvent('chat:new-message-arrived', {
+        detail: { message, isFromSelf: true }
+      }))
+
       return message
+    } catch (error: any) {
+      if ((error.response?.status === 403 || error.status === 403) && 
+          (error.response?.data?.message?.toLowerCase().includes('block') || error.message?.toLowerCase().includes('block'))) {
+        
+        if (currentConversation.value) {
+          currentConversation.value.friendship_status = 'blocked_by_them'
+        }
+
+        const blockedMessage: IMessage = {
+          id: -Date.now(),
+          conversation_id: currentConversation.value!.id,
+          user_id: 0,
+          content: 'Tin nhắn này không thể gửi được vì bạn đã bị chặn.',
+          type: 'system',
+          metadata: { is_failed: true, error: 'blocked' },
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          is_edited: false,
+          reply_to_id: null
+        } as any
+
+        saveLocalSystemMessage(currentConversation.value!.id, blockedMessage)
+        messages.value.push(blockedMessage)
+        
+        window.dispatchEvent(new CustomEvent('chat:new-message-arrived', { 
+          detail: { message: blockedMessage, isFromSelf: true } 
+        }))
+        return blockedMessage
+      }
+      console.error('ChatStore: Failed to send message', error)
+      throw error
     } finally {
       isSendingMessage.value = false
     }
@@ -213,8 +281,19 @@ export const useChatStore = defineStore('chat', () => {
     currentConversation.value = conversation
     messages.value = []
     hasMoreMessages.value = true
+    userReadMessageIds.value.clear()
+    clearTypingUsers()
+
+    // Initialize read status
+    conversation.users.forEach(user => {
+      if (user.pivot?.last_read_message_id) {
+        userReadMessageIds.value.set(user.id, user.pivot.last_read_message_id)
+      }
+    })
+
     fetchMessages(conversation.id)
     ChatService.markAsRead(conversation.id)
+    
     // Reset unread count
     const conv = conversations.value.find(c => c.id === conversation.id)
     if (conv) {
@@ -222,8 +301,29 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
+  function handleMessageRead(userId: number, messageId: number) {
+    const currentId = userReadMessageIds.value.get(userId) || 0
+    if (messageId > currentId) {
+      userReadMessageIds.value.set(userId, messageId)
+    }
+  }
+
+  function getUsersWhoRead(messageId: number) {
+    if (!currentConversation.value) return []
+    
+    const currentUserId = parseInt(localStorage.getItem('userId') || '0')
+    
+    return currentConversation.value.users
+      .filter(user => {
+        if (user.id === currentUserId) return false
+        const lastReadId = userReadMessageIds.value.get(user.id)
+        return lastReadId === messageId
+      })
+  }
+
   // WebSocket handlers
-  async function handleNewMessage(message: IMessage) {
+  async function handleNewMessage(message: IMessage): Promise<{ isMuted: boolean }> {
+    let isMuted = false
     // 1. Check if conversation is in the list
     let conv = conversations.value.find(c => c.id === message.conversation_id)
 
@@ -234,10 +334,11 @@ export const useChatStore = defineStore('chat', () => {
         if (conv) {
           conversations.value = [conv, ...conversations.value]
           // The fetched conversation already has the latest message and unread count from server
+          isMuted = conv.pivot?.is_muted || false
         }
       } catch (error) {
         console.error('ChatStore: Failed to fetch missing conversation', error)
-        return
+        return { isMuted: false }
       }
     } else {
       // 3. For existing conversation, update unread count and latest message
@@ -262,8 +363,9 @@ export const useChatStore = defineStore('chat', () => {
         if (!isDuplicate) {
           conv.unread_count = (conv.unread_count || 0) + 1
           
-          // Dispatch toast if from others
-          if (!isCurrentUser) {
+          // Dispatch toast if from others AND not muted
+          const isMuted = conv.pivot?.is_muted || false
+          if (!isCurrentUser && !isMuted) {
             window.dispatchEvent(new CustomEvent('notification:show-toast', { 
               detail: { ...message, type: 'message' } 
             }))
@@ -279,6 +381,8 @@ export const useChatStore = defineStore('chat', () => {
       const [c] = conversations.value.splice(index, 1)
       conversations.value.unshift(c)
     }
+
+    return { isMuted: conv?.pivot?.is_muted || isMuted }
   }
 
   function handleUserTyping(_conversationId: number, userId: number, userName: string, isTyping: boolean) {
@@ -336,6 +440,27 @@ export const useChatStore = defineStore('chat', () => {
     handleNewMessage,
     handleUserTyping,
     clearTypingUsers,
+
+    // Read status
+    userReadMessageIds,
+    handleMessageRead,
+    getUsersWhoRead,
+
+    // Presence
+    onlineUserIds,
+    isUserOnline(userId: number): boolean {
+      return onlineUserIds.value.has(userId)
+    },
+    setUsersOnline(userIds: number[]) {
+      userIds.forEach(id => onlineUserIds.value.add(id))
+    },
+    setUserOnline(userId: number) {
+      onlineUserIds.value.add(userId)
+    },
+    setUserOffline(userId: number) {
+      onlineUserIds.value.delete(userId)
+    },
+
     $reset
   }
 })

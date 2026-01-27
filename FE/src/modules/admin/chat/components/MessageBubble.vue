@@ -3,8 +3,15 @@
     <div class="w-full flex message-row" :class="isMine ? 'justify-end' : 'justify-start'"
         :data-message-id="message.id">
 
+        <!-- System Message / Blocked Notice -->
+        <div v-if="message.type === 'system'" class="w-full flex justify-center my-2">
+            <div class="px-4 py-2 rounded-lg bg-gray-100/80 text-[11px] text-gray-500 font-medium max-w-[80%] text-center">
+                {{ displayContent }}
+            </div>
+        </div>
+
         <!-- Received Message Layout -->
-        <div v-if="!isMine" class="flex flex-col items-start max-w-[90%] sm:max-w-[75%]">
+        <div v-else-if="!isMine" class="flex flex-col items-start max-w-[90%] sm:max-w-[75%]">
             <div class="bg-white rounded-2xl rounded-bl-none shadow-sm border border-gray-100 relative group transition-all"
                 :class="[
                     (hasImages && !displayContent) ? 'p-0' : 'px-4 py-2.5'
@@ -18,12 +25,25 @@
                 <div v-if="hasImages"
                     :class="['grid gap-1 mb-2', imageCount === 1 ? 'grid-cols-1' : (imageCount === 2 ? 'grid-cols-2' : 'grid-cols-2 sm:grid-cols-3')]">
                     <div v-for="att in imageAttachments" :key="att.id"
-                        class="relative group/img rounded-lg transition-all"
+                        class="relative group/img rounded-lg transition-all overflow-hidden"
                         :class="{ 'z-20': activeImageMenuId === att.id }">
-                        <img :src="att.url" :alt="att.name"
+                        <!-- Image with error fallback -->
+                        <img v-if="!failedImages[att.id]" :src="att.url" :alt="att.name"
                             class="w-full h-full min-h-[100px] max-h-[400px] object-cover cursor-pointer hover:brightness-95 transition-all"
                             :class="!displayContent && imageCount === 1 ? 'rounded-none' : ''"
-                            @click="$emit('preview-image', att.url)" />
+                            @click="$emit('preview-image', att.url)"
+                            @error="handleImageError(att)" />
+                        <!-- Fallback for failed images -->
+                        <div v-else 
+                            class="w-full min-h-[100px] max-h-[200px] bg-gray-100 flex flex-col items-center justify-center p-4 text-gray-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="mb-2">
+                                <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
+                                <circle cx="9" cy="9" r="2"/>
+                                <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+                            </svg>
+                            <span class="text-xs text-center truncate w-full">{{ att.name }}</span>
+                            <a :href="att.url" target="_blank" class="text-xs text-teal-500 hover:underline mt-1">Mở ảnh</a>
+                        </div>
 
                         <!-- Image Menu Button -->
                         <div class="absolute top-1 right-1 opacity-0 group-hover/img:opacity-100 transition-opacity">
@@ -124,8 +144,8 @@
                 </p>
             </div>
 
-            <!-- Footer: Avatar + Time -->
-            <div class="flex items-center gap-2 mt-1.5 px-1">
+            <!-- Footer: Avatar + Time + Seen Avatars -->
+            <div class="flex items-center gap-2 mt-1.5 px-1 overflow-visible">
                 <div v-if="showAvatar" class="flex-shrink-0">
                     <img v-if="message.user?.avatar" :src="message.user.avatar"
                         class="w-5 h-5 rounded-full object-cover border border-white shadow-sm" />
@@ -134,14 +154,41 @@
                         {{ initials }}
                     </div>
                 </div>
-                <span class="text-[10px] text-gray-400 font-medium">{{ formattedTime }}</span>
+                <span class="text-[10px] text-gray-400 font-medium whitespace-nowrap">{{ formattedTime }}</span>
+
+                <!-- Seen Avatars (Zalo Style) -->
+                <TransitionGroup 
+                    name="seen-avatar" 
+                    tag="div" 
+                    class="seen-avatars-list flex flex-row items-center overflow-visible h-4"
+                >
+                    <div v-for="user in usersWhoRead" :key="user.id" class="relative group/seen">
+                        <img v-if="user.avatar" 
+                            :src="user.avatar" 
+                            class="w-4 h-4 rounded-full border border-white shadow-sm object-cover" 
+                            :title="user.name" />
+                        <div v-else 
+                            class="w-4 h-4 rounded-full border border-white bg-gray-300 shadow-sm flex items-center justify-center text-[8px] text-white font-bold" 
+                            :title="user.name">
+                            {{ user.name.charAt(0).toUpperCase() }}
+                        </div>
+
+                        <!-- Tooltip on hover -->
+                        <div class="absolute bottom-full mb-1 left-0 bg-gray-800 text-white text-[9px] px-1.5 py-0.5 rounded opacity-0 group-hover/seen:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
+                            {{ user.name }}
+                        </div>
+                    </div>
+                </TransitionGroup>
             </div>
         </div>
 
         <!-- Sent Message Layout -->
         <div v-else class="flex flex-col items-end max-w-[90%] sm:max-w-[75%]">
-            <div class="group relative bg-teal-500 text-white rounded-2xl rounded-br-none shadow-md shadow-teal-500/10 transition-all"
+            <div class="group relative rounded-2xl rounded-br-none shadow-md transition-all"
                 :class="[
+                    sentBgClass,
+                    sentTextClass,
+                    sentShadowClass,
                     (hasImages && !displayContent) ? 'p-0' : 'px-4 py-2.5'
                 ]">
                 <!-- Delete Action (Hover - Message level) -->
@@ -159,12 +206,25 @@
                 <div v-if="hasImages"
                     :class="['grid gap-1 mb-2', imageCount === 1 ? 'grid-cols-1' : (imageCount === 2 ? 'grid-cols-2' : 'grid-cols-2 sm:grid-cols-3')]">
                     <div v-for="att in imageAttachments" :key="att.id"
-                        class="relative group/img rounded-lg transition-all"
+                        class="relative group/img rounded-lg transition-all overflow-hidden"
                         :class="{ 'z-20': activeImageMenuId === att.id }">
-                        <img :src="att.url" :alt="att.name"
+                        <!-- Image with error fallback -->
+                        <img v-if="!failedImages[att.id]" :src="att.url" :alt="att.name"
                             class="w-full h-full min-h-[100px] max-h-[400px] object-cover cursor-pointer hover:brightness-105 transition-all"
                             :class="!displayContent && imageCount === 1 ? 'rounded-none' : ''"
-                            @click="$emit('preview-image', att.url)" />
+                            @click="$emit('preview-image', att.url)"
+                            @error="handleImageError(att)" />
+                        <!-- Fallback for failed images -->
+                        <div v-else 
+                            class="w-full min-h-[100px] max-h-[200px] bg-white/20 flex flex-col items-center justify-center p-4 text-white/80">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="mb-2">
+                                <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
+                                <circle cx="9" cy="9" r="2"/>
+                                <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+                            </svg>
+                            <span class="text-xs text-center truncate w-full">{{ att.name }}</span>
+                            <a :href="att.url" target="_blank" class="text-xs hover:underline mt-1">Mở ảnh</a>
+                        </div>
 
                         <!-- Image Menu Button -->
                         <div class="absolute top-1 right-1 opacity-0 group-hover/img:opacity-100 transition-opacity">
@@ -265,10 +325,12 @@
                 </p>
             </div>
 
-            <!-- Footer: Time + Status -->
-            <div class="flex items-center gap-1.5 mt-1.5 px-1">
-                <span class="text-[10px] text-gray-400 font-medium">{{ formattedTime }}</span>
-                <div class="text-teal-500">
+            <!-- Footer: Time + Status + Seen Avatars -->
+            <div class="flex items-center gap-1.5 mt-1.5 px-1 overflow-visible">
+                <span class="text-[10px] text-gray-400 font-medium whitespace-nowrap">{{ formattedTime }}</span>
+                
+                <!-- Sent/Read Status Icon (Double Check) -->
+                <div :class="accentColorClass" class="flex-shrink-0">
                     <svg v-if="isRead" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
                         fill="none" stroke="currentColor" stroke-width="3">
                         <polyline points="20 6 9 17 4 12" />
@@ -279,22 +341,53 @@
                         <polyline points="20 6 9 17 4 12" />
                     </svg>
                 </div>
+
+                <!-- Seen Avatars (Zalo Style) -->
+                <TransitionGroup 
+                    name="seen-avatar" 
+                    tag="div" 
+                    class="seen-avatars-list flex flex-row-reverse items-center ml-auto overflow-visible h-4"
+                >
+                    <div v-for="user in usersWhoRead" :key="user.id" class="relative group/seen">
+                        <img v-if="user.avatar" 
+                            :src="user.avatar" 
+                            class="w-4 h-4 rounded-full border border-white shadow-sm object-cover" 
+                            :title="user.name" />
+                        <div v-else 
+                            class="w-4 h-4 rounded-full border border-white bg-gray-300 shadow-sm flex items-center justify-center text-[8px] text-white font-bold" 
+                            :title="user.name">
+                            {{ user.name.charAt(0).toUpperCase() }}
+                        </div>
+                        
+                        <!-- Tooltip on hover -->
+                        <div class="absolute bottom-full mb-1 right-0 bg-gray-800 text-white text-[9px] px-1.5 py-0.5 rounded opacity-0 group-hover/seen:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
+                            {{ user.name }}
+                        </div>
+                    </div>
+                </TransitionGroup>
             </div>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, reactive } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { IMessage } from '../models/Chat'
+import type { ChatTheme } from '../stores/chatThemeStore'
+import { useChatStore } from '../stores/chatStore'
 
-const props = defineProps<{
+const chatStore = useChatStore()
+
+const props = withDefaults(defineProps<{
     message: IMessage
     showAvatar: boolean
     showSenderName?: boolean
     currentUserId?: number
-}>()
+    theme?: ChatTheme | null
+}>(), {
+    theme: null
+})
 
 defineEmits<{
     (e: 'reply', message: IMessage): void
@@ -304,6 +397,14 @@ defineEmits<{
 
 const { t } = useI18n()
 
+// Track failed images to show fallback
+const failedImages = reactive<Record<string | number, boolean>>({})
+
+function handleImageError(att: { id: string | number; url: string; name: string }) {
+    console.warn('[MessageBubble] Image failed to load:', att.url)
+    failedImages[att.id] = true
+}
+
 const avatarColors = ['bg-teal-500', 'bg-blue-500', 'bg-purple-500', 'bg-pink-500', 'bg-orange-500']
 
 // Robust comparison for ID
@@ -312,6 +413,12 @@ const isMine = computed(() => {
     const currentId = Number(props.currentUserId || 0)
     return currentId !== 0 && messageUserId === currentId
 })
+
+// Theme-based classes with fallbacks
+const sentBgClass = computed(() => props.theme?.sentBg || 'bg-teal-500')
+const sentTextClass = computed(() => props.theme?.sentText || 'text-white')
+const sentShadowClass = computed(() => props.theme?.sentShadow || 'shadow-teal-500/20')
+const accentColorClass = computed(() => props.theme?.accentColor || 'text-teal-500')
 
 const avatarColor = computed(() => avatarColors[Number(props.message.user_id || 0) % avatarColors.length])
 
@@ -325,7 +432,28 @@ const formattedTime = computed(() => {
     return new Date(props.message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 })
 
-const isRead = computed(() => !!props.message.metadata?.read_at)
+const usersWhoRead = computed(() => {
+    return chatStore.getUsersWhoRead(Number(props.message.id))
+})
+
+const isRead = computed(() => {
+    // Check if the message has been read by anyone else
+    if (usersWhoRead.value.length > 0) return true
+    
+    // Fallback to metadata
+    if (props.message.metadata?.read_at) return true
+    
+    // Check global status for my own messages
+    if (isMine.value) {
+        const partner = chatStore.currentConversationPartner
+        if (partner) {
+            const lastReadId = chatStore.userReadMessageIds.get(partner.id)
+            if (lastReadId && lastReadId >= props.message.id) return true
+        }
+    }
+    
+    return false
+})
 
 const displayContent = computed(() => {
     const content = props.message.content
@@ -350,6 +478,7 @@ const normalizedAttachments = computed(() => {
     if (!props.message.attachments) return []
 
     return props.message.attachments.map((att: any) => {
+        // Get URL from various possible properties
         let url = att.url || att.file_path || att.path || ''
         const name = att.name || att.file_name || att.filename || 'File'
         const type = att.type || att.file_type || att.mime_type || ''
@@ -357,14 +486,24 @@ const normalizedAttachments = computed(() => {
         // FIX: Handle URLs from Laravel backend which may have different domains
         // e.g., http://workforce_contract_digitization.io/storage/chat-attachments/2025/12/file.png
         if (url) {
-            // If URL contains /storage/, extract the path and use local proxy
+            // If URL is a full URL with /storage/, extract just the /storage/ part
             if (url.includes('/storage/')) {
                 const storageIndex = url.indexOf('/storage/')
                 url = url.substring(storageIndex)
-            } else if (!url.startsWith('http') && !url.startsWith('data:') && !url.startsWith('/storage/')) {
+            } 
+            // If it starts with storage/ without leading slash
+            else if (url.startsWith('storage/')) {
+                url = '/' + url
+            }
+            // If it doesn't start with http or data: or /storage/, prefix with /storage/
+            else if (!url.startsWith('http') && !url.startsWith('data:') && !url.startsWith('/storage/') && !url.startsWith('/')) {
                 // Handle relative paths like 'chat-attachments/2025/12/file.png'
                 const cleanPath = url.replace(/^\//, '')
                 url = '/storage/' + encodeURI(cleanPath)
+            }
+            // If it starts with / but not /storage/, might be a relative path to storage
+            else if (url.startsWith('/') && !url.startsWith('/storage/')) {
+                url = '/storage' + url
             }
         }
 
@@ -388,7 +527,7 @@ const normalizedAttachments = computed(() => {
         }
 
         return {
-            id: att.id || Math.random(),
+            id: att.id || `${name}-${att.file_size || 0}`,
             url,
             name,
             type,
@@ -436,3 +575,28 @@ if (typeof window !== 'undefined') {
     })
 }
 </script>
+
+<style scoped>
+.seen-avatar-enter-active {
+  transition: all 0.5s cubic-bezier(0.24, 0, 0.22, 1);
+}
+.seen-avatar-enter-from {
+  opacity: 0;
+  transform: translateY(-25px); /* Simulated "falling down" from previous position */
+}
+.seen-avatar-leave-active {
+  transition: all 0.3s ease;
+}
+.seen-avatar-leave-to {
+  opacity: 0;
+  transform: scale(0.5);
+}
+
+/* Ensure avatars stack nicely */
+.seen-avatars-list > div {
+  margin-left: -0.375rem;
+}
+.seen-avatars-list > div:last-child {
+  margin-left: 0;
+}
+</style>

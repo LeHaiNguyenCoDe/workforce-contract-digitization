@@ -32,6 +32,9 @@ const categories = computed(() => store.categories)
 const isLoading = computed(() => store.isLoading)
 const currentPage = ref(store.currentPage)
 
+// Mobile filter drawer state
+const showMobileFilter = ref(false)
+
 // DTable Columns
 const displayColumns = [
   { key: 'selection', label: '#', width: '50px' },
@@ -85,6 +88,16 @@ const removeFilter = (tag: any) => {
   if (tag.type === 'rating') selectedRating.value = null
 }
 
+// Count active filters for badge
+const activeFiltersCount = computed(() => {
+  let count = 0
+  if (selectedCategoryId.value) count++
+  if (selectedBrands.value.length > 0) count += selectedBrands.value.length
+  if (priceRange.value.min > 0 || priceRange.value.max < 20000000) count++
+  if (selectedRating.value) count++
+  return count
+})
+
 onMounted(async () => {
   await store.fetchCategories()
   await store.fetchProducts()
@@ -100,8 +113,8 @@ const handlePageChange = (val: number) => {
     <PageHeader :title="t('admin.products')" pageTitle="Ecommerce" />
 
     <BRow>
-      <!-- Filter Sidebar -->
-      <BCol xl="3" lg="4" class="sticky-side-div">
+      <!-- Filter Sidebar - Hidden on mobile/tablet -->
+      <BCol xl="3" lg="4" class="sticky-side-div d-none d-lg-block">
         <ProductFilterSidebar 
           :categoryId="selectedCategoryId"
           @update:categoryId="selectedCategoryId = $event ?? null"
@@ -118,8 +131,21 @@ const handlePageChange = (val: number) => {
         />
       </BCol>
 
-      <!-- Product List -->
-      <BCol xl="9" lg="8">
+      <!-- Product List - Full width on mobile -->
+      <BCol xl="9" lg="8" cols="12">
+        <!-- Mobile Filter Button -->
+        <div class="d-lg-none mb-3">
+          <button 
+            type="button"
+            class="btn btn-outline-primary w-100 d-flex align-items-center justify-content-center gap-2"
+            @click="showMobileFilter = true"
+          >
+            <i class="ri-filter-3-line"></i>
+            <span>Filters</span>
+            <span v-if="activeFiltersCount > 0" class="badge bg-primary rounded-pill">{{ activeFiltersCount }}</span>
+          </button>
+        </div>
+        
         <ProductTableList 
           :searchQuery="searchQuery"
           @update:searchQuery="searchQuery = $event"
@@ -143,6 +169,38 @@ const handlePageChange = (val: number) => {
         />
       </BCol>
     </BRow>
+    
+    <!-- Mobile Filter Drawer -->
+    <Teleport to="body">
+      <!-- Backdrop -->
+      <div 
+        v-if="showMobileFilter" 
+        class="mobile-filter-backdrop show" 
+        @click="showMobileFilter = false"
+      ></div>
+      
+      <!-- Drawer -->
+      <div 
+        class="mobile-filter-drawer" 
+        :class="{ show: showMobileFilter }"
+      >
+        <ProductFilterSidebar 
+          :categoryId="selectedCategoryId"
+          @update:categoryId="selectedCategoryId = $event ?? null"
+          :priceRange="priceRange"
+          @update:priceRange="priceRange = $event"
+          :brands="selectedBrands"
+          @update:brands="selectedBrands = $event"
+          :rating="selectedRating"
+          @update:rating="selectedRating = $event ?? null"
+          :categories="categories"
+          :formatPrice="formatPrice"
+          @clear-all="clearAllFilters"
+          @remove-filter="removeFilter"
+          @close="showMobileFilter = false"
+        />
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -151,4 +209,6 @@ const handlePageChange = (val: number) => {
     position: sticky;
     top: 70px;
 }
+
+/* Mobile filter drawer animations are in custom.scss */
 </style>

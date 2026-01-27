@@ -16,7 +16,7 @@ const selectedBrands = defineModel<string[]>('brands', {
 })
 const selectedRating = defineModel<number | null>('rating')
 
-const emit = defineEmits(['clear-all', 'remove-filter'])
+const emit = defineEmits(['clear-all', 'remove-filter', 'close'])
 
 const store = useAdminProductStore()
 
@@ -71,9 +71,20 @@ const clearAllFilters = () => {
 <template>
   <BCard no-body class="border-0 shadow-sm mb-4 p-0">
     <BCardBody class="p-3">
-      <div class="d-flex align-items-center justify-content-between mb-3 pb-1 border-bottom border-light">
+      <!-- Mobile drawer header (shown only when used as drawer) -->
+      <div class="d-lg-none d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+        <h5 class="mb-0 fw-semibold">Filters</h5>
+        <button type="button" class="btn-close" @click="emit('close')" aria-label="Close"></button>
+      </div>
+      
+      <div class="d-none d-lg-flex align-items-center justify-content-between mb-3 pb-1 border-bottom border-light">
         <h5 class="card-title mb-0 fs-13 fw-semibold text-muted text-uppercase ls-1">Filters</h5>
         <BLink href="javascript:void(0);" @click="clearAllFilters" class="text-muted text-decoration-underline small">Clear All</BLink>
+      </div>
+      
+      <!-- Mobile clear all link -->
+      <div class="d-lg-none d-flex justify-content-end mb-2">
+        <BLink href="javascript:void(0);" @click="clearAllFilters" class="text-primary text-decoration-underline small">Clear All Filters</BLink>
       </div>
     
       <div class="filter-content-scroll" style="max-height: calc(80vh - 180px); overflow-y: auto; overflow-x: hidden; padding-right: 5px;">

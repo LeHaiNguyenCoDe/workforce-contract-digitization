@@ -396,3 +396,156 @@
         display: none;
     }
 }
+
+// ============================================
+// MOBILE TOPBAR ENHANCEMENTS
+// ============================================
+
+// Extra small devices
+@media (max-width: 575.98px) {
+    #page-topbar {
+        .navbar-header {
+            padding: 0 0.5rem;
+            height: 60px;
+        }
+    }
+
+    .navbar-header {
+        .btn-topbar {
+            height: 34px;
+            width: 34px;
+            
+            i, svg {
+                font-size: 16px;
+            }
+        }
+        
+        // Hide some buttons on very small screens
+        .topbar-head-dropdown {
+            &.ms-1:not(:first-child):not(:nth-child(2)) {
+                display: none;
+            }
+        }
+    }
+
+    .app-search {
+        display: none !important;
+    }
+
+    .topbar-user {
+        .user-name-text,
+        .user-name-sub-text {
+            display: none !important;
+        }
+        
+        .header-profile-user {
+            width: 28px;
+            height: 28px;
+        }
+    }
+
+    .header-item {
+        height: 60px;
+    }
+
+    .topbar-badge {
+        right: -5px;
+        top: 6px !important;
+        font-size: 9px;
+        min-width: 14px;
+        height: 14px;
+        line-height: 14px;
+    }
+}
+
+// Mobile search overlay
+.mobile-search-overlay {
+    display: none;
+    
+    @media (max-width: 767.98px) {
+        &.show {
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1100;
+            background: var(--#{$prefix}header-bg);
+            padding: 0.75rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            
+            .form-control {
+                height: 44px;
+                font-size: 16px;
+            }
+            
+            .btn-close-search {
+                position: absolute;
+                right: 1rem;
+                top: 50%;
+                transform: translateY(-50%);
+                background: none;
+                border: none;
+                font-size: 20px;
+                color: var(--#{$prefix}secondary-color);
+            }
+        }
+    }
+}
+
+// Mobile navbar brand adjustments
+@media (max-width: 767.98px) {
+    .navbar-brand-box {
+        padding: 0 0.75rem;
+        
+        .logo-lg {
+            display: none !important;
+        }
+        
+        .logo-sm {
+            display: inline-block !important;
+        }
+    }
+}
+
+// Hamburger menu mobile
+@media (max-width: 575.98px) {
+    .topnav-hamburger {
+        width: 34px;
+        height: 34px;
+        
+        .hamburger-icon {
+            span {
+                height: 2px;
+                
+                &:nth-child(2) {
+                    width: 70%;
+                }
+            }
+        }
+    }
+}
+
+// Dropdown mobile optimization
+@media (max-width: 575.98px) {
+    .navbar-header {
+        .dropdown-menu {
+            position: fixed !important;
+            left: 0.5rem !important;
+            right: 0.5rem !important;
+            width: auto !important;
+            max-width: calc(100vw - 1rem);
+            transform: none !important;
+            
+            &.dropdown-menu-end {
+                right: 0.5rem !important;
+                left: auto !important;
+            }
+        }
+    }
+    
+    .notification-dropdown {
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+}

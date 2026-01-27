@@ -7,7 +7,7 @@ export interface IUser {
   last_seen_at?: string | null
   is_online?: boolean
   // Friendship status relative to current user
-  friendship_status?: 'none' | 'pending' | 'sent' | 'accepted' | 'blocked'
+  friendship_status?: 'none' | 'pending' | 'sent' | 'accepted' | 'blocked' | 'blocked_by_me' | 'blocked_by_them' | 'blocked_mutually'
   friendship_id?: number | null
 }
 
@@ -25,9 +25,14 @@ export interface IConversation {
   pivot?: {
     role: 'member' | 'admin'
     last_read_at: string | null
+    last_read_message_id: number | null
     is_muted: boolean
     is_pinned: boolean
+    read_receipts_enabled: boolean
   }
+  messaging_permissions?: 'all' | 'admin_only'
+  disappearing_messages_ttl?: number | null
+  friendship_status?: 'none' | 'pending' | 'sent' | 'accepted' | 'blocked' | 'blocked_by_me' | 'blocked_by_them' | 'blocked_mutually'
   is_guest?: boolean
   guest_session?: {
     id?: number
@@ -47,8 +52,10 @@ export interface IConversationUser extends IUser {
   pivot?: {
     role: 'member' | 'admin'
     last_read_at: string | null
+    last_read_message_id: number | null
     is_muted: boolean
     is_pinned: boolean
+    read_receipts_enabled: boolean
   }
 }
 

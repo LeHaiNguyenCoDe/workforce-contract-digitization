@@ -83,8 +83,11 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { IConversation } from '../models/Chat'
+import { useChatStore } from '../stores/chatStore'
+import { useAuthStore } from '../../../../stores/auth'
 
 defineProps<{
     conversations: IConversation[]
@@ -98,6 +101,10 @@ defineEmits<{
 }>()
 
 const { t } = useI18n()
+const chatStore = useChatStore()
+const authStore = useAuthStore()
+
+const currentUserId = computed(() => authStore.user?.id || 0)
 
 const avatarColors = [
     'bg-teal-500', 'bg-blue-500', 'bg-purple-500', 'bg-pink-500',
@@ -106,14 +113,22 @@ const avatarColors = [
 
 function getName(conversation: IConversation): string {
     if (conversation.name) return conversation.name
+    
+    // For private chats, find the partner (not me)
+    if (conversation.type === 'private') {
+        const partner = conversation.users.find(u => u.id !== currentUserId.value)
+        if (partner) return partner.name
+    }
+    
     if (conversation.users.length === 1) return conversation.users[0].name
     return conversation.users.map(u => u.name.split(' ')[0]).join(', ')
 }
 
 function getAvatar(conversation: IConversation): string | null {
     if (conversation.avatar) return conversation.avatar
-    if (conversation.type === 'private' && conversation.users.length === 1) {
-        return conversation.users[0].avatar || null
+    if (conversation.type === 'private') {
+        const partner = conversation.users.find(u => u.id !== currentUserId.value)
+        return partner?.avatar || null
     }
     return null
 }
@@ -127,10 +142,13 @@ function getInitials(name: string): string {
 }
 
 function isOnline(conversation: IConversation): boolean {
-    if (conversation.type === 'private' && conversation.users.length === 1) {
-        return conversation.users[0].is_online || false
+    if (conversation.type === 'private') {
+        const partner = conversation.users.find(u => u.id !== currentUserId.value)
+        return partner ? chatStore.isUserOnline(partner.id) : false
     }
-    return false
+    
+    // For groups, check if any member (not me) is online
+    return conversation.users.some(u => u.id !== currentUserId.value && chatStore.isUserOnline(u.id))
 }
 
 function getPreview(conversation: IConversation): string {

@@ -17,7 +17,8 @@ export default defineConfig(({ mode }) => {
           'src/composables/**',
           'src/helpers/**',
           'src/utils/**',
-          'src/modules/**/composables/**',
+          // Only auto-import from composables index files to avoid duplicates
+          'src/modules/**/composables/index.ts',
           'src/modules/**/store.ts',
           'src/modules/**/store/store.ts',
           // Only import from module services, not from plugins/api/services

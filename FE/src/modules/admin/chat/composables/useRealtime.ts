@@ -20,6 +20,7 @@ import { getEcho, disconnectEcho, useRealtimeCore } from './useRealtimeCore'
 import { dispatchMessageToast, dispatchGuestChatToast, dispatchSelectConversation } from './useRealtimeEvents'
 import { processedMessageIds } from '../utils/LRUSet'
 import { useGlobalPolling } from './useGlobalPolling'
+import { useCallStore } from '../stores/callStore'
 
 // ============================================
 // State
@@ -33,6 +34,7 @@ const subscribedConversations = ref<Set<number>>(new Set())
 
 export function useRealtime() {
   const chatStore = useChatStore()
+  const callStore = useCallStore()
   const notificationStore = useNotificationStore()
   const { isConnected } = useRealtimeCore()
 
@@ -53,11 +55,12 @@ export function useRealtime() {
     const echo = getEcho()
 
     // Subscribe to user's private channel for notifications
+    console.log(`Realtime: Subscribing to user.${userId}`)
     echo.private(`user.${userId}`)
       .subscribed(() => {
-        // Connected successfully
+        console.log(`Realtime: Successfully subscribed to user.${userId}`)
       })
-      .error((error: unknown) => {
+      .error((error: any) => {
         console.error(`Realtime: Error subscribing to user.${userId}`, error)
       })
       .listen('.notification.new', (data: INotification) => {
@@ -69,6 +72,73 @@ export function useRealtime() {
       })
       .listen('.friend.request', (data: FriendRequestEvent) => {
         handleFriendRequest(data, userId)
+      })
+      .listen('.call.signal', async (data: any) => {
+        console.log('Realtime: Received call signal', data.type)
+        if (data.type === 'offer') {
+          // Store already contains caller info from status_changed 'ringing'
+          await callStore.handleOffer(data.payload)
+        } else if (data.type === 'answer') {
+          await callStore.handleAnswer(data.payload)
+        } else if (data.type === 'ice-candidate') {
+          await callStore.handleCandidate(data.payload)
+        }
+      })
+      .listen('.call.status_changed', async (data: any) => {
+        console.log('Realtime: Call status changed event received:', data.status, data)
+        const isSelf = Number(data.from_user_id) === Number(userId)
+        
+        if (data.status === 'ringing') {
+          if (isSelf) return // Ignore own ringing signals
+
+          // Try various ways to find caller info
+          let caller = (chatStore.currentConversationPartner && chatStore.currentConversationPartner.id === data.from_user_id) 
+                         ? chatStore.currentConversationPartner 
+                         : null
+          
+          if (!caller) {
+            // Search in all conversations
+            for (const conv of chatStore.conversations) {
+              const found = conv.users.find(u => u.id === data.from_user_id)
+              if (found) {
+                caller = found
+                break
+              }
+            }
+          }
+          
+          if (!caller) {
+            console.warn('Realtime: Caller info not found in store, using fallback data')
+            // Fallback: minimal user object if not found
+            caller = { id: data.from_user_id, name: 'Someone' } as any
+          }
+
+          callStore.handleIncomingCall({
+            conversation_id: data.conversation_id,
+            from_user_id: data.from_user_id,
+            call_type: data.call_type,
+            caller: caller as any
+          })
+        } else if (data.status === 'accepted') {
+          if (isSelf) return 
+          
+          console.log('Realtime: Call accepted by partner:', data.from_user_id)
+          callStore.callStatus = 'active'
+          callStore.startTimer()
+          
+          if (!callStore.localStream) {
+            console.log('Realtime: Starting local stream on accepted (caller side)')
+            await callStore.startLocalStream()
+          }
+        } else if (['rejected', 'busy', 'ended'].includes(data.status)) {
+          console.log(`Realtime: Processing ${data.status} signal from ${data.from_user_id} (isSelf: ${isSelf})`)
+          if (isSelf) {
+            console.log(`Realtime: Ignoring self-emitted ${data.status} signal`)
+            return
+          }
+          console.log(`Realtime: Call ${data.status} by partner`)
+          callStore.resetCall(`partner_${data.status}`)
+        }
       })
 
     // Subscribe to admin-specific guest chat notifications
@@ -98,11 +168,11 @@ export function useRealtime() {
     }
     processedMessageIds.add(messageId)
 
-    await chatStore.handleNewMessage(data)
+    const result = await chatStore.handleNewMessage(data)
     dispatchMessageToast(data)
 
     // Trigger browser notification if tab is hidden
-    if (document.hidden) {
+    if (document.hidden && !result.isMuted) {
       AudioHelper.playMessageSound()
       NotificationHelper.showNotification(data.user?.name || 'New Message', {
         body: typeof data.content === 'string' ? data.content : 'Sent an attachment',
@@ -169,7 +239,7 @@ export function useRealtime() {
       .subscribed(() => {
         // Subscribed successfully
       })
-      .error((error: unknown) => {
+      .error((error: any) => {
         console.error(`Realtime: Error subscribing to conversation.${conversationId}`, error)
       })
       .listen('.message.sent', (data: IMessage) => {
@@ -178,6 +248,25 @@ export function useRealtime() {
       .listen('.user.typing', (data: TypingEvent) => {
         chatStore.handleUserTyping(conversationId, data.user_id, data.user_name, data.is_typing)
       })
+      .listen('.message.read', (data: { user_id: number; message_id: number }) => {
+        chatStore.handleMessageRead(data.user_id, data.message_id)
+      })
+
+    // Subscribe to presence channel
+    const echoAny = echo as any
+    echoAny.join(`presence.conversation.${conversationId}`)
+      .here((users: Array<{ id: number; name: string }>) => {
+        chatStore.setUsersOnline(users.map(u => u.id))
+      })
+      .joining((user: { id: number; name: string }) => {
+        chatStore.setUserOnline(user.id)
+      })
+      .leaving((user: { id: number; name: string }) => {
+        chatStore.setUserOffline(user.id)
+      })
+      .error((error: any) => {
+        console.error(`Realtime: Presence error for conversation.${conversationId}`, error)
+      })
 
     subscribedConversations.value.add(conversationId)
   }
@@ -185,7 +274,7 @@ export function useRealtime() {
   /**
    * Handle message received on conversation channel
    */
-  function handleConversationMessage(data: IMessage, conversationId: number): void {
+  async function handleConversationMessage(data: IMessage, conversationId: number): Promise<void> {
     const messageId = Number(data.id)
 
     // Check for duplicates
@@ -194,11 +283,13 @@ export function useRealtime() {
     }
     processedMessageIds.add(messageId)
 
-    chatStore.handleNewMessage(data)
+    const result = await chatStore.handleNewMessage(data)
 
     // Skip notification for own messages
     if (Number(data.user_id) !== Number(currentUserId.value)) {
-      AudioHelper.playMessageSound()
+      if (!result.isMuted) {
+        AudioHelper.playMessageSound()
+      }
       dispatchMessageToast(data)
 
       // Show browser notification if tab is hidden
@@ -222,6 +313,7 @@ export function useRealtime() {
 
     const echo = getEcho()
     echo.leave(`conversation.${conversationId}`)
+    echo.leave(`presence.conversation.${conversationId}`)
     subscribedConversations.value.delete(conversationId)
     chatStore.clearTypingUsers()
   }
@@ -235,6 +327,7 @@ export function useRealtime() {
     // Leave all conversation channels
     subscribedConversations.value.forEach(convId => {
       echo.leave(`conversation.${convId}`)
+      echo.leave(`presence.conversation.${convId}`)
     })
     subscribedConversations.value.clear()
 
@@ -284,14 +377,18 @@ export function useAutoConnect() {
   const authStore = useAuthStore()
 
   onMounted(async () => {
+    console.log('useAutoConnect: Mounting...')
     if (!authStore.isInitialized) {
       await authStore.fetchUser()
     }
 
     if (authStore.user?.id) {
+      console.log('useAutoConnect: Connecting user', authStore.user.id)
       connect(authStore.user.id)
       // Start global polling as a fallback
       startGlobalPolling(30000)
+    } else {
+      console.warn('useAutoConnect: No user found after fetch')
     }
   })
 
@@ -300,6 +397,3 @@ export function useAutoConnect() {
     stopGlobalPolling()
   })
 }
-
-// Re-export for backward compatibility
-export { useGlobalPolling } from './useGlobalPolling'

@@ -129,7 +129,18 @@ class BroadcastingController extends Controller
     private function isAdmin($user): bool
     {
         $adminRoles = ['admin', 'manager', 'super_admin'];
-        return in_array($user->role, $adminRoles);
+
+        // Kiểm tra role attribute trước
+        if (isset($user->role) && in_array($user->role, $adminRoles)) {
+            return true;
+        }
+
+        // Fallback: kiểm tra Spatie roles nếu có
+        if (method_exists($user, 'hasAnyRole')) {
+            return $user->hasAnyRole($adminRoles);
+        }
+
+        return false;
     }
 
     /**

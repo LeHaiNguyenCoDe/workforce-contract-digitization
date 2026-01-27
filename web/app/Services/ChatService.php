@@ -20,12 +20,14 @@ class ChatService
      */
     public function getConversation(int $conversationId, int $userId): Conversation
     {
-        return Conversation::with([
-            'latestMessage',
-            'latestMessage.user:id,name,avatar',
-            'users:id,name,avatar,last_seen_at',
-            'guestSession',
-        ])
+        $user = User::findOrFail($userId);
+        $conversation = $user->conversations()
+            ->with([
+                'latestMessage',
+                'latestMessage.user:id,name,avatar',
+                'users:id,name,avatar,last_seen_at',
+                'guestSession',
+            ])
             ->withCount([
                 'messages as unread_count' => function ($query) use ($userId) {
                     $query->whereHas('conversation.users', function ($q) use ($userId) {
@@ -35,6 +37,12 @@ class ChatService
                 }
             ])
             ->findOrFail($conversationId);
+
+        if ($conversation->type === 'private' && !$conversation->is_guest) {
+            $this->calculateFriendshipStatus($conversation, $userId);
+        }
+
+        return $conversation;
     }
 
     /**
@@ -43,7 +51,8 @@ class ChatService
      */
     public function getConversationsForUser(int $userId, int $perPage = 20, ?string $type = null): LengthAwarePaginator
     {
-        $query = Conversation::forUser($userId)
+        $user = User::findOrFail($userId);
+        $query = $user->conversations()
             ->with([
                 'latestMessage',
                 'latestMessage.user:id,name,avatar',
@@ -81,8 +90,17 @@ class ChatService
             $query->where('type', 'group');
         }
 
-        return $query->orderByRaw('(SELECT MAX(created_at) FROM messages WHERE messages.conversation_id = conversations.id) DESC')
+        $conversations = $query->orderByRaw('(SELECT MAX(created_at) FROM messages WHERE messages.conversation_id = conversations.id) DESC')
             ->paginate($perPage);
+
+        // Add friendship status to private conversations
+        $conversations->getCollection()->each(function ($conversation) use ($userId) {
+            if ($conversation->type === 'private' && !$conversation->is_guest) {
+                $this->calculateFriendshipStatus($conversation, $userId);
+            }
+        });
+
+        return $conversations;
     }
 
     /**
@@ -99,6 +117,7 @@ class ChatService
             ->first();
 
         if ($existing) {
+            $this->calculateFriendshipStatus($existing, $userId);
             return $existing;
         }
 
@@ -114,7 +133,9 @@ class ChatService
                 $targetUserId => ['role' => 'member'],
             ]);
 
-            return $conversation->load('users');
+            $conversation->load('users');
+            $this->calculateFriendshipStatus($conversation, $userId);
+            return $conversation;
         });
     }
 
@@ -175,10 +196,28 @@ class ChatService
         ?int $replyToId = null,
         array $attachments = []
     ): Message {
-        $message = DB::transaction(function () use ($conversationId, $userId, $content, $type, $replyToId, $attachments) {
+        $conversation = Conversation::findOrFail($conversationId);
+
+        // Check if blocked in private chat
+        if ($conversation->type === 'private') {
+            $otherUser = $conversation->users()->where('users.id', '!=', $userId)->first();
+            if ($otherUser) {
+                // SENDER is blocked if the OTHER user has a 'blocked' status towards them
+                $iAmBlocked = \App\Models\Friendship::where('user_id', $otherUser->id)
+                    ->where('friend_id', $userId)
+                    ->where('status', 'blocked')
+                    ->exists();
+
+                if ($iAmBlocked) {
+                    abort(403, 'Your message was blocked. This user has blocked you.');
+                }
+            }
+        }
+
+        $message = DB::transaction(function () use ($conversation, $userId, $content, $type, $replyToId, $attachments) {
             // Create message
             $message = Message::create([
-                'conversation_id' => $conversationId,
+                'conversation_id' => $conversation->id,
                 'user_id' => $userId,
                 'content' => $content,
                 'type' => $type,
@@ -198,13 +237,20 @@ class ChatService
             // Update last read for sender
             $message->conversation->users()->updateExistingPivot($userId, [
                 'last_read_at' => now(),
+                'last_read_message_id' => $message->id,
             ]);
 
             return $message;
         });
 
         // Load relationships for broadcast outside transaction to be safe
-        $message->load(['user:id,name,avatar', 'attachments', 'replyTo:id,content,user_id']);
+        $message->load([
+            'user:id,name,avatar',
+            'attachments',
+            'replyTo:id,content,user_id',
+            'conversation',
+            'conversation.users:id'
+        ]);
 
         // Dispatch event (will broadcast automatically)
         \Log::info('ChatService: Dispatching MessageSent event', ['message_id' => $message->id, 'conversation_id' => $message->conversation_id]);
@@ -241,11 +287,124 @@ class ChatService
     /**
      * Mark conversation as read for a user.
      */
-    public function markAsRead(int $conversationId, int $userId): void
+    public function markAsRead(int $conversationId, int $userId, ?int $messageId = null): void
     {
-        Conversation::find($conversationId)?->users()->updateExistingPivot($userId, [
+        $conversation = Conversation::find($conversationId);
+        if (!$conversation) return;
+
+        // Find latest message if ID not provided
+        if (!$messageId) {
+            $messageId = $conversation->messages()->orderBy('id', 'desc')->value('id');
+        }
+
+        if (!$messageId) return;
+
+        $conversation->users()->updateExistingPivot($userId, [
             'last_read_at' => now(),
+            'last_read_message_id' => $messageId,
         ]);
+
+        // Broadcast the read event
+        event(new \App\Events\MessageRead($conversationId, $userId, $messageId));
+    }
+
+    /**
+     * Get attachments for a conversation.
+     * @param string $type Filter by 'media' (images/videos) or 'files'
+     */
+    public function getConversationAttachments(int $conversationId, string $type = 'media', int $limit = 50): Collection
+    {
+        $query = MessageAttachment::whereHas('message', function ($q) use ($conversationId) {
+            $q->where('conversation_id', $conversationId);
+        })->orderBy('id', 'desc')->limit($limit);
+
+        if ($type === 'media') {
+            $query->where(function ($q) {
+                $q->where('file_type', 'like', 'image/%')
+                  ->orWhere('file_type', 'like', 'video/%');
+            });
+        } else {
+            $query->where('file_type', 'not like', 'image/%')
+                  ->where('file_type', 'not like', 'video/%');
+        }
+
+        return $query->get();
+    }
+
+    /**
+     * Search messages in a conversation.
+     */
+    public function searchMessages(int $conversationId, string $query, int $limit = 50): Collection
+    {
+        return Message::with(['user:id,name,avatar'])
+            ->where('conversation_id', $conversationId)
+            ->where('content', 'like', '%' . $query . '%')
+            ->orderBy('id', 'desc')
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
+     * Update conversation settings for a user.
+     */
+    public function updateConversationSettings(int $conversationId, int $userId, array $settings): void
+    {
+        $conversation = Conversation::findOrFail($conversationId);
+        
+        $pivotData = [];
+        if (isset($settings['is_muted'])) {
+            $pivotData['is_muted'] = $settings['is_muted'];
+        }
+        if (isset($settings['is_pinned'])) {
+            $pivotData['is_pinned'] = $settings['is_pinned'];
+        }
+        if (isset($settings['read_receipts_enabled'])) {
+            $pivotData['read_receipts_enabled'] = $settings['read_receipts_enabled'];
+        }
+
+        if (!empty($pivotData)) {
+            $conversation->users()->updateExistingPivot($userId, $pivotData);
+        }
+
+        // Conversation-wide settings
+        $convData = [];
+        if (isset($settings['messaging_permissions']) && ($conversation->isAdmin($userId) || $conversation->type === 'private')) {
+            $convData['messaging_permissions'] = $settings['messaging_permissions'];
+        }
+        if (isset($settings['disappearing_messages_ttl']) && ($conversation->isAdmin($userId) || $conversation->type === 'private')) {
+            $convData['disappearing_messages_ttl'] = $settings['disappearing_messages_ttl'];
+        }
+
+        if (!empty($convData)) {
+            $conversation->update($convData);
+        }
+    }
+
+    /**
+     * Block a user.
+     */
+    public function blockUser(int $blockerId, int $blockedId): void
+    {
+        \App\Models\Friendship::updateOrCreate(
+            [
+                'user_id' => $blockerId,
+                'friend_id' => $blockedId,
+            ],
+            [
+                'status' => 'blocked',
+            ]
+        );
+    }
+
+    /**
+     * Unblock a user.
+     */
+    public function unblockUser(int $blockerId, int $blockedId): void
+    {
+        \App\Models\Friendship::where('user_id', $blockerId)
+            ->where('friend_id', $blockedId)
+            ->where('status', 'blocked')
+            ->delete();
     }
 
     /**
@@ -320,5 +479,38 @@ class ChatService
         }
 
         return $message->delete();
+    }
+
+    /**
+     * Calculate and attach friendship status to a private conversation.
+     */
+    private function calculateFriendshipStatus(Conversation $conversation, int $userId): void
+    {
+        $otherUser = $conversation->users->where('id', '!=', $userId)->first();
+        if (!$otherUser) {
+            $conversation->setAttribute('friendship_status', 'none');
+            return;
+        }
+
+        $iBlockedThem = \App\Models\Friendship::where('user_id', $userId)
+            ->where('friend_id', $otherUser->id)
+            ->where('status', 'blocked')
+            ->exists();
+        
+        $theyBlockedMe = \App\Models\Friendship::where('user_id', $otherUser->id)
+            ->where('friend_id', $userId)
+            ->where('status', 'blocked')
+            ->exists();
+
+        $status = 'none';
+        if ($iBlockedThem && $theyBlockedMe) {
+            $status = 'blocked_mutually';
+        } elseif ($iBlockedThem) {
+            $status = 'blocked_by_me';
+        } elseif ($theyBlockedMe) {
+            $status = 'blocked_by_them';
+        }
+
+        $conversation->setAttribute('friendship_status', $status);
     }
 }

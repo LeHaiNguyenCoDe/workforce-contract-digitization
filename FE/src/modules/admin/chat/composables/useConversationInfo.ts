@@ -5,6 +5,7 @@
 import { computed, type Ref, type ComputedRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
+import { useChatStore } from '../stores/chatStore'
 import type { IConversation, IConversationUser } from '../models/Chat'
 
 // ============================================
@@ -85,6 +86,7 @@ export function useConversationInfo(
 ): ConversationInfo {
   const { t } = useI18n()
   const authStore = useAuthStore()
+  const chatStore = useChatStore()
 
   /**
    * Get the other user in a private conversation
@@ -167,10 +169,22 @@ export function useConversationInfo(
   /**
    * Is the conversation partner online?
    */
+  /**
+   * Is the conversation partner online?
+   */
   const isOnline = computed<boolean>(() => {
     if (!conversation.value) return false
-    if (conversation.value.type !== 'private') return false
-    return partner.value?.is_online || false
+    
+    // For private conversations, check partner's ID in onlineUserIds
+    if (conversation.value.type === 'private') {
+      return partner.value ? chatStore.isUserOnline(partner.value.id) : false
+    }
+    
+    // For group conversations, return true if any member is online
+    return conversation.value.users?.some(u => {
+      const currentUserId = authStore.user?.id
+      return u.id !== currentUserId && chatStore.isUserOnline(u.id)
+    }) || false
   })
 
   /**
@@ -190,8 +204,17 @@ export function useConversationInfo(
     }
 
     // Group conversation
-    const count = conversation.value.users?.length || 0
-    return `${count} ${t('common.chat.members')}`
+    const memberCount = conversation.value.users?.length || 0
+    const onlineCount = conversation.value.users?.filter(u => {
+      const currentUserId = authStore.user?.id
+      return u.id !== currentUserId && chatStore.isUserOnline(u.id)
+    }).length || 0
+    
+    if (onlineCount > 0) {
+      return `${onlineCount}/${memberCount} ${t('common.chat.online')}`
+    }
+    
+    return `${memberCount} ${t('common.chat.members')}`
   })
 
   /**

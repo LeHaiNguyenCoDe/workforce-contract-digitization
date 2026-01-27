@@ -27,6 +27,7 @@
                     :message="msg"
                     :showAvatar="shouldShowAvatar(index)"
                     :currentUserId="currentUserId"
+                    :theme="theme"
                     @reply="$emit('reply', $event)"
                     @delete="$emit('delete-message', $event)"
                 />
@@ -39,6 +40,7 @@
 import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { IMessage } from '../models/Chat'
+import type { ChatTheme } from '../stores/chatThemeStore'
 import MessageBubble from './MessageBubble.vue'
 
 const props = defineProps<{
@@ -46,6 +48,7 @@ const props = defineProps<{
     loading: boolean
     hasMore: boolean
     currentUserId: number
+    theme?: ChatTheme | null
 }>()
 
 defineEmits<{

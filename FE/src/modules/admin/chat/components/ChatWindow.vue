@@ -37,7 +37,8 @@
             <div class="flex items-center gap-1">
                 <!-- Header Action Icons -->
                 <button
-                    class="w-9 h-9 rounded-lg text-gray-400 hover:text-teal-600 hover:bg-teal-50 flex items-center justify-center transition-all">
+                    @click="startCall('audio')"
+                    class="w-9 h-9 rounded-lg text-gray-400 hover:text-teal-600 hover:bg-teal-50 flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2">
                         <path
@@ -46,7 +47,8 @@
                 </button>
 
                 <button
-                    class="w-9 h-9 rounded-lg text-gray-400 hover:text-teal-600 hover:bg-teal-50 flex items-center justify-center transition-all">
+                    @click="startCall('video')"
+                    class="w-9 h-9 rounded-lg text-gray-400 hover:text-teal-600 hover:bg-teal-50 flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2">
                         <path d="m22 8-6 4 6 4V8Z" />
@@ -78,8 +80,8 @@
                 </button>
 
                 <!-- More Actions Menu -->
-                <div class="relative group">
-                    <button
+                <div class="relative">
+                    <button @click.stop="showMoreOptions = !showMoreOptions"
                         class="w-9 h-9 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 flex items-center justify-center transition-all">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2">
@@ -90,9 +92,13 @@
                     </button>
 
                     <!-- Dropdown -->
-                    <div
-                        class="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-50 hidden group-hover:block">
-                        <button v-if="conversation.type === 'group'" @click="handleLeaveGroup"
+                    <div v-if="showMoreOptions"
+                        class="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-50 animate-in fade-in zoom-in duration-200">
+                        <button @click="callStore.callStatus = 'ringing'; showMoreOptions = false"
+                            class="w-full px-4 py-2 text-left text-sm text-blue-600 hover:bg-blue-50 flex items-center gap-2">
+                            <i class="ri-bug-line"></i> DEBUG: Hiện CallWindow
+                        </button>
+                        <button v-if="conversation.type === 'group'" @click="handleLeaveGroup(); showMoreOptions = false"
                             class="w-full px-4 py-2 text-left text-sm text-amber-600 hover:bg-amber-50 flex items-center gap-2">
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
                                 fill="none" stroke="currentColor" stroke-width="2">
@@ -135,7 +141,7 @@
 
             <!-- Messages -->
             <div class="flex flex-col space-y-4">
-                <template v-for="(msg, index) in messages" :key="msg.id">
+                <div v-for="(msg, index) in messages" :key="msg.id" class="flex flex-col space-y-4">
                     <!-- Date separator -->
                     <div v-if="shouldShowDate(index)" class="flex items-center justify-center my-4">
                         <span class="px-3 py-1 text-xs text-gray-500 bg-white rounded-full shadow-sm">
@@ -144,14 +150,15 @@
                     </div>
 
                     <MessageBubble :message="msg" :showAvatar="shouldShowAvatar(index)" :currentUserId="currentUserId"
+                        :theme="currentTheme"
                         @reply="handleReply" @delete="handleDeleteMessage" />
-                </template>
+                </div>
             </div>
         </div>
 
         <!-- Input -->
-        <MessageInput :disabled="sending" :replyTo="replyToMessage" @send="handleSend" @typing="$emit('typing', $event)"
-            @cancel-reply="replyToMessage = null" />
+        <MessageInput :disabled="sending" :replyTo="replyToMessage" :friendshipStatus="conversation.friendship_status" @send="handleSend" @typing="$emit('typing', $event)"
+            @cancel-reply="replyToMessage = null" @unblock="$emit('unblock')" />
 
         <!-- Staff Assignment Modal -->
         <StaffAssignmentModal v-if="showAssignModal" @close="showAssignModal = false" @select="onStaffSelected" />
@@ -159,7 +166,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick, toRef } from 'vue'
+import { ref, computed, watch, nextTick, toRef, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { IConversation, IMessage } from '../models/Chat'
 import MessageBubble from './MessageBubble.vue'
@@ -168,7 +175,9 @@ import StaffAssignmentModal from './StaffAssignmentModal.vue'
 
 import { useAuthStore } from '@/stores/auth'
 import { useChatStore } from '../stores/chatStore'
-import { useConversationInfo, useTypingIndicator } from '../composables/useConversationInfo'
+import { useCallStore } from '../stores/callStore'
+import { useChatThemeStore } from '../stores/chatThemeStore'
+import { useConversationInfo, useTypingIndicator } from '../composables'
 
 const props = defineProps<{
     conversation: IConversation
@@ -189,11 +198,14 @@ const emit = defineEmits<{
     (e: 'delete-conversation', conversationId: number): void
     (e: 'leave-group', conversationId: number): void
     (e: 'toggle-details'): void
+    (e: 'unblock'): void
 }>()
 
 const { t } = useI18n()
 const authStore = useAuthStore()
 const chatStore = useChatStore()
+const callStore = useCallStore()
+const themeStore = useChatThemeStore()
 
 // Use shared conversation info composable
 const conversationRef = toRef(props, 'conversation')
@@ -203,7 +215,8 @@ const {
     initials: conversationInitials,
     avatarColor: conversationAvatarColor,
     isOnline: isUserOnline,
-    isGuestChat
+    isGuestChat,
+    partner
 } = useConversationInfo(conversationRef as any)
 
 // Use typing indicator composable
@@ -212,9 +225,15 @@ const { typingText, isTyping } = useTypingIndicator(typingUsersRef)
 
 const messagesContainer = ref<HTMLElement>()
 const replyToMessage = ref<IMessage | null>(null)
+const showMoreOptions = ref(false)
 
 const currentUserId = computed(() => {
     return authStore.user?.id || 0
+})
+
+// Get current theme for this conversation
+const currentTheme = computed(() => {
+    return themeStore.getTheme(props.conversation.id)
 })
 
 const canAssign = computed(() => {
@@ -222,6 +241,31 @@ const canAssign = computed(() => {
     const role = authStore.user?.role
     return role === 'admin' || role === 'manager' || authStore.user?.email?.includes('admin') || authStore.user?.email?.includes('manager')
 })
+
+const startCall = (type: 'audio' | 'video') => {
+    console.log(`[ChatWindow] startCall requested: ${type}`)
+    
+    if (props.conversation.type !== 'private') {
+        console.warn('[ChatWindow] Calls are only supported in private chats')
+        alert('Tính năng gọi chỉ hỗ trợ trò chuyện cá nhân.')
+        return
+    }
+
+    if (partner.value) {
+        console.log(`[ChatWindow] Initiating ${type} call with partner:`, partner.value.name, partner.value.id)
+        callStore.initiateCall(props.conversation.id, partner.value as any, type)
+    } else {
+        console.warn('[ChatWindow] Cannot start call: No partner found in private conversation')
+        // Fallback: try to find manually if composable fails
+        const manualPartner = props.conversation.users.find(u => u.id !== currentUserId.value)
+        if (manualPartner) {
+            console.log('[ChatWindow] Found partner manually:', manualPartner.name)
+            callStore.initiateCall(props.conversation.id, manualPartner as any, type)
+        } else {
+            console.error('[ChatWindow] Partner identification totally failed')
+        }
+    }
+}
 
 const showAssignModal = ref(false)
 
@@ -295,6 +339,7 @@ function handleLeaveGroup() {
 }
 
 function handleSend(content: string, attachments?: File[]) {
+    console.log('[ChatWindow] handleSend called, content:', content, 'attachments:', attachments?.length, 'replyToId:', replyToMessage.value?.id)
     emit('send', content, attachments, replyToMessage.value?.id)
     replyToMessage.value = null
 }
@@ -321,7 +366,16 @@ const isAtBottom = () => {
 // Listen for new messages from store
 let messageArrivalHandler: EventListener | null = null
 
+// Handle clicking outside to close menu
+const handleClickOutside = () => {
+    showMoreOptions.value = false
+}
+
 onMounted(() => {
+    console.log('[ChatWindow] Mounted for conversation:', props.conversation.id)
+    
+    window.addEventListener('click', handleClickOutside)
+
     messageArrivalHandler = ((e: CustomEvent) => {
         const { isFromSelf } = e.detail
 
@@ -343,6 +397,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+    window.removeEventListener('click', handleClickOutside)
     if (messageArrivalHandler) {
         window.removeEventListener('chat:new-message-arrived', messageArrivalHandler)
     }

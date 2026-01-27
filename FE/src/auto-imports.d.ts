@@ -31,12 +31,6 @@ declare global {
   const defineAsyncComponent: typeof import('vue').defineAsyncComponent
   const defineComponent: typeof import('vue').defineComponent
   const defineStore: typeof import('pinia').defineStore
-  const disconnectEcho: typeof import('./modules/admin/chat/composables/useRealtimeCore').disconnectEcho
-  const dispatchGuestChatToast: typeof import('./modules/admin/chat/composables/useRealtimeEvents').dispatchGuestChatToast
-  const dispatchMessageToast: typeof import('./modules/admin/chat/composables/useRealtimeEvents').dispatchMessageToast
-  const dispatchNewMessageArrived: typeof import('./modules/admin/chat/composables/useRealtimeEvents').dispatchNewMessageArrived
-  const dispatchSelectConversation: typeof import('./modules/admin/chat/composables/useRealtimeEvents').dispatchSelectConversation
-  const dispatchToastNotification: typeof import('./modules/admin/chat/composables/useRealtimeEvents').dispatchToastNotification
   const effectScope: typeof import('vue').effectScope
   const extractErrorMessage: typeof import('./utils/useErrorHandler').extractErrorMessage
   const formatDate: typeof import('./utils/format').formatDate
@@ -44,15 +38,11 @@ declare global {
   const formatNumber: typeof import('./utils/format').formatNumber
   const formatPrice: typeof import('./utils/format').formatPrice
   const formatRelativeTime: typeof import('./utils/format').formatRelativeTime
-  const formatTypingText: typeof import('./modules/admin/chat/composables/useConversationInfo').formatTypingText
   const generateSlug: typeof import('./utils/string').generateSlug
   const getActivePinia: typeof import('pinia').getActivePinia
-  const getAvatarColorById: typeof import('./modules/admin/chat/composables/useConversationInfo').getAvatarColorById
   const getCurrentInstance: typeof import('vue').getCurrentInstance
   const getCurrentScope: typeof import('vue').getCurrentScope
   const getCurrentWatcher: typeof import('vue').getCurrentWatcher
-  const getEcho: typeof import('./modules/admin/chat/composables/useRealtimeCore').getEcho
-  const getInitials: typeof import('./modules/admin/chat/composables/useConversationInfo').getInitials
   const getOrderStatusClass: typeof import('./helpers/statusHelpers').getOrderStatusClass
   const getOrderStatusLabel: typeof import('./helpers/statusHelpers').getOrderStatusLabel
   const getReturnStatusClass: typeof import('./helpers/statusHelpers').getReturnStatusClass
@@ -130,84 +120,51 @@ declare global {
   const triggerRef: typeof import('vue').triggerRef
   const truncate: typeof import('./utils/string').truncate
   const unref: typeof import('vue').unref
-  const useAdminCategories: typeof import('./modules/admin/products/composables/useAdminCategories').useAdminCategories
-  const useAdminCategoryStore: typeof import('./modules/admin/categories/store/store').useAdminCategoryStore
   const useAdminList: typeof import('./composables/useAdminList').useAdminList
   const useAdminOrderStore: typeof import('./modules/admin/orders/store/store').useAdminOrderStore
-  const useAdminOrders: typeof import('./modules/admin/orders/composables/useAdminOrders').useAdminOrders
   const useAdminProductStore: typeof import('./modules/admin/products/store/store').useAdminProductStore
-  const useAdminProducts: typeof import('./modules/admin/products/composables/useAdminProducts').useAdminProducts
   const useAdminPromotionStore: typeof import('./modules/admin/promotions/store/store').useAdminPromotionStore
-  const useAdminPromotions: typeof import('./modules/admin/promotions/composables/useAdminPromotions').useAdminPromotions
   const useArticleStore: typeof import('./modules/landing/articles/store/store').useArticleStore
-  const useArticles: typeof import('./modules/landing/articles/composables/useArticles').useArticles
   const useAttrs: typeof import('vue').useAttrs
   const useAuditActionLabel: typeof import('./helpers/statusHelpers').useAuditActionLabel
-  const useAuditLogs: typeof import('./modules/admin/erp/audit-logs/composables/useAuditLogs').useAuditLogs
-  const useAuth: typeof import('./modules/landing/auth/composables/useAuth').useAuth
   const useAuthStore: typeof import('@/stores').useAuthStore
-  const useAutoConnect: typeof import('./modules/admin/chat/composables/useRealtime').useAutoConnect
+  const useAutoConnect: typeof import('./modules/admin/chat/composables/index').useAutoConnect
   const useAutoTranslate: typeof import('./composables/useAutoTranslate').default
-  const useAutomations: typeof import('./modules/admin/erp/automations/composables/useAutomations').useAutomations
   const useCRUD: typeof import('./composables/useCRUD').useCRUD
-  const useCart: typeof import('./modules/landing/cart/composables/useCart').useCart
   const useCartStore: typeof import('./modules/landing/cart/store/store').useCartStore
-  const useCheckout: typeof import('./modules/landing/orders/composables/useCheckout').useCheckout
-  const useConversationInfo: typeof import('./modules/admin/chat/composables/useConversationInfo').useConversationInfo
+  const useConversationDetails: typeof import('./modules/admin/chat/composables/index').useConversationDetails
+  const useConversationInfo: typeof import('./modules/admin/chat/composables/index').useConversationInfo
   const useCssModule: typeof import('vue').useCssModule
   const useCssVars: typeof import('vue').useCssVars
-  const useCustomers: typeof import('./modules/admin/erp/customers/composables/useCustomers').useCustomers
   const useErrorHandler: typeof import('./utils/useErrorHandler').useErrorHandler
-  const useExpenseCategories: typeof import('./modules/admin/erp/expenses/composables/useExpenseCategories').useExpenseCategories
-  const useExpenses: typeof import('./modules/admin/erp/expenses/composables/useExpenses').useExpenses
-  const useGlobalPolling: typeof import('./modules/admin/chat/composables/useRealtime').useGlobalPolling
-  const useGlobalPollingStandalone: typeof import('./modules/admin/chat/composables/index').useGlobalPollingStandalone
-  const useHome: typeof import('./modules/landing/home/composables/useHome').useHome
   const useHomeStore: typeof import('./modules/landing/home/store/store').useHomeStore
   const useI18n: typeof import('vue-i18n').useI18n
   const useId: typeof import('vue').useId
-  const useLandingCategories: typeof import('./modules/landing/categories/composables/useLandingCategories').useLandingCategories
   const useLandingCategoryStore: typeof import('./modules/landing/categories/store/store').useLandingCategoryStore
   const useLandingOrderStore: typeof import('./modules/landing/orders/store/store').useLandingOrderStore
-  const useLandingOrders: typeof import('./modules/landing/orders/composables/useLandingOrders').useLandingOrders
   const useLandingProductStore: typeof import('./modules/landing/products/store/store').useLandingProductStore
-  const useLandingProducts: typeof import('./modules/landing/products/composables/useLandingProducts').useLandingProducts
   const useLandingPromotionStore: typeof import('./modules/landing/promotions/store/store').useLandingPromotionStore
-  const useLandingPromotions: typeof import('./modules/landing/promotions/composables/useLandingPromotions').useLandingPromotions
   const useLink: typeof import('vue-router').useLink
-  const useLoyalty: typeof import('./modules/landing/loyalty/composables/useLoyalty').useLoyalty
   const useLoyaltyStore: typeof import('./modules/landing/loyalty/store/store').useLoyaltyStore
-  const useMembership: typeof import('./modules/admin/erp/membership/composables/useMembership').useMembership
   const useModel: typeof import('vue').useModel
   const useOrderStatusLabel: typeof import('./helpers/statusHelpers').useOrderStatusLabel
   const usePagination: typeof import('./composables/usePagination').usePagination
   const usePermission: typeof import('./composables/usePermission').usePermission
-  const usePermissions: typeof import('./modules/admin/erp/permissions/composables/usePermissions').usePermissions
   const usePointTransactionLabel: typeof import('./helpers/statusHelpers').usePointTransactionLabel
-  const usePoints: typeof import('./modules/admin/erp/points/composables/usePoints').usePoints
-  const useProductModal: typeof import('./modules/admin/warehouses/composables/useProductModal').useProductModal
-  const useProfile: typeof import('./modules/landing/profile/composables/useProfile').useProfile
   const useReadOnlyList: typeof import('./composables/useCRUD').useReadOnlyList
-  const useRealtime: typeof import('./modules/admin/chat/composables/useRealtime').useRealtime
-  const useRealtimeCore: typeof import('./modules/admin/chat/composables/useRealtimeCore').useRealtimeCore
-  const useRealtimeEvents: typeof import('./modules/admin/chat/composables/useRealtimeEvents').useRealtimeEvents
+  const useRealtime: typeof import('./modules/admin/chat/composables/index').useRealtime
   const useReturnStatusLabel: typeof import('./helpers/statusHelpers').useReturnStatusLabel
-  const useReturns: typeof import('./modules/admin/erp/returns/composables/useReturns').useReturns
   const useReviewStore: typeof import('./modules/admin/reviews/store/store').useReviewStore
-  const useReviews: typeof import('./modules/admin/reviews/composables/useReviews').useReviews
   const useRoute: typeof import('vue-router').useRoute
   const useRouter: typeof import('vue-router').useRouter
   const useSlots: typeof import('vue').useSlots
   const useSwal: typeof import('./utils/useSwal').useSwal
   const useTemplateRef: typeof import('vue').useTemplateRef
-  const useTypingIndicator: typeof import('./modules/admin/chat/composables/useConversationInfo').useTypingIndicator
+  const useTypingIndicator: typeof import('./modules/admin/chat/composables/index').useTypingIndicator
   const useUserStatusLabel: typeof import('./helpers/statusHelpers').useUserStatusLabel
   const useUserStore: typeof import('./modules/admin/users/store/store').useUserStore
-  const useUsers: typeof import('./modules/admin/users/composables/useUsers').useUsers
-  const useVoiceRecorder: typeof import('./modules/admin/chat/composables/useVoiceRecorder').useVoiceRecorder
-  const useWarehouseProducts: typeof import('./modules/admin/warehouses/composables/useWarehouseProducts').useWarehouseProducts
+  const useVoiceRecorder: typeof import('./modules/admin/chat/composables/index').useVoiceRecorder
   const useWarehouseStore: typeof import('./modules/admin/warehouses/store/store').useWarehouseStore
-  const useWishlist: typeof import('./modules/landing/wishlist/composables/useWishlist').useWishlist
   const useWishlistStore: typeof import('./modules/landing/wishlist/store/store').useWishlistStore
   const userStatusClasses: typeof import('./helpers/statusHelpers').userStatusClasses
   const userStatusKeys: typeof import('./helpers/statusHelpers').userStatusKeys
@@ -242,17 +199,8 @@ declare global {
   export type { ApiError, ErrorHandlerOptions } from './utils/useErrorHandler'
   import('./utils/useErrorHandler')
   // @ts-ignore
-  export type { ConversationInfo, TypingInfo } from './modules/admin/chat/composables/useConversationInfo'
-  import('./modules/admin/chat/composables/useConversationInfo')
-  // @ts-ignore
-  export type { VoiceRecorderState } from './modules/admin/chat/composables/useVoiceRecorder'
-  import('./modules/admin/chat/composables/useVoiceRecorder')
-  // @ts-ignore
-  export type { CartItem, Cart } from './modules/landing/cart/composables/useCart'
-  import('./modules/landing/cart/composables/useCart')
-  // @ts-ignore
-  export type { ShippingAddress, CheckoutForm, PaymentMethod } from './modules/landing/orders/composables/useCheckout'
-  import('./modules/landing/orders/composables/useCheckout')
+  export type { ConversationInfo, TypingInfo, ConversationDetailsState, SharedMedia } from './modules/admin/chat/composables/index'
+  import('./modules/admin/chat/composables/index')
   // @ts-ignore
   export type { OrderItem, Order, Shipper } from './modules/admin/orders/store/store'
   import('./modules/admin/orders/store/store')
@@ -294,12 +242,6 @@ declare module 'vue' {
     readonly defineAsyncComponent: UnwrapRef<typeof import('vue')['defineAsyncComponent']>
     readonly defineComponent: UnwrapRef<typeof import('vue')['defineComponent']>
     readonly defineStore: UnwrapRef<typeof import('pinia')['defineStore']>
-    readonly disconnectEcho: UnwrapRef<typeof import('./modules/admin/chat/composables/useRealtimeCore')['disconnectEcho']>
-    readonly dispatchGuestChatToast: UnwrapRef<typeof import('./modules/admin/chat/composables/useRealtimeEvents')['dispatchGuestChatToast']>
-    readonly dispatchMessageToast: UnwrapRef<typeof import('./modules/admin/chat/composables/useRealtimeEvents')['dispatchMessageToast']>
-    readonly dispatchNewMessageArrived: UnwrapRef<typeof import('./modules/admin/chat/composables/useRealtimeEvents')['dispatchNewMessageArrived']>
-    readonly dispatchSelectConversation: UnwrapRef<typeof import('./modules/admin/chat/composables/useRealtimeEvents')['dispatchSelectConversation']>
-    readonly dispatchToastNotification: UnwrapRef<typeof import('./modules/admin/chat/composables/useRealtimeEvents')['dispatchToastNotification']>
     readonly effectScope: UnwrapRef<typeof import('vue')['effectScope']>
     readonly extractErrorMessage: UnwrapRef<typeof import('./utils/useErrorHandler')['extractErrorMessage']>
     readonly formatDate: UnwrapRef<typeof import('./utils/format')['formatDate']>
@@ -307,15 +249,11 @@ declare module 'vue' {
     readonly formatNumber: UnwrapRef<typeof import('./utils/format')['formatNumber']>
     readonly formatPrice: UnwrapRef<typeof import('./utils/format')['formatPrice']>
     readonly formatRelativeTime: UnwrapRef<typeof import('./utils/format')['formatRelativeTime']>
-    readonly formatTypingText: UnwrapRef<typeof import('./modules/admin/chat/composables/useConversationInfo')['formatTypingText']>
     readonly generateSlug: UnwrapRef<typeof import('./utils/string')['generateSlug']>
     readonly getActivePinia: UnwrapRef<typeof import('pinia')['getActivePinia']>
-    readonly getAvatarColorById: UnwrapRef<typeof import('./modules/admin/chat/composables/useConversationInfo')['getAvatarColorById']>
     readonly getCurrentInstance: UnwrapRef<typeof import('vue')['getCurrentInstance']>
     readonly getCurrentScope: UnwrapRef<typeof import('vue')['getCurrentScope']>
     readonly getCurrentWatcher: UnwrapRef<typeof import('vue')['getCurrentWatcher']>
-    readonly getEcho: UnwrapRef<typeof import('./modules/admin/chat/composables/useRealtimeCore')['getEcho']>
-    readonly getInitials: UnwrapRef<typeof import('./modules/admin/chat/composables/useConversationInfo')['getInitials']>
     readonly getOrderStatusClass: UnwrapRef<typeof import('./helpers/statusHelpers')['getOrderStatusClass']>
     readonly getOrderStatusLabel: UnwrapRef<typeof import('./helpers/statusHelpers')['getOrderStatusLabel']>
     readonly getReturnStatusClass: UnwrapRef<typeof import('./helpers/statusHelpers')['getReturnStatusClass']>
@@ -393,83 +331,51 @@ declare module 'vue' {
     readonly triggerRef: UnwrapRef<typeof import('vue')['triggerRef']>
     readonly truncate: UnwrapRef<typeof import('./utils/string')['truncate']>
     readonly unref: UnwrapRef<typeof import('vue')['unref']>
-    readonly useAdminCategories: UnwrapRef<typeof import('./modules/admin/products/composables/useAdminCategories')['useAdminCategories']>
     readonly useAdminList: UnwrapRef<typeof import('./composables/useAdminList')['useAdminList']>
     readonly useAdminOrderStore: UnwrapRef<typeof import('./modules/admin/orders/store/store')['useAdminOrderStore']>
-    readonly useAdminOrders: UnwrapRef<typeof import('./modules/admin/orders/composables/useAdminOrders')['useAdminOrders']>
     readonly useAdminProductStore: UnwrapRef<typeof import('./modules/admin/products/store/store')['useAdminProductStore']>
-    readonly useAdminProducts: UnwrapRef<typeof import('./modules/admin/products/composables/useAdminProducts')['useAdminProducts']>
     readonly useAdminPromotionStore: UnwrapRef<typeof import('./modules/admin/promotions/store/store')['useAdminPromotionStore']>
-    readonly useAdminPromotions: UnwrapRef<typeof import('./modules/admin/promotions/composables/useAdminPromotions')['useAdminPromotions']>
     readonly useArticleStore: UnwrapRef<typeof import('./modules/landing/articles/store/store')['useArticleStore']>
-    readonly useArticles: UnwrapRef<typeof import('./modules/landing/articles/composables/useArticles')['useArticles']>
     readonly useAttrs: UnwrapRef<typeof import('vue')['useAttrs']>
     readonly useAuditActionLabel: UnwrapRef<typeof import('./helpers/statusHelpers')['useAuditActionLabel']>
-    readonly useAuditLogs: UnwrapRef<typeof import('./modules/admin/erp/audit-logs/composables/useAuditLogs')['useAuditLogs']>
-    readonly useAuth: UnwrapRef<typeof import('./modules/landing/auth/composables/useAuth')['useAuth']>
     readonly useAuthStore: UnwrapRef<typeof import('@/stores')['useAuthStore']>
-    readonly useAutoConnect: UnwrapRef<typeof import('./modules/admin/chat/composables/useRealtime')['useAutoConnect']>
+    readonly useAutoConnect: UnwrapRef<typeof import('./modules/admin/chat/composables/index')['useAutoConnect']>
     readonly useAutoTranslate: UnwrapRef<typeof import('./composables/useAutoTranslate')['default']>
-    readonly useAutomations: UnwrapRef<typeof import('./modules/admin/erp/automations/composables/useAutomations')['useAutomations']>
     readonly useCRUD: UnwrapRef<typeof import('./composables/useCRUD')['useCRUD']>
-    readonly useCart: UnwrapRef<typeof import('./modules/landing/cart/composables/useCart')['useCart']>
     readonly useCartStore: UnwrapRef<typeof import('./modules/landing/cart/store/store')['useCartStore']>
-    readonly useCheckout: UnwrapRef<typeof import('./modules/landing/orders/composables/useCheckout')['useCheckout']>
-    readonly useConversationInfo: UnwrapRef<typeof import('./modules/admin/chat/composables/useConversationInfo')['useConversationInfo']>
+    readonly useConversationDetails: UnwrapRef<typeof import('./modules/admin/chat/composables/index')['useConversationDetails']>
+    readonly useConversationInfo: UnwrapRef<typeof import('./modules/admin/chat/composables/index')['useConversationInfo']>
     readonly useCssModule: UnwrapRef<typeof import('vue')['useCssModule']>
     readonly useCssVars: UnwrapRef<typeof import('vue')['useCssVars']>
-    readonly useCustomers: UnwrapRef<typeof import('./modules/admin/erp/customers/composables/useCustomers')['useCustomers']>
     readonly useErrorHandler: UnwrapRef<typeof import('./utils/useErrorHandler')['useErrorHandler']>
-    readonly useExpenseCategories: UnwrapRef<typeof import('./modules/admin/erp/expenses/composables/useExpenseCategories')['useExpenseCategories']>
-    readonly useExpenses: UnwrapRef<typeof import('./modules/admin/erp/expenses/composables/useExpenses')['useExpenses']>
-    readonly useGlobalPolling: UnwrapRef<typeof import('./modules/admin/chat/composables/useRealtime')['useGlobalPolling']>
-    readonly useGlobalPollingStandalone: UnwrapRef<typeof import('./modules/admin/chat/composables/index')['useGlobalPollingStandalone']>
-    readonly useHome: UnwrapRef<typeof import('./modules/landing/home/composables/useHome')['useHome']>
     readonly useHomeStore: UnwrapRef<typeof import('./modules/landing/home/store/store')['useHomeStore']>
     readonly useI18n: UnwrapRef<typeof import('vue-i18n')['useI18n']>
     readonly useId: UnwrapRef<typeof import('vue')['useId']>
-    readonly useLandingCategories: UnwrapRef<typeof import('./modules/landing/categories/composables/useLandingCategories')['useLandingCategories']>
     readonly useLandingCategoryStore: UnwrapRef<typeof import('./modules/landing/categories/store/store')['useLandingCategoryStore']>
     readonly useLandingOrderStore: UnwrapRef<typeof import('./modules/landing/orders/store/store')['useLandingOrderStore']>
-    readonly useLandingOrders: UnwrapRef<typeof import('./modules/landing/orders/composables/useLandingOrders')['useLandingOrders']>
     readonly useLandingProductStore: UnwrapRef<typeof import('./modules/landing/products/store/store')['useLandingProductStore']>
-    readonly useLandingProducts: UnwrapRef<typeof import('./modules/landing/products/composables/useLandingProducts')['useLandingProducts']>
     readonly useLandingPromotionStore: UnwrapRef<typeof import('./modules/landing/promotions/store/store')['useLandingPromotionStore']>
-    readonly useLandingPromotions: UnwrapRef<typeof import('./modules/landing/promotions/composables/useLandingPromotions')['useLandingPromotions']>
     readonly useLink: UnwrapRef<typeof import('vue-router')['useLink']>
-    readonly useLoyalty: UnwrapRef<typeof import('./modules/landing/loyalty/composables/useLoyalty')['useLoyalty']>
     readonly useLoyaltyStore: UnwrapRef<typeof import('./modules/landing/loyalty/store/store')['useLoyaltyStore']>
-    readonly useMembership: UnwrapRef<typeof import('./modules/admin/erp/membership/composables/useMembership')['useMembership']>
     readonly useModel: UnwrapRef<typeof import('vue')['useModel']>
     readonly useOrderStatusLabel: UnwrapRef<typeof import('./helpers/statusHelpers')['useOrderStatusLabel']>
     readonly usePagination: UnwrapRef<typeof import('./composables/usePagination')['usePagination']>
     readonly usePermission: UnwrapRef<typeof import('./composables/usePermission')['usePermission']>
-    readonly usePermissions: UnwrapRef<typeof import('./modules/admin/erp/permissions/composables/usePermissions')['usePermissions']>
     readonly usePointTransactionLabel: UnwrapRef<typeof import('./helpers/statusHelpers')['usePointTransactionLabel']>
-    readonly usePoints: UnwrapRef<typeof import('./modules/admin/erp/points/composables/usePoints')['usePoints']>
-    readonly useProductModal: UnwrapRef<typeof import('./modules/admin/warehouses/composables/useProductModal')['useProductModal']>
-    readonly useProfile: UnwrapRef<typeof import('./modules/landing/profile/composables/useProfile')['useProfile']>
     readonly useReadOnlyList: UnwrapRef<typeof import('./composables/useCRUD')['useReadOnlyList']>
-    readonly useRealtime: UnwrapRef<typeof import('./modules/admin/chat/composables/useRealtime')['useRealtime']>
-    readonly useRealtimeCore: UnwrapRef<typeof import('./modules/admin/chat/composables/useRealtimeCore')['useRealtimeCore']>
-    readonly useRealtimeEvents: UnwrapRef<typeof import('./modules/admin/chat/composables/useRealtimeEvents')['useRealtimeEvents']>
+    readonly useRealtime: UnwrapRef<typeof import('./modules/admin/chat/composables/index')['useRealtime']>
     readonly useReturnStatusLabel: UnwrapRef<typeof import('./helpers/statusHelpers')['useReturnStatusLabel']>
-    readonly useReturns: UnwrapRef<typeof import('./modules/admin/erp/returns/composables/useReturns')['useReturns']>
     readonly useReviewStore: UnwrapRef<typeof import('./modules/admin/reviews/store/store')['useReviewStore']>
-    readonly useReviews: UnwrapRef<typeof import('./modules/admin/reviews/composables/useReviews')['useReviews']>
     readonly useRoute: UnwrapRef<typeof import('vue-router')['useRoute']>
     readonly useRouter: UnwrapRef<typeof import('vue-router')['useRouter']>
     readonly useSlots: UnwrapRef<typeof import('vue')['useSlots']>
     readonly useSwal: UnwrapRef<typeof import('./utils/useSwal')['useSwal']>
     readonly useTemplateRef: UnwrapRef<typeof import('vue')['useTemplateRef']>
-    readonly useTypingIndicator: UnwrapRef<typeof import('./modules/admin/chat/composables/useConversationInfo')['useTypingIndicator']>
+    readonly useTypingIndicator: UnwrapRef<typeof import('./modules/admin/chat/composables/index')['useTypingIndicator']>
     readonly useUserStatusLabel: UnwrapRef<typeof import('./helpers/statusHelpers')['useUserStatusLabel']>
     readonly useUserStore: UnwrapRef<typeof import('./modules/admin/users/store/store')['useUserStore']>
-    readonly useUsers: UnwrapRef<typeof import('./modules/admin/users/composables/useUsers')['useUsers']>
-    readonly useVoiceRecorder: UnwrapRef<typeof import('./modules/admin/chat/composables/useVoiceRecorder')['useVoiceRecorder']>
-    readonly useWarehouseProducts: UnwrapRef<typeof import('./modules/admin/warehouses/composables/useWarehouseProducts')['useWarehouseProducts']>
+    readonly useVoiceRecorder: UnwrapRef<typeof import('./modules/admin/chat/composables/index')['useVoiceRecorder']>
     readonly useWarehouseStore: UnwrapRef<typeof import('./modules/admin/warehouses/store/store')['useWarehouseStore']>
-    readonly useWishlist: UnwrapRef<typeof import('./modules/landing/wishlist/composables/useWishlist')['useWishlist']>
     readonly useWishlistStore: UnwrapRef<typeof import('./modules/landing/wishlist/store/store')['useWishlistStore']>
     readonly userStatusClasses: UnwrapRef<typeof import('./helpers/statusHelpers')['userStatusClasses']>
     readonly userStatusKeys: UnwrapRef<typeof import('./helpers/statusHelpers')['userStatusKeys']>

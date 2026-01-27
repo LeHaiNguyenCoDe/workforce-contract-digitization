@@ -34,10 +34,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'sanitize' => \App\Http\Middleware\SanitizeInput::class,
         ]);
 
-        // CSRF Protection: Only exclude truly stateless endpoints
-        // Sanctum handles CSRF for stateful requests via EnsureFrontendRequestsAreStateful
+        // CSRF Protection: Exclude API endpoints that use Sanctum session auth
+        // These routes are protected by Sanctum authentication instead
         $middleware->validateCsrfTokens(except: [
-            'api/v1/frontend/guest-chat/*',  // Stateless guest chat only
+            'api/*',                          // All API routes use Sanctum session/token auth
             'sanctum/csrf-cookie',            // CSRF cookie endpoint itself
         ]);
     })
@@ -119,13 +119,23 @@ return Application::configure(basePath: dirname(__DIR__))
                     ], 404);
                 }
 
-                // Return error response for all other exceptions
+                // Handle Symfony/Laravel HTTP exceptions (like abort(403))
+                $status = 500;
+                if ($e instanceof \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface) {
+                    $status = $e->getStatusCode();
+                } elseif (method_exists($e, 'getStatusCode')) {
+                    $status = $e->getStatusCode();
+                } elseif ($e->getCode() >= 400 && $e->getCode() < 600) {
+                    $status = $e->getCode();
+                }
+
+                // Return error response
                 // SECURITY: Never expose debug info in production
                 return response()->json([
                     'status' => 'error',
                     'message' => (config('app.debug') && config('app.env') !== 'production')
                         ? $e->getMessage()
-                        : 'Internal server error',
+                        : (($status >= 500) ? 'Internal server error' : $e->getMessage()),
                     'exception' => (config('app.debug') && config('app.env') !== 'production')
                         ? get_class($e)
                         : null,
@@ -136,7 +146,7 @@ return Application::configure(basePath: dirname(__DIR__))
                         ? $e->getLine()
                         : null,
                     'trace_id' => \Illuminate\Support\Str::uuid()->toString(), // For support debugging
-                ], 500);
+                ], $status);
             }
         });
     })->create();

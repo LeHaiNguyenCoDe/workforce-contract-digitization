@@ -20,7 +20,13 @@ class MessageSent implements ShouldBroadcastNow
      */
     public function __construct(Message $message)
     {
-        $this->message = $message->load(['user', 'attachments', 'replyTo']);
+        $this->message = $message->load([
+            'user',
+            'attachments',
+            'replyTo',
+            'conversation',
+            'conversation.users'
+        ]);
     }
 
     /**
@@ -35,7 +41,7 @@ class MessageSent implements ShouldBroadcastNow
         ];
 
         // Also broadcast to each user's private channel for global notifications
-        $userIds = $this->message->conversation->users()->pluck('users.id')->toArray();
+        $userIds = $this->message->conversation->users->pluck('id')->toArray();
         foreach ($userIds as $userId) {
             // Optional: Skip the sender to reduce noise, though handleNewMessage handles duplicates
             if ($userId !== $this->message->user_id) {
