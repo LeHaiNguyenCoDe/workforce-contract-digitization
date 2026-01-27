@@ -1,0 +1,14 @@
+{
+  "title": "Produkter",
+  "detail": "Produktdetaljer",
+  "price": "Pris",
+  "quantity": "Antal",
+  "addToCart": "Lägg i kundvagn",
+  "addToWishlist": "Lägg till i önskelista",
+  "outOfStock": "Slut i lager",
+  "inStock": "I lager",
+  "reviews": "Recensioner",
+  "noReviews": "Inga recensioner ännu",
+  "variants": "Varianter",
+  "category": "Kategori"
+}

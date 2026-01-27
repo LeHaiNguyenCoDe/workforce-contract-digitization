@@ -1,0 +1,14 @@
+{
+  "home": "होम",
+  "products": "उत्पाद",
+  "categories": "श्रेणियां",
+  "articles": "लेख",
+  "promotions": "प्रचार",
+  "cart": "कार्ट",
+  "wishlist": "इच्छा सूची",
+  "orders": "ऑर्डर",
+  "profile": "खाता",
+  "login": "लॉगिन",
+  "register": "रजिस्टर",
+  "logout": "लॉगआउट"
+}

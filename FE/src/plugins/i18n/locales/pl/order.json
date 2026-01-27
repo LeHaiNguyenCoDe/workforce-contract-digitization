@@ -1,0 +1,17 @@
+{
+  "title": "Zamówienia",
+  "myOrders": "Moje zamówienia",
+  "orderNumber": "Numer zamówienia",
+  "status": "Status",
+  "date": "Data",
+  "shippingAddress": "Adres dostawy",
+  "phone": "Telefon",
+  "paymentMethod": "Metoda płatności",
+  "notes": "Uwagi",
+  "placeOrder": "Złóż zamówienie",
+  "pending": "Oczekujące",
+  "processing": "W realizacji",
+  "shipped": "Wysłane",
+  "delivered": "Dostarczone",
+  "cancelled": "Anulowane"
+}

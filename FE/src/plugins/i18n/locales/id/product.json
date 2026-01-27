@@ -1,0 +1,14 @@
+{
+  "title": "Produk",
+  "detail": "Detail Produk",
+  "price": "Harga",
+  "quantity": "Jumlah",
+  "addToCart": "Tambah ke Keranjang",
+  "addToWishlist": "Tambah ke Favorit",
+  "outOfStock": "Habis",
+  "inStock": "Tersedia",
+  "reviews": "Ulasan",
+  "noReviews": "Belum ada ulasan",
+  "variants": "Varian",
+  "category": "Kategori"
+}

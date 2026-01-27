@@ -33,35 +33,44 @@ class ProductSeeder extends Seeder
     private function createProductsForCategory(Category $category, int $count): void
     {
         $productNames = [
-            'Premium Quality Item',
-            'Professional Grade Product',
-            'Deluxe Edition',
-            'Standard Model',
-            'Advanced Version',
-            'Classic Design',
-            'Modern Style',
-            'Eco-Friendly Option',
-            'Budget Friendly',
-            'Luxury Collection',
+            'Bình Gốm',
+            'Ấm Trà',
+            'Đĩa Sứ',
+            'Tượng Nghệ Thuật',
+            'Bộ Bát Đĩa',
+            'Chậu Hoa',
+            'Hũ Đựng',
+            'Tranh Gốm',
         ];
 
         for ($i = 0; $i < $count; $i++) {
-            $name = $productNames[array_rand($productNames)] . ' ' . $category->name . ' ' . ($i + 1);
+            $baseName = $productNames[array_rand($productNames)];
+            $name = "{$baseName} {$category->name} " . ($i + 1);
             $slug = Str::slug($name) . '-' . uniqid();
+
+            $ceramicImages = [
+                'https://www.elledecoration.vn/wp-content/uploads/2024/08/Kutani-yaki-1536x1024.jpeg',
+                'https://www.elledecoration.vn/wp-content/uploads/2024/08/Kutani-yaki-1536x1024.jpeg',
+                'https://www.elledecoration.vn/wp-content/uploads/2024/08/Kutani-yaki-1536x1024.jpeg',
+                'https://www.elledecoration.vn/wp-content/uploads/2024/08/Kutani-yaki-1536x1024.jpeg',
+                'https://www.elledecoration.vn/wp-content/uploads/2024/08/Kutani-yaki-1536x1024.jpeg',
+                'https://www.elledecoration.vn/wp-content/uploads/2024/08/Kutani-yaki-1536x1024.jpeg',
+                'https://www.elledecoration.vn/wp-content/uploads/2024/08/Kutani-yaki-1536x1024.jpeg'
+            ];
 
             $product = Product::create([
                 'category_id' => $category->id,
                 'name' => $name,
                 'slug' => $slug,
-                'price' => rand(100000, 5000000), // 100k - 5M VND
-                'short_description' => "High quality {$category->name} product with excellent features.",
-                'description' => "This is a detailed description of the {$name}. It features premium materials, excellent craftsmanship, and comes with a satisfaction guarantee. Perfect for everyday use or special occasions.",
-                'thumbnail' => "https://picsum.photos/400/400?random=" . rand(1, 1000),
+                'price' => rand(200000, 15000000), // 200k - 15M VND
+                'short_description' => "Sản phẩm {$category->name} được làm thủ công từ nghệ nhân xưởng gốm làng nghề.",
+                'description' => "Sản phẩm {$name} được tạo hình tỉ mỉ, nung ở nhiệt độ cao trên 1200 độ C. Lớp men sáng bóng, bền màu theo thời gian. Thích hợp cho trang trí không gian sang trọng hoặc làm quà tặng ý nghĩa.",
+                'thumbnail' => $ceramicImages[array_rand($ceramicImages)],
                 'specs' => [
-                    'material' => 'Premium Quality',
-                    'weight' => rand(100, 2000) . 'g',
-                    'dimensions' => rand(10, 50) . 'x' . rand(10, 50) . 'x' . rand(5, 30) . 'cm',
-                    'warranty' => rand(6, 24) . ' months',
+                    'chất_liệu' => 'Gốm sứ cao cấp',
+                    'nhiệt_độ_nung' => '1200 - 1300 độ C',
+                    'xuất_xứ' => 'Việt Nam',
+                    'bảo_hành' => 'Trọn đời về màu men',
                 ],
             ]);
 
@@ -70,21 +79,21 @@ class ProductSeeder extends Seeder
             for ($j = 0; $j < $imageCount; $j++) {
                 ProductImage::create([
                     'product_id' => $product->id,
-                    'image_url' => "https://picsum.photos/800/800?random=" . rand(1, 1000),
+                    'image_url' => $ceramicImages[array_rand($ceramicImages)],
                     'is_main' => $j === 0,
                 ]);
             }
 
-            // Tạo product variants
-            $colors = ['Black', 'White', 'Red', 'Blue', 'Green', 'Yellow', 'Gray', 'Silver'];
-            $variantCount = rand(1, 4);
-            $selectedColors = array_slice($colors, 0, $variantCount);
+            // Tạo product variants (Sử dụng loại men làm variant)
+            $types = ['Men Xanh', 'Men Rạn', 'Men Ngọc', 'Gốm Thô', 'Vẽ Vàng'];
+            $variantCount = rand(1, 3);
+            $selectedTypes = (array) array_rand(array_flip($types), $variantCount);
 
-            foreach ($selectedColors as $index => $color) {
+            foreach ($selectedTypes as $type) {
                 ProductVariant::create([
                     'product_id' => $product->id,
-                    'color' => $color,
-                    'stock' => rand(0, 100),
+                    'color' => $type,
+                    'stock' => rand(5, 50),
                 ]);
             }
         }

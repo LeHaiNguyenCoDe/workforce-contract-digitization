@@ -1,0 +1,9 @@
+{
+  "required": "Este campo é obrigatório",
+  "email": "Endereço de e-mail inválido",
+  "minLength": "Mínimo de {min} caracteres",
+  "maxLength": "Máximo de {max} caracteres",
+  "passwordMismatch": "As senhas não coincidem",
+  "passwordWeak": "A senha deve incluir letras, números e caracteres especiais",
+  "loginFailed": "Falha no login"
+}

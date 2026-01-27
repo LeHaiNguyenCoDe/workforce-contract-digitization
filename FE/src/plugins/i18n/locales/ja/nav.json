@@ -1,0 +1,14 @@
+{
+  "home": "ホーム",
+  "products": "商品",
+  "categories": "カテゴリー",
+  "articles": "記事",
+  "promotions": "プロモーション",
+  "cart": "カート",
+  "wishlist": "お気に入り",
+  "orders": "注文",
+  "profile": "アカウント",
+  "login": "ログイン",
+  "register": "登録",
+  "logout": "ログアウト"
+}

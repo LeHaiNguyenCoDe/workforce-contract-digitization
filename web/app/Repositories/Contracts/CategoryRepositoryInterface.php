@@ -12,7 +12,7 @@ interface CategoryRepositoryInterface
      *
      * @return Collection
      */
-    public function getAll(): Collection;
+    public function getAll(array $filters = []): Collection;
 
     /**
      * Find category by ID

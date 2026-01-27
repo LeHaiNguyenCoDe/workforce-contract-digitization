@@ -1,0 +1,17 @@
+{
+  "title": "ऑर्डर",
+  "myOrders": "मेरे ऑर्डर",
+  "orderNumber": "ऑर्डर नंबर",
+  "status": "स्थिति",
+  "date": "तारीख",
+  "shippingAddress": "शिपिंग पता",
+  "phone": "फोन",
+  "paymentMethod": "भुगतान विधि",
+  "notes": "नोट्स",
+  "placeOrder": "ऑर्डर दें",
+  "pending": "लंबित",
+  "processing": "प्रसंस्करण",
+  "shipped": "भेज दिया",
+  "delivered": "वितरित",
+  "cancelled": "रद्द"
+}

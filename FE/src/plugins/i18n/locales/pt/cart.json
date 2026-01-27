@@ -1,0 +1,12 @@
+{
+  "title": "Carrinho de compras",
+  "empty": "Seu carrinho está vazio",
+  "continueShopping": "Continuar comprando",
+  "checkout": "Finalizar compra",
+  "subtotal": "Subtotal",
+  "shipping": "Frete",
+  "total": "Total",
+  "freeShipping": "Grátis",
+  "addToCart": "Adicionar ao carrinho",
+  "summary": "Resumo do pedido"
+}

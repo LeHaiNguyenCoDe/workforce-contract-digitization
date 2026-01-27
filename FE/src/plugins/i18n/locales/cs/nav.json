@@ -1,0 +1,14 @@
+{
+  "home": "Domů",
+  "products": "Produkty",
+  "categories": "Kategorie",
+  "articles": "Články",
+  "promotions": "Akce",
+  "cart": "Košík",
+  "wishlist": "Oblíbené",
+  "orders": "Objednávky",
+  "profile": "Účet",
+  "login": "Přihlášení",
+  "register": "Registrace",
+  "logout": "Odhlásit"
+}

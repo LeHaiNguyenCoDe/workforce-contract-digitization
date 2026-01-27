@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Services\TranslationService;
+use App\Services\Core\TranslationService;
 use Illuminate\Console\Command;
 
 class ImportTranslations extends Command
@@ -53,4 +53,5 @@ class ImportTranslations extends Command
         return Command::SUCCESS;
     }
 }
+
 

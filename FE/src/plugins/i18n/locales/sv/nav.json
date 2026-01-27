@@ -1,0 +1,14 @@
+{
+  "home": "Hem",
+  "products": "Produkter",
+  "categories": "Kategorier",
+  "articles": "Artiklar",
+  "promotions": "Erbjudanden",
+  "cart": "Kundvagn",
+  "wishlist": "Önskelista",
+  "orders": "Beställningar",
+  "profile": "Konto",
+  "login": "Logga in",
+  "register": "Registrera",
+  "logout": "Logga ut"
+}

@@ -1,0 +1,14 @@
+{
+  "title": "المنتجات",
+  "detail": "تفاصيل المنتج",
+  "price": "السعر",
+  "quantity": "الكمية",
+  "addToCart": "أضف إلى السلة",
+  "addToWishlist": "أضف إلى المفضلة",
+  "outOfStock": "نفذ المخزون",
+  "inStock": "متوفر",
+  "reviews": "التقييمات",
+  "noReviews": "لا توجد تقييمات بعد",
+  "variants": "الأنواع",
+  "category": "الفئة"
+}
