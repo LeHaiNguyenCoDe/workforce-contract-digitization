@@ -11,9 +11,11 @@
     "require": {
         "php": "^8.2",
         "laravel/framework": "^12.0",
+        "laravel/reverb": "^1.6",
+        "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1",
-        "laravel-lang/common": "^3.0",
-        "laravel-lang/locales": "^3.0"
+        "mews/purifier": "^3.4",
+        "stichoza/google-translate-php": "^5.3"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -49,9 +51,10 @@
             "npm install",
             "npm run build"
         ],
+        "lint": "./vendor/bin/pint",
         "dev": [
             "Composer\\Config::disableProcessTimeout",
-            "npx concurrently -c \"#93c5fd,#c4b5fd,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1\" \"npm run dev\" --names='server,queue,vite'"
+            "npx concurrently -c \"#93c5fd,#c4b5fd,#fdba74,#fca5a5\" \"php artisan serve\" \"php artisan queue:listen --tries=1\" \"php artisan reverb:start\" \"npm run dev\" --names='server,queue,reverb,vite'"
         ],
         "test": [
             "@php artisan config:clear --ansi",

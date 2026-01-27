@@ -1,0 +1,17 @@
+{
+  "title": "注文",
+  "myOrders": "注文履歴",
+  "orderNumber": "注文番号",
+  "status": "ステータス",
+  "date": "日付",
+  "shippingAddress": "配送先住所",
+  "phone": "電話番号",
+  "paymentMethod": "支払い方法",
+  "notes": "備考",
+  "placeOrder": "注文する",
+  "pending": "処理待ち",
+  "processing": "処理中",
+  "shipped": "発送済み",
+  "delivered": "配達済み",
+  "cancelled": "キャンセル"
+}

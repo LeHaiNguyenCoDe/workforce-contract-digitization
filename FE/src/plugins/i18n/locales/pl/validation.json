@@ -1,0 +1,9 @@
+{
+  "required": "To pole jest wymagane",
+  "email": "Nieprawidłowy adres email",
+  "minLength": "Minimum {min} znaków",
+  "maxLength": "Maksimum {max} znaków",
+  "passwordMismatch": "Hasła nie są zgodne",
+  "passwordWeak": "Hasło musi zawierać litery, cyfry i znaki specjalne",
+  "loginFailed": "Logowanie nieudane"
+}

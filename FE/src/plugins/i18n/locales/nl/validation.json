@@ -1,0 +1,9 @@
+{
+  "required": "Dit veld is verplicht",
+  "email": "Ongeldig e-mailadres",
+  "minLength": "Minimaal {min} tekens",
+  "maxLength": "Maximaal {max} tekens",
+  "passwordMismatch": "Wachtwoorden komen niet overeen",
+  "passwordWeak": "Wachtwoord moet letters, cijfers en speciale tekens bevatten",
+  "loginFailed": "Inloggen mislukt"
+}

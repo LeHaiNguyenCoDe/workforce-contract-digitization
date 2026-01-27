@@ -1,0 +1,14 @@
+{
+  "title": "Producten",
+  "detail": "Productdetails",
+  "price": "Prijs",
+  "quantity": "Aantal",
+  "addToCart": "Toevoegen aan winkelwagen",
+  "addToWishlist": "Toevoegen aan verlanglijst",
+  "outOfStock": "Uitverkocht",
+  "inStock": "Op voorraad",
+  "reviews": "Beoordelingen",
+  "noReviews": "Nog geen beoordelingen",
+  "variants": "Varianten",
+  "category": "Categorie"
+}

@@ -1,0 +1,9 @@
+{
+  "required": "Toto pole je povinné",
+  "email": "Neplatná e-mailová adresa",
+  "minLength": "Minimálně {min} znaků",
+  "maxLength": "Maximálně {max} znaků",
+  "passwordMismatch": "Hesla se neshodují",
+  "passwordWeak": "Heslo musí obsahovat písmena, čísla a speciální znaky",
+  "loginFailed": "Přihlášení se nezdařilo"
+}

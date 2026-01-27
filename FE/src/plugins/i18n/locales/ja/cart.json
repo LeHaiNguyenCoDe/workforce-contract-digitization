@@ -1,0 +1,12 @@
+{
+  "title": "ショッピングカート",
+  "empty": "カートは空です",
+  "continueShopping": "買い物を続ける",
+  "checkout": "購入手続き",
+  "subtotal": "小計",
+  "shipping": "送料",
+  "total": "合計",
+  "freeShipping": "無料",
+  "addToCart": "カートに追加",
+  "summary": "注文概要"
+}

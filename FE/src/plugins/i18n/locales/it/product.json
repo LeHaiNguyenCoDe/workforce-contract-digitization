@@ -1,0 +1,14 @@
+{
+  "title": "Prodotti",
+  "detail": "Dettaglio prodotto",
+  "price": "Prezzo",
+  "quantity": "Quantità",
+  "addToCart": "Aggiungi al carrello",
+  "addToWishlist": "Aggiungi ai preferiti",
+  "outOfStock": "Esaurito",
+  "inStock": "Disponibile",
+  "reviews": "Recensioni",
+  "noReviews": "Ancora nessuna recensione",
+  "variants": "Varianti",
+  "category": "Categoria"
+}

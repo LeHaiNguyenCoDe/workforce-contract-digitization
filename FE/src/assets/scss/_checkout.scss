@@ -1,0 +1,20 @@
+/* Cart View Styles */
+.cart-container {
+    padding-top: 1rem;
+}
+
+@media (max-width: 768px) {
+    .cart-container {
+        padding-top: 0;
+    }
+}
+
+/* Checkout View Styles */
+.checkout-container {
+    padding-bottom: 4rem;
+}
+
+/* Order Success View Styles */
+.order-success-container {
+    background-color: transparent;
+}

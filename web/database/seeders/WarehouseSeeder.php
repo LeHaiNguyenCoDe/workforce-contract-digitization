@@ -2,10 +2,11 @@
 
 namespace Database\Seeders;
 
+use App\Models\InventoryLog;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Stock;
-use App\Models\StockMovement;
+use App\Models\User;
 use App\Models\Warehouse;
 use Illuminate\Database\Seeder;
 
@@ -19,21 +20,21 @@ class WarehouseSeeder extends Seeder
         // Tạo warehouses
         $warehouses = [
             [
-                'name' => 'Main Warehouse',
+                'name' => 'Kho Lò Nung - Bát Tràng',
                 'code' => 'WH001',
-                'address' => '123 Warehouse Street, Ho Chi Minh City',
+                'address' => 'Xóm 2, Bát Tràng, Hà Nội',
                 'is_active' => true,
             ],
             [
-                'name' => 'North Warehouse',
+                'name' => 'Kho Thành Phẩm - Minh Long',
                 'code' => 'WH002',
-                'address' => '456 Storage Road, Hanoi',
+                'address' => 'Thuận An, Bình Dương',
                 'is_active' => true,
             ],
             [
-                'name' => 'Central Warehouse',
+                'name' => 'Kho Trưng Bày - Chu Đậu',
                 'code' => 'WH003',
-                'address' => '789 Distribution Center, Da Nang',
+                'address' => 'Nam Sách, Hải Dương',
                 'is_active' => true,
             ],
         ];
@@ -48,25 +49,38 @@ class WarehouseSeeder extends Seeder
 
         $products = Product::all();
 
-        // Tạo stocks và stock movements cho mỗi warehouse
+        // Get admin user for logging
+        $adminUser = User::where('email', 'admin@example.com')->first();
+        $userId = $adminUser?->id ?? 1;
+
+        // Tạo stocks và inventory logs cho mỗi warehouse
         foreach ($createdWarehouses as $warehouse) {
             foreach ($products as $product) {
                 // Tạo stock cho product (không có variant)
                 $quantity = rand(50, 500);
-                $stock = Stock::create([
-                    'warehouse_id' => $warehouse->id,
-                    'product_id' => $product->id,
-                    'product_variant_id' => null,
-                    'quantity' => $quantity,
-                ]);
+                $availableQty = rand((int) ($quantity * 0.7), $quantity);
+                $stock = Stock::updateOrCreate(
+                    [
+                        'warehouse_id' => $warehouse->id,
+                        'product_id' => $product->id,
+                        'product_variant_id' => null,
+                    ],
+                    [
+                        'quantity' => $quantity,
+                        'available_quantity' => $availableQty,
+                    ]
+                );
 
-                // Tạo initial stock movement
-                StockMovement::create([
+                // Tạo initial inventory log
+                InventoryLog::create([
                     'warehouse_id' => $warehouse->id,
                     'product_id' => $product->id,
                     'product_variant_id' => null,
-                    'type' => 'in',
+                    'movement_type' => InventoryLog::MOVEMENT_TYPE_INBOUND,
                     'quantity' => $quantity,
+                    'quantity_before' => 0,
+                    'quantity_after' => $quantity,
+                    'user_id' => $userId,
                     'reference_type' => 'manual',
                     'note' => 'Initial stock',
                     'created_at' => now()->subDays(rand(30, 60)),
@@ -75,40 +89,60 @@ class WarehouseSeeder extends Seeder
                 // Tạo stocks cho variants
                 foreach ($product->variants as $variant) {
                     $variantQuantity = rand(10, 100);
-                    Stock::create([
-                        'warehouse_id' => $warehouse->id,
-                        'product_id' => $product->id,
-                        'product_variant_id' => $variant->id,
-                        'quantity' => $variantQuantity,
-                    ]);
+                    Stock::updateOrCreate(
+                        [
+                            'warehouse_id' => $warehouse->id,
+                            'product_id' => $product->id,
+                            'product_variant_id' => $variant->id,
+                        ],
+                        [
+                            'quantity' => $variantQuantity,
+                            'available_quantity' => $variantQuantity,
+                        ]
+                    );
 
-                    // Tạo initial stock movement cho variant
-                    StockMovement::create([
+                    // Tạo initial inventory log cho variant
+                    InventoryLog::create([
                         'warehouse_id' => $warehouse->id,
                         'product_id' => $product->id,
                         'product_variant_id' => $variant->id,
-                        'type' => 'in',
+                        'movement_type' => InventoryLog::MOVEMENT_TYPE_INBOUND,
                         'quantity' => $variantQuantity,
+                        'quantity_before' => 0,
+                        'quantity_after' => $variantQuantity,
+                        'user_id' => $userId,
                         'reference_type' => 'manual',
                         'note' => 'Initial stock for variant',
                         'created_at' => now()->subDays(rand(30, 60)),
                     ]);
                 }
 
-                // Tạo một số stock movements khác (out, adjust)
+                // Tạo một số inventory logs khác (outbound, adjust)
                 $movementCount = rand(2, 5);
+                $currentQty = $quantity;
                 for ($i = 0; $i < $movementCount; $i++) {
-                    $movementType = ['out', 'adjust'][rand(0, 1)];
+                    $movementType = [InventoryLog::MOVEMENT_TYPE_OUTBOUND, InventoryLog::MOVEMENT_TYPE_ADJUST][rand(0, 1)];
                     $movementQty = rand(5, 50);
 
-                    StockMovement::create([
+                    $qtyBefore = $currentQty;
+                    if ($movementType === InventoryLog::MOVEMENT_TYPE_OUTBOUND) {
+                        $currentQty -= $movementQty;
+                    } else {
+                        $currentQty += $movementQty;
+                    }
+
+                    InventoryLog::create([
                         'warehouse_id' => $warehouse->id,
                         'product_id' => $product->id,
                         'product_variant_id' => null,
-                        'type' => $movementType,
-                        'quantity' => $movementType === 'out' ? -$movementQty : $movementQty,
-                        'reference_type' => $movementType === 'out' ? 'order' : 'manual',
-                        'note' => $movementType === 'out' ? 'Stock out for order' : 'Stock adjustment',
+                        'movement_type' => $movementType,
+                        'quantity' => $movementType === InventoryLog::MOVEMENT_TYPE_OUTBOUND ? -$movementQty : $movementQty,
+                        'quantity_before' => $qtyBefore,
+                        'quantity_after' => $currentQty,
+                        'user_id' => $userId,
+                        'reason' => $movementType === InventoryLog::MOVEMENT_TYPE_ADJUST ? 'Stock adjustment' : null,
+                        'reference_type' => $movementType === InventoryLog::MOVEMENT_TYPE_OUTBOUND ? 'order' : 'manual',
+                        'note' => $movementType === InventoryLog::MOVEMENT_TYPE_OUTBOUND ? 'Stock out for order' : 'Stock adjustment',
                         'created_at' => now()->subDays(rand(1, 25)),
                     ]);
                 }

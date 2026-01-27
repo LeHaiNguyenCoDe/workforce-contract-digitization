@@ -1,0 +1,17 @@
+{
+  "title": "Beställningar",
+  "myOrders": "Mina beställningar",
+  "orderNumber": "Ordernummer",
+  "status": "Status",
+  "date": "Datum",
+  "shippingAddress": "Leveransadress",
+  "phone": "Telefon",
+  "paymentMethod": "Betalningsmetod",
+  "notes": "Anteckningar",
+  "placeOrder": "Lägg beställning",
+  "pending": "Väntande",
+  "processing": "Bearbetas",
+  "shipped": "Skickad",
+  "delivered": "Levererad",
+  "cancelled": "Avbruten"
+}

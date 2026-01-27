@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\Services\LanguageDetectionService;
+use App\Services\Core\LanguageDetectionService;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
@@ -36,4 +36,5 @@ class SetLocale
         return $next($request);
     }
 }
+
 

@@ -1,0 +1,9 @@
+{
+  "required": "Trường này là bắt buộc",
+  "email": "Email không hợp lệ",
+  "minLength": "Tối thiểu {min} ký tự",
+  "maxLength": "Tối đa {max} ký tự",
+  "passwordMismatch": "Mật khẩu xác nhận không khớp",
+  "passwordWeak": "Mật khẩu phải có chữ, số và ký tự đặc biệt",
+  "loginFailed": "Đăng nhập thất bại"
+}

@@ -1,0 +1,32 @@
+// Button components
+@use '../variables' as *;
+
+.btn {
+  @include button-base;
+}
+
+.btn-primary {
+  @include button-primary;
+}
+
+.btn-secondary {
+  @include button-secondary;
+}
+
+.btn-outline {
+  @include button-outline;
+}
+
+.btn-sm {
+  padding: $space-2 $space-4;
+  font-size: $text-sm;
+}
+
+.btn-lg {
+  padding: $space-4 $space-8;
+  font-size: $text-lg;
+}
+
+.btn-full {
+  width: 100%;
+}

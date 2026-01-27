@@ -9,8 +9,13 @@ class ProductVariant extends Model
 {
     protected $fillable = [
         'product_id',
+        'variant_type',
+        'label',
         'color',
+        'color_code',
+        'price_adjustment',
         'stock',
+        'is_default',
     ];
 
     public function product(): BelongsTo

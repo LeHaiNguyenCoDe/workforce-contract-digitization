@@ -1,0 +1,14 @@
+{
+  "title": "商品",
+  "detail": "商品详情",
+  "price": "价格",
+  "quantity": "数量",
+  "addToCart": "加入购物车",
+  "addToWishlist": "加入收藏",
+  "outOfStock": "缺货",
+  "inStock": "有货",
+  "reviews": "评价",
+  "noReviews": "暂无评价",
+  "variants": "规格",
+  "category": "分类"
+}

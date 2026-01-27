@@ -1,0 +1,14 @@
+{
+  "home": "Home",
+  "products": "Prodotti",
+  "categories": "Categorie",
+  "articles": "Articoli",
+  "promotions": "Promozioni",
+  "cart": "Carrello",
+  "wishlist": "Preferiti",
+  "orders": "Ordini",
+  "profile": "Account",
+  "login": "Accedi",
+  "register": "Registrati",
+  "logout": "Esci"
+}
