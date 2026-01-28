@@ -3,6 +3,7 @@ import vue from "@vitejs/plugin-vue";
 import { fileURLToPath, URL } from "node:url";
 import AutoImport from "unplugin-auto-import/vite";
 import Components from "unplugin-vue-components/vite";
+import viteCompression from "vite-plugin-compression";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -11,6 +12,10 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [
       vue(),
+      viteCompression({
+        algorithm: 'gzip',
+        ext: '.gz',
+      }),
       AutoImport({
         // Auto import functions from Vue, Vue Router, Pinia
         dirs: [
@@ -134,6 +139,35 @@ export default defineConfig(({ mode }) => {
           silenceDeprecations: ['import', 'global-builtin', 'color-functions', 'if-function'],
         },
       },
+    },
+    build: {
+      chunkSizeWarningLimit: 1000,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('vue') || id.includes('pinia') || id.includes('vue-router') || id.includes('vue-i18n')) {
+                return 'vendor';
+              }
+              if (id.includes('apexcharts') || id.includes('echarts') || id.includes('chartjs')) {
+                return 'charts';
+              }
+              if (id.includes('leaflet') || id.includes('google-map')) {
+                return 'maps';
+              }
+              if (id.includes('ckeditor')) {
+                return 'editors';
+              }
+              if (id.includes('fullcalendar')) {
+                return 'calendar';
+              }
+              if (id.includes('bootstrap') || id.includes('sweetalert2') || id.includes('swiper') || id.includes('popperjs') || id.includes('aos')) {
+                return 'ui';
+              }
+            }
+          }
+        }
+      }
     },
   };
 });
