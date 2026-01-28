@@ -2,12 +2,13 @@
  * usePoints Composable
  */
 import { ref } from 'vue'
-import { useSwal } from '@/utils'
+import { useSwal, useErrorHandler } from '@/utils'
 import pointsService from '../services/pointsService'
 import type { PointTransaction, CustomerPoints } from '../models/point'
 
 export function usePoints() {
     const swal = useSwal()
+    const { handleError } = useErrorHandler()
 
     const customerInfo = ref<CustomerPoints | null>(null)
     const transactions = ref<PointTransaction[]>([])
@@ -23,32 +24,39 @@ export function usePoints() {
 
     async function searchCustomer() {
         if (!searchQuery.value) return
+
         isLoading.value = true
         try {
-            // Mock for development
-            customerInfo.value = {
-                customer_id: 1,
-                customer_name: 'Nguyễn Văn An',
-                customer_email: 'an@example.com',
-                current_points: 5200,
-                tier_name: 'Vàng',
-                tier_color: '#FFD700',
-                total_earned: 12500,
-                total_redeemed: 7300
+            // Assume searchQuery is customer ID for simplicity in this ERP part
+            // In a better UX, this would be a search-and-select
+            const customerId = parseInt(searchQuery.value)
+            if (isNaN(customerId)) {
+                await swal.warning('Vui lòng nhập ID khách hàng (số)!')
+                return
             }
-            transactions.value = [
-                { id: 1, customer_id: 1, type: 'earn', amount: 500, balance_after: 5200, description: 'Mua hàng #1001', created_at: '2024-12-20' },
-                { id: 2, customer_id: 1, type: 'redeem', amount: -1000, balance_after: 4700, description: 'Đổi voucher', created_at: '2024-12-15' },
-                { id: 3, customer_id: 1, type: 'earn', amount: 300, balance_after: 5700, description: 'Mua hàng #995', created_at: '2024-12-10' }
-            ]
+
+            const info = await pointsService.getCustomerPoints(customerId)
+            // Force Vue reactivity by creating new object
+            customerInfo.value = { ...info }
+
+            const transResponse = await pointsService.getTransactions(customerId, {
+                page: currentPage.value,
+                per_page: 10
+            })
+            // Force Vue reactivity by creating new array
+            transactions.value = [...transResponse.data]
+            totalPages.value = transResponse.last_page
         } catch (error) {
-            await swal.error('Không tìm thấy khách hàng!')
+            handleError(error, 'Không tìm thấy khách hàng hoặc lỗi hệ thống')
+            customerInfo.value = null
+            transactions.value = []
         } finally {
             isLoading.value = false
         }
     }
 
     function openRedeemModal() {
+        if (!customerInfo.value) return
         redeemAmount.value = 0
         redeemDescription.value = ''
         showRedeemModal.value = true
@@ -66,20 +74,31 @@ export function usePoints() {
 
         isSaving.value = true
         try {
-            await pointsService.redeemPoints(customerInfo.value.customer_id, redeemAmount.value, redeemDescription.value)
+            console.log('Điểm trước khi đổi:', customerInfo.value.current_points)
+            const response = await pointsService.redeemPoints(customerInfo.value.customer_id, redeemAmount.value, redeemDescription.value)
+            console.log('Redeem response:', response)
+
             await swal.success('Đổi điểm thành công!')
             showRedeemModal.value = false
+
+            // Refresh customer info
             await searchCustomer()
+            console.log('Điểm sau khi refresh:', customerInfo.value?.current_points)
         } catch (error) {
-            await swal.error('Không thể đổi điểm!')
+            handleError(error, 'Không thể đổi điểm')
         } finally {
             isSaving.value = false
         }
     }
 
+    function changePage(page: number) {
+        currentPage.value = page
+        searchCustomer()
+    }
+
     return {
         customerInfo, transactions, isLoading, isSaving, searchQuery, currentPage, totalPages,
         showRedeemModal, redeemAmount, redeemDescription,
-        searchCustomer, openRedeemModal, handleRedeem
+        searchCustomer, openRedeemModal, handleRedeem, changePage
     }
 }

@@ -301,8 +301,8 @@ onMounted(() => {
             </router-link>
           </div>
 
-          <BButton v-bind="{ variant: 'light' }" type="button"
-            class="btn btn-sm px-3 fs-16 header-item vertical-menu-btn topnav-hamburger  material-shadow-none" id="topnav-hamburger-icon">
+          <BButton v-bind="{ variant: 'white' }" type="button"
+            class="btn btn-sm px-3 fs-16 header-item vertical-menu-btn topnav-hamburger material-shadow-none" id="topnav-hamburger-icon">
             <span class="hamburger-icon">
               <span></span>
               <span></span>

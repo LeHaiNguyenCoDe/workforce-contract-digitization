@@ -4,7 +4,7 @@
 export const transactionColumns = [
     { key: 'id', label: 'ID', width: '80px' },
     { key: 'type', label: 'Loại', width: '100px' },
-    { key: 'amount', label: 'Số điểm', width: '100px', align: 'right' as const },
+    { key: 'points', label: 'Số điểm', width: '100px', align: 'right' as const },
     { key: 'balance_after', label: 'Còn lại', width: '100px', align: 'right' as const },
     { key: 'description', label: 'Mô tả' },
     { key: 'created_at', label: 'Ngày', width: '150px' }

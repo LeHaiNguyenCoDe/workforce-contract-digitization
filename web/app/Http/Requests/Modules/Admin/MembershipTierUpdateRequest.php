@@ -14,7 +14,7 @@ class MembershipTierUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['nullable', 'string', 'max:100'],
+            'name' => ['nullable', 'string', 'max:50'],
             'min_points' => ['nullable', 'integer', 'min:0'],
             'max_points' => ['nullable', 'integer', 'min:0'],
             'discount_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],

@@ -9,9 +9,9 @@ const BASE_URL = '/admin/membership/tiers'
 export const tierService = {
     async getAll() {
         const response = await httpClient.get(BASE_URL)
-        // API returns { status: 'success', data: [...] }
-        const tiers = response.data?.data || response.data
-        if (!tiers || !Array.isArray(tiers)) {
+        const data = (response.data as any).data
+        const tiers = Array.isArray(data) ? data : (data.items || data)
+        if (!Array.isArray(tiers)) {
             throw new Error('Invalid tiers data received')
         }
         return tiers as MembershipTier[]
@@ -19,12 +19,14 @@ export const tierService = {
 
     async create(payload: CreateTierPayload) {
         const response = await httpClient.post(BASE_URL, payload)
-        return (response.data?.data || response.data) as MembershipTier
+        const data = (response.data as any).data
+        return (data.data || data) as MembershipTier
     },
 
     async update(id: number, payload: Partial<CreateTierPayload>) {
         const response = await httpClient.put(`${BASE_URL}/${id}`, payload)
-        return (response.data?.data || response.data) as MembershipTier
+        const data = (response.data as any).data
+        return (data.data || data) as MembershipTier
     },
 
     async delete(id: number) {

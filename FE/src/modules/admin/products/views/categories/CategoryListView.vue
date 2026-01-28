@@ -37,7 +37,7 @@ const selectedRows = ref<number[]>([])
 // Column config
 const displayColumns = [
   { key: 'selection', label: '#', width: '50px' },
-  { key: 'name', label: 'Danh mục' },
+  { key: 'name', label: 'Danh mục', width: '250px' },
   { key: 'slug', label: 'Slug', width: '200px' },
   { key: 'products_count', label: 'Sản phẩm', width: '120px', align: 'center' as const },
   { key: 'is_active', label: 'Trạng thái', width: '120px', align: 'center' as const },
@@ -108,7 +108,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="page-content py-4" style="background-color: #f3f3f9;">
+  <div style="background-color: #f3f3f9;">
     <PageHeader :title="t('admin.categories')" pageTitle="Ecommerce" />
 
     <BRow>
@@ -220,7 +220,7 @@ onMounted(async () => {
               <!-- Actions -->
               <template #actions="{ item }">
                 <div class="text-center">
-                  <BDropdown variant="link" no-caret toggle-class="p-0 border-0" 
+                  <BDropdown variant="link" no-caret toggle-class="text-decoration-none p-0 border-0" 
                             menu-class="shadow-lg border-0" placement="bottom-end" offset="5" teleport-to="body">
                     <template #button-content>
                       <div class="action-btn">

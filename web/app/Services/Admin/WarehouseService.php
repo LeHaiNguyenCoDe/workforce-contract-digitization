@@ -421,7 +421,7 @@ class WarehouseService
             'pendingBatches' => InboundBatch::where('status', InboundBatch::STATUS_PENDING)->count(),
             'receivedBatches' => InboundBatch::where('status', InboundBatch::STATUS_RECEIVED)->count(),
             'qcInProgress' => InboundBatch::where('status', InboundBatch::STATUS_QC_IN_PROGRESS)->count(),
-            'lowStock' => Stock::whereColumn('available_quantity', '<=', DB::raw('0'))->count(),
+            'lowStock' => Stock::where('quantity', '<=', 0)->count(),
         ];
     }
 

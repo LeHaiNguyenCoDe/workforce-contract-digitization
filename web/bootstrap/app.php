@@ -63,6 +63,17 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         });
 
+        // Handle standard validation exceptions for API
+        $exceptions->render(function (\Illuminate\Validation\ValidationException $e, \Illuminate\Http\Request $request) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Validation error',
+                    'errors' => $e->errors(),
+                ], 422);
+            }
+        });
+
         // Handle custom exceptions for API
         $exceptions->render(function (\App\Exceptions\ValidationException $e, \Illuminate\Http\Request $request) {
             if ($request->expectsJson() || $request->is('api/*')) {

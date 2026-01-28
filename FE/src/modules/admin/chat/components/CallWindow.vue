@@ -29,11 +29,10 @@ const handleEndCall = () => {
 }
 
 const handleRetry = async () => {
-  console.log('[CallWindow] User clicked retry permissions')
   try {
     await callStore.checkPermissions()
   } catch (err) {
-    console.error('[CallWindow] Retry failed:', err)
+    // Retry failed
   }
 }
 
@@ -41,42 +40,48 @@ const playEndCallSound = () => {
   playAudio(endCallAudio.value)
 }
 
+const pendingAudio = ref<HTMLAudioElement | null>(null)
+
+// Sound warmup/retry helper
+const handleUserInteraction = () => {
+  if (pendingAudio.value) {
+    pendingAudio.value.play().catch(() => {})
+    pendingAudio.value = null
+  }
+  document.removeEventListener('click', handleUserInteraction)
+  document.removeEventListener('keydown', handleUserInteraction)
+}
+
 const playAudio = async (audioEl: HTMLAudioElement | null) => {
   if (!audioEl) {
-    console.warn('[CallWindow] Audio element not found for playing')
     return
   }
   
+  const displaySrc = audioEl.src || 'Unknown'
+  
   try {
-    const displaySrc = audioEl.src || 'Unknown'
-    console.log(`[CallWindow] Processing sound: ${displaySrc}`)
-    
     // Reset state
     audioEl.muted = false 
-    audioEl.volume = 0.8 // Increase volume for testing
+    audioEl.volume = 0.8
     audioEl.currentTime = 0
     
-    // Force reload if src changed or was empty
     if (!audioEl.readyState) {
        audioEl.load()
     }
 
-    const playPromise = audioEl.play()
-    if (playPromise !== undefined) {
-      await playPromise
-      console.log('[CallWindow] Play SUCCESS')
-    }
+    await audioEl.play()
+    // If we successfully played, we can clear pending
+    if (pendingAudio.value === audioEl) pendingAudio.value = null
   } catch (e: any) {
-    console.error(`[CallWindow] Play FAILED:`, e.name, e.message)
-    // Try to recover if it was a loading error
-    if (e.name === 'NotSupportedError') {
-      console.log('[CallWindow] Attempting sound recovery/reload...')
-      audioEl.load()
-    }
     if (e.name === 'NotAllowedError') {
-      window.alert('Trình duyệt đang chặn âm thanh. Sau khi bạn bấm OK, hệ thống sẽ tự động phát lại tiếng.')
-      // After alert (which is blocking and counts as interaction), try playing again!
-      audioEl.play().catch(err => console.error('[CallWindow] Final retry failed:', err))
+      pendingAudio.value = audioEl
+      document.addEventListener('click', handleUserInteraction, { once: true })
+      document.addEventListener('keydown', handleUserInteraction, { once: true })
+      return;
+    }
+    
+    if (e.name === 'NotSupportedError') {
+      audioEl.load()
     }
   }
 }
@@ -128,19 +133,16 @@ watch(() => callStore.localStream, (newStream) => {
 // Watch specifically for permission changes while ringing
 watch(() => callStore.hasPermissions, async (hasPerms) => {
   if (hasPerms === true && callStore.callStatus === 'ringing' && !callStore.isIncoming) {
-    console.log('CallWindow: Permissions granted while ringing, starting media...')
     try {
       await callStore.startLocalStream()
       await callStore.makeOffer()
     } catch (err) {
-      console.error('CallWindow: Failed to start after delayed permission:', err)
       callStore.resetCall()
     }
   }
 })
 
 watch(() => callStore.callStatus, async (newStatus, oldStatus) => {
-  console.log('CallWindow: status changed', { newStatus, oldStatus })
   
   await nextTick() // Ensure DOM is updated if v-if changed
 
@@ -150,33 +152,29 @@ watch(() => callStore.callStatus, async (newStatus, oldStatus) => {
 
   if (newStatus === 'ringing') {
     if (callStore.isIncoming) {
-      console.log('CallWindow: Incoming call - playing ringtone')
       playAudio(ringingAudio.value)
     } else {
-      console.log('CallWindow: Outgoing call - playing dialing sound')
       playAudio(dialingAudio.value)
       
       // If we just entered ringing state and we are the caller and ALREADY have permissions
       if (callStore.hasPermissions === true && (oldStatus === 'idle' || oldStatus === null || oldStatus === undefined)) {
         try {
-          console.log('CallWindow: Caller initiating media and offer')
           await callStore.startLocalStream()
           await callStore.makeOffer()
         } catch (err) {
-          console.error('Failed to start call UI:', err)
           callStore.resetCall()
         }
       }
     }
   } else if (newStatus === 'active') {
-    console.log('CallWindow: Call active')
+    // Call active
   } else if (newStatus === 'idle' && oldStatus !== 'idle') {
     playEndCallSound()
   }
 }, { immediate: true })
 
 onMounted(() => {
-  console.log('CallWindow: Global component mounted and ready')
+  // Global component mounted
 })
 
 onUnmounted(() => {

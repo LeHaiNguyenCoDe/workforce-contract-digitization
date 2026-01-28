@@ -2,6 +2,8 @@
 import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { reviewColumns } from '../../configs/columns'
+import { useReviewStore } from '../../store/store'
+import { useReviews } from '../../composables/useReviews'
 
 const { t } = useI18n()
 
@@ -29,6 +31,11 @@ const statusFilter = computed(() => store.statusFilter)
 onMounted(async () => {
   await store.fetchReviews()
 })
+
+function handleStatusChange(event: Event) {
+  const target = event.target as HTMLSelectElement
+  setStatusFilter(target.value)
+}
 </script>
 
 <template>
@@ -40,7 +47,7 @@ onMounted(async () => {
     <AdminSearch :modelValue="''" @search="store.fetchReviews({ status: statusFilter || undefined })" placeholder="Tìm kiếm đánh giá...">
       <template #filters>
         <div class="flex gap-2">
-          <select :value="statusFilter" @change="setStatusFilter(($event.target as HTMLSelectElement).value)" class="form-input w-48 bg-dark-700 border-white/10 text-white">
+          <select :value="statusFilter" @change="handleStatusChange" class="form-input w-48 bg-dark-700 border-white/10 text-white">
             <option value="">Tất cả trạng thái</option>
             <option value="pending">Chờ duyệt</option>
             <option value="approved">Đã duyệt</option>
@@ -98,7 +105,7 @@ onMounted(async () => {
         <div class="flex items-center justify-end gap-1">
           <template v-if="item.status === 'pending'">
             <DAction icon="approve" title="Duyệt" variant="success" @click.stop="approveReview(item)" />
-            <DAction icon="cancel" title="Từ chối" variant="danger" @click.stop="rejectReview(item)" />
+            <DAction icon="reject" title="Từ chối" variant="danger" @click.stop="rejectReview(item)" />
           </template>
           <DAction v-else icon="delete" variant="danger" @click.stop="deleteReview(item.id)" />
         </div>

@@ -2,19 +2,13 @@
  * useMembership Composable
  */
 import { ref, onMounted } from 'vue'
-import { useSwal } from '@/utils'
+import { useSwal, useErrorHandler } from '@/utils'
 import tierService from '../services/tierService'
 import type { MembershipTier, CreateTierPayload } from '../models/tier'
 
-const getMockTiers = (): MembershipTier[] => [
-    { id: 1, name: 'Đồng', min_points: 0, discount_percent: 0, color: '#CD7F32', benefits: ['Tích điểm 1%', 'Nhận thông báo'], member_count: 1250, created_at: '2024-01-01', updated_at: '2024-01-01' },
-    { id: 2, name: 'Bạc', min_points: 1000, discount_percent: 5, color: '#C0C0C0', benefits: ['Tích điểm 2%', 'Giảm 5%', 'Ưu tiên hỗ trợ'], member_count: 450, created_at: '2024-01-01', updated_at: '2024-01-01' },
-    { id: 3, name: 'Vàng', min_points: 5000, discount_percent: 10, color: '#FFD700', benefits: ['Tích điểm 3%', 'Giảm 10%', 'Free ship', 'Quà sinh nhật'], member_count: 120, created_at: '2024-01-01', updated_at: '2024-01-01' },
-    { id: 4, name: 'Kim cương', min_points: 20000, discount_percent: 15, color: '#B9F2FF', benefits: ['Tích điểm 5%', 'Giảm 15%', 'Free ship', 'Quà VIP', 'Hotline riêng'], member_count: 28, created_at: '2024-01-01', updated_at: '2024-01-01' }
-]
-
 export function useMembership() {
     const swal = useSwal()
+    const { handleError } = useErrorHandler()
 
     const tiers = ref<MembershipTier[]>([])
     const isLoading = ref(false)
@@ -24,7 +18,7 @@ export function useMembership() {
     const editingTier = ref<MembershipTier | null>(null)
 
     const form = ref<CreateTierPayload>({
-        name: '', min_points: 0, discount_percent: 0, color: '#6366f1', benefits: []
+        name: '', code: '', min_points: 0, max_points: null, discount_percent: 0, point_multiplier: 1, color: '#6366f1', benefits: []
     })
     const newBenefit = ref('')
 
@@ -32,11 +26,10 @@ export function useMembership() {
         isLoading.value = true
         try {
             const result = await tierService.getAll()
-            // Use mock data if API returns empty array
-            tiers.value = result.length > 0 ? result : getMockTiers()
+            tiers.value = result
         } catch (error) {
-            console.error('Failed to fetch tiers:', error)
-            tiers.value = getMockTiers()
+            handleError(error, 'Không thể tải danh sách hạng thành viên')
+            tiers.value = []
         } finally {
             isLoading.value = false
         }
@@ -44,13 +37,22 @@ export function useMembership() {
 
     function openCreate() {
         editingTier.value = null
-        form.value = { name: '', min_points: 0, discount_percent: 0, color: '#6366f1', benefits: [] }
+        form.value = { name: '', code: '', min_points: 0, max_points: null, discount_percent: 0, point_multiplier: 1, color: '#6366f1', benefits: [] }
         showModal.value = true
     }
 
     function openEdit(tier: MembershipTier) {
         editingTier.value = tier
-        form.value = { name: tier.name, min_points: tier.min_points, discount_percent: tier.discount_percent, color: tier.color, benefits: [...tier.benefits] }
+        form.value = { 
+            name: tier.name, 
+            code: tier.code, 
+            min_points: tier.min_points, 
+            max_points: tier.max_points,
+            discount_percent: tier.discount_percent, 
+            point_multiplier: tier.point_multiplier,
+            color: tier.color, 
+            benefits: [...tier.benefits] 
+        }
         showModal.value = true
     }
 
@@ -70,6 +72,10 @@ export function useMembership() {
             await swal.warning('Vui lòng nhập tên hạng!')
             return
         }
+        if (!form.value.code) {
+            await swal.warning('Vui lòng nhập mã hạng!')
+            return
+        }
 
         isSaving.value = true
         try {
@@ -83,7 +89,7 @@ export function useMembership() {
             showModal.value = false
             await fetchTiers()
         } catch (error) {
-            await swal.error('Có lỗi xảy ra!')
+            handleError(error, 'Không thể lưu hạng thành viên')
         } finally {
             isSaving.value = false
         }
@@ -98,7 +104,7 @@ export function useMembership() {
             await swal.success('Đã xóa!')
             await fetchTiers()
         } catch (error) {
-            await swal.error('Không thể xóa!')
+            handleError(error, 'Không thể xóa hạng thành viên')
         }
     }
 

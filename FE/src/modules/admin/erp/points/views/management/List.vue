@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { transactionColumns, transactionTypeLabels } from '../../configs/columns'
+import { usePoints } from '../../composables/usePoints'
+import { transactionColumns, transactionTypeLabels, transactionTypeClasses } from '../../configs/columns'
+import { formatDateTime } from '@/utils'
 
 const {
   customerInfo, transactions, isLoading, isSaving, searchQuery,
@@ -39,7 +41,7 @@ const {
         <DCard class="flex flex-col justify-center">
           <p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">Khả dụng</p>
           <div class="flex items-baseline gap-1">
-            <span class="text-3xl font-black text-primary-light">{{ customerInfo.current_points.toLocaleString() }}</span>
+            <span class="text-3xl font-black text-primary-light">{{ (customerInfo.current_points || 0).toLocaleString() }}</span>
             <span class="text-xs text-slate-400 font-medium">pts</span>
           </div>
         </DCard>
@@ -49,7 +51,7 @@ const {
             <img src="@/assets/admin/icons/layers.svg" class="w-20 h-20" alt="Points" />
           </div>
           <p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">Tổng tích lũy</p>
-          <p class="text-2xl font-bold text-success">{{ customerInfo.total_earned.toLocaleString() }}</p>
+          <p class="text-2xl font-bold text-success">{{ (customerInfo.total_earned || 0).toLocaleString() }}</p>
           <DButton variant="primary" size="sm" class="mt-3" @click="openRedeemModal">
             <img src="@/assets/admin/icons/wallet.svg" class="w-3.5 h-3.5 mr-1 brightness-0 invert" alt="Redeem" />
             Đổi điểm
@@ -60,20 +62,22 @@ const {
       <!-- Transactions -->
       <AdminTable :columns="transactionColumns" :data="transactions" :loading="isLoading" empty-text="Khách hàng chưa có giao dịch điểm nào">
         <template #cell-type="{ value }">
-          <StatusBadge :status="value" :text="transactionTypeLabels[value] || value" />
+          <span class="px-2 py-1 rounded-full text-xs font-medium" :class="transactionTypeClasses[value] || 'bg-slate-500/10 text-slate-400'">
+            {{ transactionTypeLabels[value] || value }}
+          </span>
         </template>
 
-        <template #cell-amount="{ value }">
+        <template #cell-points="{ value }">
           <div class="flex items-center gap-1">
-            <span :class="value > 0 ? 'text-success' : 'text-error'" class="font-bold text-base">
-              {{ value > 0 ? '+' : '' }}{{ value.toLocaleString() }}
+            <span :class="(value || 0) > 0 ? 'text-success' : 'text-error'" class="font-bold text-base">
+              {{ (value || 0) > 0 ? '+' : '' }}{{ (value || 0).toLocaleString() }}
             </span>
             <span class="text-[10px] text-slate-500 font-mono">pts</span>
           </div>
         </template>
 
         <template #cell-balance_after="{ value }">
-          <span class="text-white font-mono text-sm bg-dark-700 px-2 py-0.5 rounded border border-white/5">{{ value.toLocaleString() }}</span>
+          <span class="text-white font-mono text-sm bg-dark-700 px-2 py-0.5 rounded border border-white/5">{{ (value || 0).toLocaleString() }}</span>
         </template>
 
         <template #cell-description="{ value }">

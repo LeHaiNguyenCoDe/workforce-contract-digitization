@@ -28,7 +28,7 @@ class EmployeeController extends Controller
             $perPage = (int) $request->query('per_page', 50);
 
             $employees = $this->employeeService->getAll($perPage, $filters);
-            return $this->paginatedResponse(EmployeeResource::collection($employees));
+            return $this->paginatedResponse($employees, null, [], EmployeeResource::class);
         } catch (Exception $e) {
             return $this->serverErrorResponse('Lỗi khi lấy danh sách nhân viên', $e);
         }

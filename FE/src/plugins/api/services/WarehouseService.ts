@@ -167,10 +167,14 @@ class WarehouseService extends BaseApiService<Warehouse> {
    * Get all stocks for a warehouse (BR-06.1: Chỉ hiển thị Available Inventory)
    */
   async getStocks(warehouseId: number): Promise<Stock[]> {
-    const response = await httpClient.get<ApiResponse<Stock[]>>(
-      `${this.formattedEndpoint}/${warehouseId}/stocks`
-    )
-    return response.data.data || []
+    try {
+      const response = await httpClient.get<ApiResponse<Stock[]>>(
+        `${this.formattedEndpoint}/${warehouseId}/stocks`
+      )
+      return response.data.data || []
+    } catch (e) {
+      return []
+    }
   }
 
   /**

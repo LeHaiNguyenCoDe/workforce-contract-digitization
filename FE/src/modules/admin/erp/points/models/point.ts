@@ -5,7 +5,7 @@ export interface PointTransaction {
     id: number
     customer_id: number
     type: 'earn' | 'redeem' | 'adjust' | 'expire'
-    amount: number
+    points: number  // Changed from 'amount' to match backend
     balance_after: number
     description?: string
     order_id?: number

@@ -1,7 +1,10 @@
+```
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { promotionColumns } from '../../configs/columns'
+import { useAdminPromotionStore } from '../../store/store'
+import { useAdminPromotions } from '../../composables/useAdminPromotions'
 
 const { t } = useI18n()
 

@@ -11,7 +11,11 @@ useAutoConnect()
 <template>
     <div class="admin-wrapper">
         <MainLayout>
-            <RouterView />
+            <router-view v-slot="{ Component }">
+                <transition name="page-fade" mode="out-in">
+                    <component :is="Component" />
+                </transition>
+            </router-view>
         </MainLayout>
         <CallWindow />
     </div>

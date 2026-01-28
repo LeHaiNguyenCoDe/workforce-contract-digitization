@@ -237,9 +237,7 @@ onUnmounted(() => {
       <div class="page-content">
         <!-- Start Content-->
         <BContainer fluid>
-          <transition name="page-fade" mode="out-in">
-            <slot />
-          </transition>
+          <slot />
         </BContainer>
       </div>
       <Footer />

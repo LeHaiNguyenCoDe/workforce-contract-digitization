@@ -23,6 +23,10 @@ $v1Groups = [
         'prefix' => '',
         'middleware' => [Authenticate::class, 'throttle:chat']
     ],
+    'marketing.php' => [
+        'prefix' => 'marketing',
+        'middleware' => [Authenticate::class, 'throttle:api']
+    ],
 ];
 
 Route::prefix('v1')->group(function () use ($v1Groups) {
