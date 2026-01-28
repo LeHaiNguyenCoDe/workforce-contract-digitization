@@ -2,55 +2,14 @@
  * useReturns Composable - Business logic
  */
 import { ref, computed, onMounted, watch } from 'vue'
-import { useSwal } from '@/utils'
+import { useSwal, useErrorHandler } from '@/utils'
 import { erpReturnService } from '../services/returnService'
 import { adminOrderService } from '@/plugins/api/services/OrderService'
 import type { Return, ReturnStatus } from '../models/return'
 
-// Mock data for development
-const getMockReturns = (): Return[] => [
-    {
-        id: 1,
-        order_id: 1001,
-        customer_id: 5,
-        status: 'pending',
-        reason: 'Sản phẩm bị lỗi',
-        notes: 'Khách hàng phản ánh sản phẩm không hoạt động',
-        refund_amount: 500000,
-        created_at: '2024-12-20T10:00:00Z',
-        updated_at: '2024-12-20T10:00:00Z',
-        customer: { id: 5, name: 'Nguyễn Văn A', email: 'a@example.com' },
-        order: { id: 1001, total_amount: 500000 }
-    },
-    {
-        id: 2,
-        order_id: 1002,
-        customer_id: 8,
-        status: 'approved',
-        reason: 'Đổi size',
-        refund_amount: 0,
-        created_at: '2024-12-21T14:30:00Z',
-        updated_at: '2024-12-22T09:00:00Z',
-        customer: { id: 8, name: 'Trần Thị B', email: 'b@example.com' },
-        order: { id: 1002, total_amount: 350000 }
-    },
-    {
-        id: 3,
-        order_id: 1003,
-        customer_id: 12,
-        status: 'completed',
-        reason: 'Không đúng mô tả',
-        refund_amount: 750000,
-        refund_method: 'original',
-        created_at: '2024-12-15T08:00:00Z',
-        updated_at: '2024-12-18T16:00:00Z',
-        customer: { id: 12, name: 'Lê Văn C', email: 'c@example.com' },
-        order: { id: 1003, total_amount: 750000 }
-    }
-]
-
 export function useReturns() {
     const swal = useSwal()
+    const { handleError } = useErrorHandler()
 
     // State
     const returns = ref<Return[]>([])
@@ -100,9 +59,10 @@ export function useReturns() {
             const response = await erpReturnService.getAll(params)
             returns.value = response?.items || []
             totalPages.value = response?.meta?.last_page || 1
+            currentPage.value = response?.meta?.current_page || 1
         } catch (error) {
-            console.error('Failed to fetch returns:', error)
-            returns.value = getMockReturns()
+            handleError(error, 'Không thể tải danh sách phiếu trả hàng')
+            returns.value = []
         } finally {
             isLoading.value = false
         }
@@ -120,7 +80,7 @@ export function useReturns() {
                 reason: ''
             })) || []
         } catch (error) {
-            console.error('Failed to fetch order details:', error)
+            handleError(error, 'Không thể tải chi tiết đơn hàng')
         }
     }
 
@@ -131,9 +91,9 @@ export function useReturns() {
                 per_page: 100,
                 status: 'delivered' // Or maybe also 'completed'
             })
-            availableOrders.value = (response as any).data || []
+            availableOrders.value = (response as any).items || []
         } catch (error) {
-            console.error('Failed to fetch orders:', error)
+            handleError(error, 'Không thể tải danh sách đơn hàng khả dụng')
         }
     }
 
@@ -171,8 +131,7 @@ export function useReturns() {
             showCreateModal.value = false
             fetchReturns()
         } catch (error) {
-            console.error('Failed to create return:', error)
-            await swal.error('Không thể tạo phiếu trả hàng. Vui lòng kiểm tra lại.')
+            handleError(error, 'Không thể tạo phiếu trả hàng')
         } finally {
             isSaving.value = false
         }
@@ -188,7 +147,7 @@ export function useReturns() {
             await swal.success('Đã duyệt phiếu trả hàng!')
             await fetchReturns()
         } catch (error) {
-            await swal.error('Không thể duyệt phiếu trả hàng')
+            handleError(error, 'Không thể duyệt phiếu trả hàng')
         } finally {
             isSaving.value = false
         }
@@ -204,7 +163,7 @@ export function useReturns() {
             await swal.success('Đã từ chối phiếu trả hàng!')
             await fetchReturns()
         } catch (error) {
-            await swal.error('Không thể từ chối phiếu trả hàng')
+            handleError(error, 'Không thể từ chối phiếu trả hàng')
         } finally {
             isSaving.value = false
         }
@@ -220,7 +179,7 @@ export function useReturns() {
             await swal.success('Đã hoàn thành phiếu trả hàng!')
             await fetchReturns()
         } catch (error) {
-            await swal.error('Không thể hoàn thành phiếu trả hàng')
+            handleError(error, 'Không thể hoàn thành phiếu trả hàng')
         } finally {
             isSaving.value = false
         }

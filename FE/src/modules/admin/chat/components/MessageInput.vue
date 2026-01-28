@@ -218,14 +218,11 @@ let typingTimeout: ReturnType<typeof setTimeout> | null = null
 // Methods
 function handleSend() {
     const content = message.value.trim()
-    console.log('[MessageInput] handleSend called, content:', content, 'attachments:', attachments.value.length)
 
     if (!content && attachments.value.length === 0) {
-        console.log('[MessageInput] No content and no attachments, returning')
         return
     }
 
-    console.log('[MessageInput] Emitting send event')
     emit('send', content, attachments.value.length > 0 ? attachments.value : undefined)
     message.value = ''
     attachments.value = []
@@ -307,7 +304,7 @@ function insertEmoji(emoji: string) {
 async function startVoiceRecording() {
     const success = await voiceRecorder.startRecording()
     if (!success && voiceRecorder.error.value) {
-        console.error('Recording error:', voiceRecorder.error.value)
+        // Recording error
         alert(voiceRecorder.error.value)
     }
 }

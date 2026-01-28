@@ -28,7 +28,6 @@ export const useCallStore = defineStore('call', () => {
   if (typeof window !== 'undefined') {
     (window as any).toggleCallDebug = () => {
       debugBypassPermissions.value = !debugBypassPermissions.value
-      console.log('CallStore: Debug bypass permissions is now:', debugBypassPermissions.value)
       return debugBypassPermissions.value
     }
   }
@@ -53,12 +52,10 @@ export const useCallStore = defineStore('call', () => {
   // Actions
   async function checkPermissions(forceVideo = false) {
     if (debugBypassPermissions.value) {
-      console.log('[CallStore] DEBUG MODE: Bypassing real permission check')
       hasPermissions.value = true
       return true
     }
     const videoRequired = forceVideo || callType.value === 'video'
-    console.log(`[CallStore] checkPermissions - Target: (audio: true, video: ${videoRequired})`)
     
     // Safety: check if API is available
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -73,18 +70,15 @@ export const useCallStore = defineStore('call', () => {
         audio: true,
         video: videoRequired
       })
-      console.log('[CallStore] getUserMedia SUCCESS - permissions granted')
       stream.getTracks().forEach(track => track.stop())
       hasPermissions.value = true
       return true
     } catch (error: any) {
-      console.error('[CallStore] getUserMedia FAILED:', error.name, error.message)
       hasPermissions.value = false
       
       if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-        console.warn('[CallStore] User explicitly denied permissions')
+        // Permission denied
       } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
-        console.warn('[CallStore] Required hardware not found')
         alert('Không tìm thấy thiết bị Micro hoặc Camera yêu cầu.')
       }
       
@@ -93,9 +87,7 @@ export const useCallStore = defineStore('call', () => {
   }
 
   async function initiateCall(convId: number, targetUser: IUser, type: CallType) {
-    console.log('CallStore: initiateCall clicked for', targetUser.name, 'type:', type)
     if (callStatus.value !== 'idle') {
-      console.warn('CallStore: Cannot initiate call, system is busy with status:', callStatus.value)
       return
     }
 
@@ -110,44 +102,34 @@ export const useCallStore = defineStore('call', () => {
     isIncoming.value = false
     callStatus.value = 'ringing'
     ringingStartTime.value = Date.now()
-    console.log('[CallStore] UI showing (ringing state). Timeout is 60s.')
 
     // Check permissions...
     if (hasPermissions.value !== true && !debugBypassPermissions.value) {
-      console.log('CallStore: Permissions not ready, requesting...')
       const granted = await checkPermissions()
       if (!granted) {
-        console.warn('CallStore: Permissions denied. UI will show warning overlay.')
         return // UI stays at ringing, overlay shows
       }
     }
 
     // Proceed with API call if permissions granted
     try {
-      console.log('CallStore: Permissions OK, sending initiation signal to server')
       await ChatService.initiateCall(convId, targetUser.id, type)
       startTimeoutTimer(60000) // Increase to 60s
-      console.log('CallStore: Call initiation signal sent successfully')
     } catch (error) {
-      console.error('CallStore: Failed to initiate call API:', error)
       resetCall('initiation_error')
     }
   }
 
   function handleIncomingCall(data: { conversation_id: number, from_user_id: number, call_type: CallType, caller: IUser }) {
-    console.log('[CallStore] handleIncomingCall received:', data)
-    
     // If already in a call OR ringing, check if it's the SAME call to avoid self-rejection
     if (callStatus.value !== 'idle') {
       const isSameCall = Number(conversationId.value) === Number(data.conversation_id) && 
                          Number(partner.value?.id) === Number(data.from_user_id)
       
       if (isSameCall) {
-        console.log('[CallStore] Ignoring duplicate incoming call signal for same session')
         return
       }
       
-      console.warn('[CallStore] System busy, rejecting incoming call from:', data.from_user_id)
       ChatService.updateCallStatus(data.conversation_id, 'busy', data.call_type, data.from_user_id)
       return
     }
@@ -162,9 +144,7 @@ export const useCallStore = defineStore('call', () => {
   }
 
   async function acceptCall() {
-    console.log('CallStore: Accepting call')
     if (!conversationId.value || !partner.value) {
-      console.error('CallStore: Missing conversationId or partner on accept')
       return
     }
     
@@ -178,7 +158,6 @@ export const useCallStore = defineStore('call', () => {
     }
 
     callStatus.value = 'connecting'
-    console.log('CallStore: Setting status to connecting and informing server')
     await ChatService.updateCallStatus(conversationId.value, 'accepted', callType.value, partner.value.id)
     
     // Start local stream for receiver
@@ -187,13 +166,9 @@ export const useCallStore = defineStore('call', () => {
       
       // If we already received an offer, process it now
       if (pendingOffer.value) {
-        console.log('CallStore: Processing pending offer after acceptance')
         await processOffer(pendingOffer.value)
-      } else {
-        console.log('CallStore: No pending offer yet, receiver waiting for signaling from caller...')
       }
     } catch (err) {
-      console.error('CallStore: Failed to start local stream after acceptance:', err)
       endCall()
     }
   }
@@ -225,17 +200,14 @@ export const useCallStore = defineStore('call', () => {
     // CRITICAL: Ignore 'busy' signals for the first 3 seconds of a call to avoid race conditions
     const now = Date.now()
     if (reason === 'partner_busy' && (now - ringingStartTime.value < 3000)) {
-      console.log('[CallStore] Ignoring "busy" signal during 3s safe-start period')
       return
     }
 
     isResetting = true
-    console.log(`[CallStore] resetCall called. Reason: ${reason}`)
     
     // Show alert only for unexpected resets (not from user clicking end/reject)
     const silentReasons = ['user_ended', 'user_rejected', 'idle', 'unknown']
     if (!silentReasons.includes(reason) && callStatus.value !== 'idle') {
-      console.warn(`[CallStore] AUTO-RESET triggered by: ${reason}`)
       // Temporarily alert to help user debug
       // window.alert(`Cuộc gọi tự ngắt: ${reason}`)
     }
@@ -249,14 +221,12 @@ export const useCallStore = defineStore('call', () => {
     if (localStream.value) {
       localStream.value.getTracks().forEach(track => {
         track.stop()
-        console.log(`CallStore: Stopped track ${track.kind}`)
       })
     }
     
     if (peerConnection.value) {
       peerConnection.value.close()
       peerConnection.value = null
-      console.log('CallStore: Closed PeerConnection')
     }
     
     callStatus.value = 'idle'
@@ -274,37 +244,32 @@ export const useCallStore = defineStore('call', () => {
 
   // WebRTC Actions
   async function createPeerConnection() {
-    console.log('CallStore: Creating PeerConnection')
     if (peerConnection.value) peerConnection.value.close()
 
     peerConnection.value = new RTCPeerConnection(configuration)
 
     peerConnection.value.onicecandidate = (event) => {
       if (event.candidate && conversationId.value && partner.value) {
-        console.log('CallStore: Sending ICE candidate')
         ChatService.sendCallSignal(conversationId.value, partner.value.id, 'ice-candidate', event.candidate.toJSON())
       }
     }
 
     peerConnection.value.ontrack = (event) => {
       if (event.streams && event.streams[0]) {
-        console.log('CallStore: Received remote stream')
         remoteStream.value = event.streams[0]
       }
     }
 
     peerConnection.value.oniceconnectionstatechange = () => {
-      console.log('CallStore: ICE Connection State:', peerConnection.value?.iceConnectionState)
       if (peerConnection.value?.iceConnectionState === 'connected') {
         callStatus.value = 'active'
         startTimer()
       } else if (peerConnection.value?.iceConnectionState === 'failed' || peerConnection.value?.iceConnectionState === 'disconnected') {
-        console.warn('CallStore: ICE connection failed/disconnected')
+        // failed
       }
     }
 
     if (localStream.value) {
-      console.log('CallStore: Adding local tracks to PC')
       localStream.value.getTracks().forEach(track => {
         peerConnection.value?.addTrack(track, localStream.value!)
       })
@@ -314,7 +279,6 @@ export const useCallStore = defineStore('call', () => {
   }
 
   async function startLocalStream() {
-    console.log('CallStore: Starting local stream...')
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
@@ -322,17 +286,14 @@ export const useCallStore = defineStore('call', () => {
       })
       localStream.value = stream
       hasPermissions.value = true
-      console.log('CallStore: Local stream started')
       return stream
     } catch (error) {
-      console.error('CallStore: Error accessing media devices:', error)
       hasPermissions.value = false
       throw error
     }
   }
 
   async function makeOffer() {
-    console.log('CallStore: Making offer')
     try {
       const pc = await createPeerConnection()
       const offer = await pc.createOffer()
@@ -340,17 +301,14 @@ export const useCallStore = defineStore('call', () => {
 
       if (conversationId.value && partner.value) {
         await ChatService.sendCallSignal(conversationId.value, partner.value.id, 'offer', offer)
-        console.log('CallStore: Offer sent')
       }
     } catch (err) {
-      console.error('CallStore: makeOffer failed', err)
       throw err
     }
   }
 
   async function handleOffer(offer: RTCSessionDescriptionInit) {
     if (isIncoming.value && (callStatus.value === 'ringing' || callStatus.value === 'idle')) {
-      console.log('CallStore: Received offer before acceptance, queueing...')
       pendingOffer.value = offer
       return
     }
@@ -359,7 +317,6 @@ export const useCallStore = defineStore('call', () => {
   }
 
   async function processOffer(offer: RTCSessionDescriptionInit) {
-    console.log('CallStore: Processing offer')
     try {
       const pc = await createPeerConnection()
       await pc.setRemoteDescription(new RTCSessionDescription(offer))
@@ -369,50 +326,44 @@ export const useCallStore = defineStore('call', () => {
 
       if (conversationId.value && partner.value) {
         await ChatService.sendCallSignal(conversationId.value, partner.value.id, 'answer', answer)
-        console.log('CallStore: Answer sent')
       }
 
       // Process queued candidates
       if (pendingCandidates.value.length > 0) {
-        console.log(`CallStore: Processing ${pendingCandidates.value.length} queued candidates`)
         for (const candidate of pendingCandidates.value) {
           try {
             await pc.addIceCandidate(new RTCIceCandidate(candidate))
           } catch (e) {
-            console.warn('CallStore: Error adding queued candidate', e)
+            // Error adding queued candidate
           }
         }
         pendingCandidates.value = []
       }
     } catch (err) {
-      console.error('CallStore: processOffer failed', err)
+      // processOffer failed
     }
   }
 
   async function handleAnswer(answer: RTCSessionDescriptionInit) {
-    console.log('CallStore: Received answer')
     if (peerConnection.value) {
       try {
         await peerConnection.value.setRemoteDescription(new RTCSessionDescription(answer))
-        console.log('CallStore: Remote description set from answer')
       } catch (err) {
-        console.error('CallStore: handleAnswer failed', err)
+        // handleAnswer failed
       }
     }
   }
 
   async function handleCandidate(candidate: RTCIceCandidateInit) {
     if (!peerConnection.value || !peerConnection.value.remoteDescription) {
-      console.log('CallStore: PC or remoteDescription not ready, queueing candidate')
       pendingCandidates.value.push(candidate)
       return
     }
 
     try {
       await peerConnection.value.addIceCandidate(new RTCIceCandidate(candidate))
-      console.log('CallStore: Added ICE candidate')
     } catch (err) {
-      console.warn('CallStore: handleCandidate failed', err)
+      // handleCandidate failed
     }
   }
 
@@ -437,7 +388,6 @@ export const useCallStore = defineStore('call', () => {
     if (timeoutTimer) clearTimeout(timeoutTimer)
     timeoutTimer = setTimeout(() => {
       if (callStatus.value === 'ringing') {
-        console.log('CallStore: Call timed out')
         endCall()
       }
     }, ms)

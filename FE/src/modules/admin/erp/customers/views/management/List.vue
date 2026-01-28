@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { useCustomers } from '../../composables/useCustomers'
 import { customerColumns } from '../../configs/columns'
+import { formatPrice, formatDate } from '@/utils'
 import DetailModal from '../modals/DetailModal.vue'
 
 const {

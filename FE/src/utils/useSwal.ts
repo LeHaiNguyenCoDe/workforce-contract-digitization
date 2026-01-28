@@ -145,10 +145,17 @@ export function useSwal() {
     }
 
     /**
-     * Close current alert
+     * Show prompt dialog
      */
-    const close = () => {
-        Swal.close()
+    const prompt = async (message: string, defaultValue: string = '', title: string = '') => {
+        return await Swal.fire({
+            ...defaultOptions,
+            title: title || message,
+            text: title ? message : '',
+            input: 'text',
+            inputValue: defaultValue,
+            showCancelButton: true,
+        })
     }
 
     return {
@@ -160,6 +167,7 @@ export function useSwal() {
         confirmDelete,
         fire,
         loading,
+        prompt,
         close,
     }
 }

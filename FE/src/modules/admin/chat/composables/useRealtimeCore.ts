@@ -65,12 +65,10 @@ function createEchoConfig(): EchoConfig {
           if (data && ('auth' in data || typeof data === 'object')) {
             callback(false, data as { auth: string })
           } else {
-            console.error('Realtime: Invalid auth response format:', data)
             callback(true, new Error('Invalid response format'))
           }
         })
         .catch((error: Error & { response?: { status?: number; data?: unknown } }) => {
-          console.error(`Realtime: Failed authorizing ${channel.name}`, error.response?.status, error.response?.data)
           callback(true, error)
         })
       }
@@ -100,8 +98,7 @@ export function getEcho(): Echo<unknown> {
         isConnected.value = states.current === 'connected'
       })
 
-      connection.bind('error', (err: unknown) => {
-        console.error('Echo connection error:', err)
+      connection.bind('error', () => {
         isConnected.value = false
       })
     }

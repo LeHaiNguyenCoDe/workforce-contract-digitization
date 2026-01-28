@@ -2,6 +2,8 @@
 import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { orderColumns } from '../../configs/columns'
+import { useAdminOrderStore } from '../../store/store'
+import { useAdminOrders } from '../../composables/useAdminOrders'
 import OrderDetailModal from '../../components/OrderDetailModal.vue'
 
 const { t } = useI18n()

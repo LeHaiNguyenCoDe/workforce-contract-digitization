@@ -374,7 +374,7 @@ async function handleUnblockRefined() {
   try {
     await refinedUnblockUser()
   } catch (error) {
-    console.error('ChatView: Failed to unblock user:', error)
+    // Error unblocking user
   }
 }
 
@@ -470,7 +470,7 @@ async function loadGuestConversations() {
       })
     }
   } catch (error) {
-    console.error('Failed to load guest conversations:', error)
+    // Failed to load guest conversations
   } finally {
     isLoadingGuestConversations.value = false
   }
@@ -482,7 +482,7 @@ async function loadUsers() {
   try {
     allUsers.value = await FriendService.getAllUsers()
   } catch (error) {
-    console.error('Failed to load users:', error)
+    // Failed to load users
   } finally {
     isLoadingUsers.value = false
   }
@@ -515,7 +515,7 @@ async function handleStartChatFromContact(userId: number) {
       await chatStore.fetchConversations()
     }
   } catch (error) {
-    console.error('Failed to start chat from contact:', error)
+    // Failed to start chat
   }
 }
 
@@ -525,7 +525,7 @@ async function handleAddFriend(userId: number) {
     // Refresh users list to show updated status
     await loadUsers()
   } catch (error) {
-    console.error('Failed to send friend request:', error)
+    // Failed to send friend request
   }
 }
 
@@ -541,7 +541,7 @@ async function handleAcceptFriend(friendshipId: number) {
     // Also refresh conversations to show new friend in chats
     await chatStore.fetchConversations()
   } catch (error) {
-    console.error('Failed to accept friend request:', error)
+    // Failed to accept friend request
   }
 }
 
@@ -555,7 +555,7 @@ async function handleRejectFriend(friendshipId: number) {
     // Refresh users list to show updated status
     await loadUsers()
   } catch (error) {
-    console.error('Failed to reject friend request:', error)
+    // Failed to reject friend request
   }
 }
 
@@ -569,17 +569,15 @@ async function handleCancelFriend(friendshipId: number) {
     // Refresh users list to show updated status
     await loadUsers()
   } catch (error) {
-    console.error('Failed to cancel friend request:', error)
+    // Failed to cancel friend request
   }
 }
 
 async function handleSendMessage(content: string, attachments?: File[], replyToId?: number) {
-  console.log('[ChatView] handleSendMessage called, content:', content, 'attachments:', attachments?.length, 'replyToId:', replyToId)
   try {
     await chatStore.sendMessage(content, attachments, replyToId)
-    console.log('[ChatView] Message sent successfully')
   } catch (error) {
-    console.error('[ChatView] Failed to send message:', error)
+    // Failed to send message
   }
 }
 
@@ -596,7 +594,7 @@ async function handleDeleteConversation(conversationId: number) {
     await chatStore.deleteConversation(conversationId)
     sidebarOpen.value = true
   } catch (error) {
-    console.error('Failed to delete conversation:', error)
+    // Failed to delete conversation
   }
 }
 
@@ -605,7 +603,7 @@ async function handleLeaveGroup(conversationId: number) {
     await chatStore.leaveConversation(conversationId)
     sidebarOpen.value = true
   } catch (error) {
-    console.error('Failed to leave group:', error)
+    // Failed to leave group
   }
 }
 
@@ -653,7 +651,6 @@ function scrollToMessage(messageId: number) {
       messageElement.classList.remove('message-highlight')
     }, 2000)
   } else {
-    console.warn('ChatView: Message element not found for id', messageId)
     // If message not found, scroll to bottom (where newest messages are)
     const chatWindow = document.querySelector('.chat-window .messages-area')
     if (chatWindow) {

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { triggerLabels, actionLabels } from '../../models/automation'
+import { useAutomations } from '../../composables/useAutomations'
 
 const { automations, isLoading, showModal, editingItem, form, openCreate, openEdit, toggleActive, saveAutomation, deleteAutomation } = useAutomations()
 </script>
