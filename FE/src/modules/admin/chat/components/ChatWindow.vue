@@ -243,26 +243,20 @@ const canAssign = computed(() => {
 })
 
 const startCall = (type: 'audio' | 'video') => {
-    console.log(`[ChatWindow] startCall requested: ${type}`)
-    
     if (props.conversation.type !== 'private') {
-        console.warn('[ChatWindow] Calls are only supported in private chats')
         alert('Tính năng gọi chỉ hỗ trợ trò chuyện cá nhân.')
         return
     }
 
     if (partner.value) {
-        console.log(`[ChatWindow] Initiating ${type} call with partner:`, partner.value.name, partner.value.id)
         callStore.initiateCall(props.conversation.id, partner.value as any, type)
     } else {
-        console.warn('[ChatWindow] Cannot start call: No partner found in private conversation')
         // Fallback: try to find manually if composable fails
         const manualPartner = props.conversation.users.find(u => u.id !== currentUserId.value)
         if (manualPartner) {
-            console.log('[ChatWindow] Found partner manually:', manualPartner.name)
             callStore.initiateCall(props.conversation.id, manualPartner as any, type)
         } else {
-            console.error('[ChatWindow] Partner identification totally failed')
+            // Partner identification totally failed
         }
     }
 }
@@ -283,7 +277,7 @@ async function onStaffSelected(userId: number) {
         // Trigger a refresh if needed
         chatStore.fetchConversations(1)
     } catch (error) {
-        console.error('Failed to assign staff:', error)
+        // Failed to assign staff
     }
 }
 
@@ -339,7 +333,6 @@ function handleLeaveGroup() {
 }
 
 function handleSend(content: string, attachments?: File[]) {
-    console.log('[ChatWindow] handleSend called, content:', content, 'attachments:', attachments?.length, 'replyToId:', replyToMessage.value?.id)
     emit('send', content, attachments, replyToMessage.value?.id)
     replyToMessage.value = null
 }
@@ -372,8 +365,6 @@ const handleClickOutside = () => {
 }
 
 onMounted(() => {
-    console.log('[ChatWindow] Mounted for conversation:', props.conversation.id)
-    
     window.addEventListener('click', handleClickOutside)
 
     messageArrivalHandler = ((e: CustomEvent) => {

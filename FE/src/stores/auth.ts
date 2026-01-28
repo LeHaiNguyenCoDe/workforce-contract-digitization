@@ -49,12 +49,9 @@ export const useAuthStore = defineStore('auth', () => {
       if (user.value?.language) {
         await setLocale(user.value.language as any)
       }
-      console.log('Logged in user:', user.value)
-      console.log('Is admin:', isAdmin.value)
       isInitialized.value = true
       return true
     } catch (error) {
-      console.error('Login failed:', error)
       return false
     } finally {
       isLoading.value = false
@@ -67,7 +64,6 @@ export const useAuthStore = defineStore('auth', () => {
       await authService.register({ name, email, password })
       return true
     } catch (error) {
-      console.error('Register failed:', error)
       return false
     } finally {
       isLoading.value = false

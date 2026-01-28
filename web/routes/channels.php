@@ -20,14 +20,9 @@ Broadcast::channel('user.{id}', function ($user, $id) {
 |--------------------------------------------------------------------------
 */
 Broadcast::channel('admin.guest-chats', function ($user) {
-    $isAdmin = false;
-    if (isset($user->role)) {
-        $isAdmin = in_array($user->role, ['admin', 'manager', 'super_admin']);
-    }
-    if (!$isAdmin && method_exists($user, 'hasAnyRole')) {
-        $isAdmin = $user->hasAnyRole(['admin', 'manager', 'super_admin']);
-    }
-    return $isAdmin;
+    $adminRoles = ['admin', 'manager', 'super_admin'];
+    return $user->roles()->whereIn('name', $adminRoles)->exists() || 
+           (method_exists($user, 'hasAnyRole') && $user->hasAnyRole($adminRoles));
 });
 
 /*
@@ -47,14 +42,9 @@ Broadcast::channel('conversation.{conversationId}', function ($user, $conversati
 
     if ($isGuest) {
         // For guest chats, allow all admin/manager/super_admin to listen even if not assigned
-        $isAdmin = false;
-        if (isset($user->role)) {
-            $isAdmin = in_array($user->role, ['admin', 'manager', 'super_admin']);
-        }
-        // Also check Spatie roles if they exist
-        if (!$isAdmin && method_exists($user, 'hasAnyRole')) {
-            $isAdmin = $user->hasAnyRole(['admin', 'manager', 'super_admin']);
-        }
+        $adminRoles = ['admin', 'manager', 'super_admin'];
+        $isAdmin = $user->roles()->whereIn('name', $adminRoles)->exists() || 
+                   (method_exists($user, 'hasAnyRole') && $user->hasAnyRole($adminRoles));
 
         if ($isAdmin) {
             \Log::info('Channel Auth: conversation.{id} (GUEST) ALLOWED for Admin', ['user_id' => $user->id, 'conversation_id' => $conversationId]);

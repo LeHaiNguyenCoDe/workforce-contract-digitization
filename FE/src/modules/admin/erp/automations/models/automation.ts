@@ -4,8 +4,8 @@
 export interface Automation {
     id: number
     name: string
-    trigger: 'order_placed' | 'order_shipped' | 'customer_signup' | 'birthday' | 'inactive' | 'points_earned'
-    action: 'send_email' | 'send_sms' | 'add_points' | 'apply_discount' | 'assign_tag'
+    trigger: 'order_placed' | 'order_completed' | 'order_cancelled' | 'customer_registered' | 'cart_abandoned' | 'product_viewed' | 'review_submitted'
+    action: 'email' | 'sms' | 'notification' | 'webhook'
     is_active: boolean
     conditions?: Record<string, any>
     config?: Record<string, any>
@@ -14,17 +14,17 @@ export interface Automation {
 
 export const triggerLabels: Record<string, string> = {
     order_placed: 'Đặt hàng mới',
-    order_shipped: 'Đơn được giao',
-    customer_signup: 'Khách đăng ký',
-    birthday: 'Sinh nhật',
-    inactive: 'Không hoạt động',
-    points_earned: 'Tích điểm'
+    order_completed: 'Hoàn thành đơn',
+    order_cancelled: 'Hủy đơn hàng',
+    customer_registered: 'Khách đăng ký',
+    cart_abandoned: 'Bỏ giỏ hàng',
+    product_viewed: 'Xem sản phẩm',
+    review_submitted: 'Gửi đánh giá'
 }
 
 export const actionLabels: Record<string, string> = {
-    send_email: 'Gửi Email',
-    send_sms: 'Gửi SMS',
-    add_points: 'Cộng điểm',
-    apply_discount: 'Giảm giá',
-    assign_tag: 'Gắn tag'
+    email: 'Gửi Email',
+    sms: 'Gửi SMS',
+    notification: 'Thông báo',
+    webhook: 'Webhook'
 }

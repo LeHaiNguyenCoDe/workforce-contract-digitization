@@ -5,7 +5,8 @@ namespace App\Services\Admin;
 use App\Models\MembershipTier;
 use App\Models\CustomerMembership;
 use App\Models\PointTransaction;
-use App\Models\Customer;
+use App\Models\CustomerPoint;
+use App\Models\User;
 use App\Helpers\Helper;
 use Illuminate\Support\Facades\DB;
 
@@ -54,19 +55,30 @@ class MembershipService
     /**
      * Get customer membership
      */
-    public function getCustomerMembership(int $customerId): ?CustomerMembership
+    public function getCustomerMembership(int $userId): ?CustomerMembership
     {
-        return CustomerMembership::with('tier')
-            ->where('customer_id', $customerId)
+        return CustomerMembership::with(['tier', 'customer'])
+            ->where('user_id', $userId)
             ->first();
+    }
+
+    /**
+     * Get customer points
+     */
+    public function getCustomerPoints(int $userId): CustomerPoint
+    {
+        return CustomerPoint::firstOrCreate(
+            ['user_id' => $userId],
+            ['available_points' => 0, 'total_earned' => 0]
+        );
     }
 
     /**
      * Initialize membership for customer
      */
-    public function initMembership(int $customerId): CustomerMembership
+    public function initMembership(int $userId): CustomerMembership
     {
-        $existing = CustomerMembership::where('customer_id', $customerId)->first();
+        $existing = CustomerMembership::where('user_id', $userId)->first();
         if ($existing) {
             return $existing;
         }
@@ -76,21 +88,21 @@ class MembershipService
             ->first();
 
         return CustomerMembership::create([
-            'customer_id' => $customerId,
+            'user_id' => $userId,
             'tier_id' => $defaultTier?->id,
-            'total_points' => 0,
-            'available_points' => 0,
             'total_spent' => 0,
-            'joined_at' => now(),
+            'total_orders' => 0,
+            'tier_achieved_at' => now(),
         ]);
     }
 
     /**
      * Add points from order
      */
-    public function earnPointsFromOrder(int $customerId, float $orderTotal, int $orderId): ?PointTransaction
+    public function earnPointsFromOrder(int $userId, float $orderTotal, int $orderId): ?PointTransaction
     {
-        $membership = $this->getOrCreateMembership($customerId);
+        $membership = $this->getOrCreateMembership($userId);
+        $pointsData = $this->getCustomerPoints($userId);
         
         // Calculate points (1000 VND = 1 point, with tier multiplier)
         $basePoints = floor($orderTotal / 1000);
@@ -101,28 +113,67 @@ class MembershipService
             return null;
         }
 
-        // Update total spent
-        $membership->total_spent += $orderTotal;
-        $membership->save();
+        return DB::transaction(function () use ($membership, $pointsData, $earnedPoints, $orderTotal, $orderId, $userId) {
+            // Update total spent in membership
+            $membership->total_spent += $orderTotal;
+            $membership->total_orders += 1;
+            $membership->save();
 
-        return $membership->addPoints($earnedPoints, PointTransaction::TYPE_EARN, "Đơn hàng #{$orderId}");
+            // Update points
+            $pointsData->available_points += $earnedPoints;
+            $pointsData->total_earned += $earnedPoints;
+            $pointsData->save();
+
+            // Create transaction
+            $transaction = PointTransaction::create([
+                'user_id' => $userId,
+                'type' => PointTransaction::TYPE_EARN,
+                'points' => $earnedPoints,
+                'balance_after' => $pointsData->available_points,
+                'reference_type' => 'order',
+                'reference_id' => $orderId,
+                'description' => "Đơn hàng #{$orderId}",
+            ]);
+
+            // Check tier upgrade
+            $membership->checkTierUpgrade();
+
+            return $transaction;
+        });
     }
 
     /**
      * Redeem points
      */
-    public function redeemPoints(int $customerId, int $points, string $reason): PointTransaction
+    public function redeemPoints(int $userId, int $points, string $reason): PointTransaction
     {
-        $membership = CustomerMembership::where('customer_id', $customerId)->firstOrFail();
-        return $membership->usePoints($points, $reason);
+        $pointsData = CustomerPoint::where('user_id', $userId)->firstOrFail();
+        
+        if ($points > $pointsData->available_points) {
+            throw new \Exception('Không đủ điểm');
+        }
+
+        return DB::transaction(function () use ($pointsData, $points, $reason, $userId) {
+            $pointsData->available_points -= $points;
+            $pointsData->used_points += $points;
+            $pointsData->save();
+
+            return PointTransaction::create([
+                'user_id' => $userId,
+                'type' => PointTransaction::TYPE_REDEEM,
+                'points' => -$points,
+                'balance_after' => $pointsData->available_points,
+                'description' => $reason,
+            ]);
+        });
     }
 
     /**
      * Get point transactions
      */
-    public function getTransactions(int $customerId, int $perPage = 20)
+    public function getTransactions(int $userId, int $perPage = 20)
     {
-        return PointTransaction::where('customer_id', $customerId)
+        return PointTransaction::where('user_id', $userId)
             ->orderBy('created_at', 'desc')
             ->paginate($perPage);
     }
@@ -130,12 +181,12 @@ class MembershipService
     /**
      * Get or create membership
      */
-    protected function getOrCreateMembership(int $customerId): CustomerMembership
+    protected function getOrCreateMembership(int $userId): CustomerMembership
     {
-        $membership = CustomerMembership::where('customer_id', $customerId)->first();
+        $membership = CustomerMembership::where('user_id', $userId)->first();
         
         if (!$membership) {
-            $membership = $this->initMembership($customerId);
+            $membership = $this->initMembership($userId);
         }
 
         return $membership;
@@ -144,9 +195,9 @@ class MembershipService
     /**
      * Calculate discount for order
      */
-    public function calculateDiscount(int $customerId, float $orderTotal): array
+    public function calculateDiscount(int $userId, float $orderTotal): array
     {
-        $membership = $this->getCustomerMembership($customerId);
+        $membership = $this->getCustomerMembership($userId);
 
         if (!$membership || !$membership->tier) {
             return ['discount_percent' => 0, 'discount_amount' => 0];

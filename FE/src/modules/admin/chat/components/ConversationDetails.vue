@@ -619,14 +619,13 @@ function openMediaPreview(media: any) {
 function handleViewProfile() {
     // Could navigate to user profile or open a modal
     // For now, this is a placeholder
-    console.log('View profile for conversation:', props.conversation.id)
 }
 
 async function handleToggleMute() {
     try {
         await toggleMute()
     } catch (error) {
-        console.error('Failed to toggle mute:', error)
+        // Failed to toggle mute
     }
 }
 
@@ -634,7 +633,7 @@ async function handleTogglePin() {
     try {
         await togglePin()
     } catch (error) {
-        console.error('Failed to toggle pin:', error)
+        // Failed to toggle pin
     }
 }
 
@@ -642,13 +641,12 @@ async function handleToggleReadReceipts() {
     try {
         await toggleReadReceipts()
     } catch (error) {
-        console.error('Failed to toggle read receipts:', error)
+        // Failed to toggle read receipts
     }
 }
 
 function handleViewPinnedMessages() {
     // Could open a pinned messages panel
-    console.log('View pinned messages')
 }
 
 function handleChangeTheme() {
@@ -657,12 +655,10 @@ function handleChangeTheme() {
 
 function handleChangeEmoji() {
     // Could open an emoji picker for quick reactions
-    console.log('Change emoji')
 }
 
 function handleEditNicknames() {
     // Could open a nickname editor for group members
-    console.log('Edit nicknames')
 }
 
 function handleBlock() {
@@ -674,7 +670,7 @@ async function confirmBlock() {
         await blockUser()
         showBlockModal.value = false
     } catch (error) {
-        console.error('Failed to block user:', error)
+        // Failed to block user
     }
 }
 
@@ -682,7 +678,7 @@ async function handleUnblock() {
     try {
         await unblockUser()
     } catch (error) {
-        console.error('Failed to unblock user:', error)
+        // Failed to unblock user
     }
 }
 
@@ -698,7 +694,7 @@ async function confirmReport() {
         showReportModal.value = false
         reportReason.value = ''
     } catch (error) {
-        console.error('Failed to report conversation:', error)
+        // Failed to report conversation
     }
 }
 

@@ -6,6 +6,7 @@
 import { computed } from 'vue'
 import { useSwal } from '@/utils'
 import type { Review } from '@/plugins/api/services/ReviewService'
+import { useReviewStore } from '../store/store'
 
 export function useReviews() {
   const store = useReviewStore()

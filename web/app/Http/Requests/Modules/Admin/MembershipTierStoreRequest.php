@@ -14,8 +14,8 @@ class MembershipTierStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:100'],
-            'code' => ['required', 'string', 'max:50', 'unique:membership_tiers,code'],
+            'name' => ['required', 'string', 'max:50'],
+            'code' => ['required', 'string', 'max:20', 'unique:membership_tiers,code'],
             'min_points' => ['required', 'integer', 'min:0'],
             'max_points' => ['nullable', 'integer', 'min:0'],
             'discount_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],

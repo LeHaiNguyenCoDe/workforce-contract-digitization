@@ -192,5 +192,13 @@ class User extends Authenticatable
     {
         return $this->hasOne(CustomerMembership::class, 'user_id');
     }
+
+    /**
+     * Get user's orders.
+     */
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class);
+    }
 }
 

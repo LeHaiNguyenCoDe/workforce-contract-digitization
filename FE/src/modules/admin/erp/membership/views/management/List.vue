@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { colorPresets } from '../../configs/presets'
+import { useMembership } from '../../composables/useMembership'
 
 const {
   tiers, isLoading, isSaving, showModal, editingTier, form, newBenefit,
@@ -13,7 +14,7 @@ const {
     <AdminPageHeader title="Hạng Thành Viên" description="Thiết lập các cấp bậc thành viên, điểm tích lũy và quyền lợi ưu đãi">
       <template #actions>
         <DButton variant="primary" @click="openCreate">
-          <svg xmlns="http://www.w3.org/2000/center" width="20" height="20" viewBox="0 0 24 24" fill="none"
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" stroke-width="2" class="mr-2">
             <path d="M12 5v14" /><path d="M5 12h14" />
           </svg>
@@ -89,16 +90,31 @@ const {
     <!-- Modal -->
     <DModal v-model="showModal" :title="editingTier ? 'Cập nhật hạng thành viên' : 'Thiết lập hạng mới'" size="md">
       <div class="grid grid-cols-2 gap-4">
-        <div class="col-span-2">
+        <div>
           <label class="block text-sm font-medium text-slate-300 mb-2">Tên hạng *</label>
           <input v-model="form.name" type="text" class="form-input" placeholder="Ví dụ: Platinum, Diamond..." />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-300 mb-2">Mã hạng *</label>
+          <input v-model="form.code" type="text" class="form-input" placeholder="Ví dụ: BRONZE, SILVER, GOLD..." />
         </div>
         
         <div>
           <label class="block text-sm font-medium text-slate-300 mb-2">Điểm tối thiểu</label>
           <input v-model.number="form.min_points" type="number" class="form-input" min="0" placeholder="0" />
         </div>
+
+        <div>
+           <label class="block text-sm font-medium text-slate-300 mb-2">Điểm tối đa (để trống nếu không giới hạn)</label>
+           <input v-model.number="form.max_points" type="number" class="form-input" min="0" placeholder="Không giới hạn" />
+        </div>
         
+        <div>
+          <label class="block text-sm font-medium text-slate-300 mb-2">Hệ số tích điểm (Multiplier)</label>
+          <input v-model.number="form.point_multiplier" type="number" class="form-input" min="1" step="0.1" placeholder="1.0" />
+        </div>
+
         <div>
           <label class="block text-sm font-medium text-slate-300 mb-2">Giảm giá (%)</label>
           <input v-model.number="form.discount_percent" type="number" class="form-input" min="0" max="100" placeholder="0" />

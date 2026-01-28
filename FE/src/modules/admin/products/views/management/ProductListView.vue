@@ -39,7 +39,7 @@ const showMobileFilter = ref(false)
 const displayColumns = [
   { key: 'selection', label: '#', width: '50px' },
   { key: 'id', label: 'ID', width: '50px', align: 'center' as const },
-  { key: 'name', label: 'Product' },
+  { key: 'name', label: 'Product', width: '380px' },
   { key: 'stock_quantity', label: 'Stock', width: '100px', align: 'center' as const },
   { key: 'price', label: 'Price', width: '120px', align: 'center' as const },
   { key: 'orders_count', label: 'Orders', width: '100px', align: 'center' as const },
@@ -109,7 +109,7 @@ const handlePageChange = (val: number) => {
 </script>
 
 <template>
-  <div class="page-content py-4" style="background-color: #f3f3f9;">
+  <div style="background-color: #f3f3f9;">
     <PageHeader :title="t('admin.products')" pageTitle="Ecommerce" />
 
     <BRow>

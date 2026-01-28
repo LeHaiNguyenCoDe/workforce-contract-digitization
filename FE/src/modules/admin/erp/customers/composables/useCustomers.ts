@@ -4,14 +4,7 @@
 import { ref, computed, onMounted } from 'vue'
 import customerService from '../services/customerService'
 import type { Customer } from '../models/customer'
-
-const getMockCustomers = (): Customer[] => [
-    { id: 1, name: 'Nguyễn Văn An', email: 'an@email.com', phone: '0901234567', role: 'customer', active: true, total_orders: 15, total_spent: 12500000, created_at: '2024-01-15' },
-    { id: 2, name: 'Trần Thị Bình', email: 'binh@email.com', phone: '0912345678', role: 'customer', active: true, total_orders: 8, total_spent: 5600000, created_at: '2024-03-20' },
-    { id: 3, name: 'Lê Hoàng Cường', email: 'cuong@email.com', phone: '0923456789', role: 'customer', active: true, total_orders: 3, total_spent: 2100000, created_at: '2024-06-10' },
-    { id: 4, name: 'Phạm Thu Dung', email: 'dung@email.com', phone: '0934567890', role: 'customer', active: false, total_orders: 1, total_spent: 350000, created_at: '2024-08-05' },
-    { id: 5, name: 'Hoàng Minh Đức', email: 'duc@email.com', phone: '0945678901', role: 'customer', active: true, total_orders: 25, total_spent: 28900000, created_at: '2023-11-20' }
-]
+import { useErrorHandler } from '@/utils'
 
 export function useCustomers() {
     const customers = ref<Customer[]>([])
@@ -19,6 +12,7 @@ export function useCustomers() {
     const currentPage = ref(1)
     const totalPages = ref(1)
     const searchQuery = ref('')
+    const { handleError } = useErrorHandler()
 
     const showDetailModal = ref(false)
     const selectedCustomer = ref<Customer | null>(null)
@@ -48,11 +42,12 @@ export function useCustomers() {
                 page: currentPage.value,
                 per_page: 15
             })
-            customers.value = response.data
-            totalPages.value = response.last_page
+            customers.value = response.items
+            totalPages.value = response.meta.last_page
+            currentPage.value = response.meta.current_page
         } catch (error) {
-            console.error('Failed to fetch customers:', error)
-            customers.value = getMockCustomers()
+            handleError(error, 'Không thể tải danh sách khách hàng')
+            customers.value = []
         } finally {
             isLoading.value = false
         }
@@ -60,6 +55,7 @@ export function useCustomers() {
 
     function openDetail(customer: Customer) {
         selectedCustomer.value = customer
+        // In a real app, these should also be fetched from API
         customerOrders.value = [
             { id: 1001, total_amount: 500000, status: 'delivered', created_at: '2024-12-20' },
             { id: 1002, total_amount: 350000, status: 'processing', created_at: '2024-12-22' }

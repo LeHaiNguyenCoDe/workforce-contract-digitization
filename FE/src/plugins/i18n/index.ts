@@ -38,7 +38,7 @@ export const i18nInstance = i18n
 /**
  * Categories for locale files
  */
-const LOCALE_CATEGORIES = ['common', 'nav', 'auth', 'product', 'cart', 'order', 'admin', 'validation', 'home', 'admin-panel'] as const
+const LOCALE_CATEGORIES = ['common', 'nav', 'auth', 'product', 'cart', 'order', 'admin', 'validation', 'home', 'admin-panel', 'marketing'] as const
 
 /**
  * Load locale messages dynamically from folder structure

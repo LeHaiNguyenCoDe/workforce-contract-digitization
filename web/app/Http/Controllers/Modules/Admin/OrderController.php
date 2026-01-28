@@ -50,7 +50,7 @@ class OrderController extends Controller
                 $orders = $this->orderService->getByUserId(Auth::id(), $perPage);
             }
 
-            return $this->paginatedResponse(OrderResource::collection($orders));
+            return $this->paginatedResponse($orders, null, [], OrderResource::class);
         } catch (\Exception $ex) {
             return $this->serverErrorResponse('An error occurred while fetching orders', $ex);
         }
