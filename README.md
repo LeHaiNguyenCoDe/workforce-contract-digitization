@@ -4,145 +4,166 @@
 ![Version](https://img.shields.io/badge/Version-2.0.0-blue)
 ![License](https://img.shields.io/badge/License-Private-red)
 
-## 🌟 Giới thiệu tổng quan
+## プロジェクト概要
 
-**Workforce Contract Digitization** là nền tảng chuyển đổi số toàn diện, kết hợp sức mạnh của **Thương mại điện tử (E-Commerce)** và **Quản trị doanh nghiệp (ERP)**. Hệ thống được xây dựng trên kiến trúc **Decoupled Monolith**, tách biệt hoàn toàn giữa Frontend và Backend, đảm bảo khả năng mở rộng linh hoạt, hiệu năng cao và trải nghiệm người dùng tối ưu.
+**Workforce Contract Digitization**は、**Eコマース（電子商取引）**と**企業リソース計画（ERP）**の力を融合させた包括的なデジタルトランスフォーメーションプラットフォームです。
 
-Dự án không chỉ dừng lại ở việc bán hàng, mà còn số hóa quy trình vận hành nội bộ, từ quản lý kho, nhân sự, tài chính đến chăm sóc khách hàng tự động.
+本システムは、フロントエンドとバックエンドを完全に分離した**Decoupled Monolith（分離型モノリス）**アーキテクチャに基づいて構築されており、柔軟な拡張性、高いパフォーマンス、そして最適なユーザー体験を保証します。単なる商品の販売にとどまらず、在庫管理、人事、財務から自動化されたカスタマーケアに至るまで、企業の内部運営プロセス全体をデジタル化します。
 
-## 🚀 Tính năng cốt lõi
+## 主な機能
 
-### 🛒 E-Commerce & Marketplace
-*   **Trải nghiệm mua sắm hiện đại**: Tìm kiếm thông minh, bộ lọc sản phẩm đa tầng, gợi ý sản phẩm.
-*   **Quy trình thanh toán (Checkout)**: Tối ưu hóa các bước, hỗ trợ đa dạng cổng thanh toán (VNPAY, VietQR), tính phí vận chuyển tự động.
-*   **Chương trình khuyến mãi**: Quản lý Voucher, Flash Sale, Giảm giá theo cấp bậc thành viên.
+### Eコマース & マーケットプレイス
+*   **モダンなショッピング体験**: スマート検索、多階層商品フィルター、AIによる商品レコメンデーション。
+*   **チェックアウトプロセス**: 手順の最適化、多様な決済ゲートウェイ（VNPAY, VietQR）対応、送料の自動計算。
+*   **プロモーション管理**: バウチャー、フラッシュセール、会員ランク別の割引設定。
 
-### 🏢 Quản trị Doanh nghiệp (ERP)
-*   **Quản lý Kho (WMS)**: Theo dõi tồn kho Real-time, quản lý phiếu nhập/xuất, cảnh báo mức tồn kho an toàn.
-*   **Quản lý Đơn hàng (OMS)**: Quy trình xử lý đơn hàng khép kín (Đặt hàng -> Xác nhận -> Đóng gói -> Giao vận -> Đối soát).
-*   **Quản trị Quan hệ Khách hàng (CRM)**: Hồ sơ khách hàng 360 độ, lịch sử mua hàng, phân nhóm khách hàng, tích điểm Loyalty.
-*   **Tài chính & Kế toán**: Theo dõi doanh thu, công nợ, quản lý dòng tiền thu chi.
+### 企業リソース計画 (ERP)
+*   **倉庫管理 (WMS)**: リアルタイム在庫追跡、入出庫管理、安全在庫アラート。
+*   **注文管理 (OMS)**: クローズドループの注文処理プロセス（注文 -> 確認 -> 梱包 -> 配送 -> 照合）。
+*   **顧客関係管理 (CRM)**: 360度顧客プロファイル、購入履歴、顧客セグメンテーション、ロイヤリティポイント。
+*   **財務 & 会計**: 売上追跡、債権債務管理、キャッシュフロー管理。
 
-### ⚡ Công nghệ Real-time & Tương tác
-*   **Hệ thống Chat thông minh**: Guest Chat hỗ trợ khách hàng ngay lập tức qua WebSocket (Laravel Reverb).
-*   **Hệ thống Thông báo (Notifications)**: Cập nhật trạng thái đơn hàng, tin nhắn và sự kiện quan trọng tức thì.
+### リアルタイム & インタラクション
+*   **スマートチャットシステム**: WebSocket (Laravel Reverb) を介したゲストとサポートスタッフの即時チャット。
+*   **通知システム**: 注文状況、メッセージ、重要なイベントの即時更新通知。
 
-## 🛠️ Tech Stack & Kiến trúc
+## 技術スタック & アーキテクチャ
 
-### Backend (`/web`)
-Đóng vai trò là **Logic Engine** mạnh mẽ, xử lý nghiệp vụ phức tạp và bảo mật dữ liệu.
+### バックエンド (`/web`)
+強力な**ロジックエンジン**として機能し、複雑な業務処理とデータセキュリティを担います。
 *   **Core Framework**: Laravel 11.x
 *   **Language**: PHP 8.2+
 *   **Database**: MySQL 8.0
-*   **Real-time Server**: Laravel Reverb (High-performance WebSocket)
-*   **Queue System**: Redis (Xử lý tác vụ nền hiệu suất cao)
+*   **Real-time Server**: Laravel Reverb (高性能 WebSocket)
+*   **Queue System**: Redis (高速バックグラウンド処理)
 *   **API Standard**: RESTful API / OpenAPI 3.0 Specification
 
-### Frontend (`/FE`)
-Giao diện người dùng mượt mà (SPA), tốc độ phản hồi cực nhanh.
+### フロントエンド (`/FE`)
+スムーズなシングルページアプリケーション (SPA) で、極めて高速な応答速度を実現します。
 *   **Framework**: Vue 3 (Composition API)
 *   **Language**: TypeScript (Strongly typed)
-*   **Build Tool**: Vite 5 (Fast HMR & Optimized Build)
+*   **Build Tool**: Vite 5 (高速HMR & ビルド最適化)
 *   **State Management**: Pinia
 *   **UI System**: SCSS, Bootstrap Vue Next
 
-## 📂 Truy cập nhanh mã nguồn
+## ソースコードへのアクセス
 
-Hệ thống được tổ chức khoa học thành các module chuyên biệt. Dưới đây là sơ đồ cấu trúc chi tiết:
+システムは専門化されたモジュールごとに科学的に構成されています。以下は詳細なディレクトリ構造図です：
 
 <details open>
-<summary><b>1. Frontend Structure (`FE/src`)</b></summary>
+<summary><b>1. フロントエンド構造 (`FE/src`)</b></summary>
 
 ```
 FE/src/
-├── modules/
-│   ├── admin/               # — Phân hệ Quản trị (Admin Portal)
-│   │   ├── dashboard/       # Báo cáo & Thống kê tổng quan
-│   │   ├── erp/             # Các tính năng quản trị chuyên sâu (Finance, CRM, HRM)
-│   │   ├── orders/          # Trung tâm xử lý đơn hàng & Vận đơn
-│   │   ├── products/        # Quản lý danh mục, sản phẩm & kho
-│   │   └── chat/            # Hệ thống Chat Support cho Admin
-│   ├── marketplace/         # — Phân hệ Mua sắm (Storefront)
-│   │   ├── shop/            # Trang danh sách & chi tiết sản phẩm
-│   │   ├── cart/            # Quản lý Giỏ hàng & Mini-cart
-│   │   └── checkout/        # Quy trình thanh toán & Đặt hàng
-│   └── landing/             # — Trang chủ & Thông tin chung
-├── stores/                  # Pinia Global State (Auth, Cart, Toast)
-├── router/                  # Cấu hình điều hướng ứng dụng
-└── components/              # Thư viện UI Components dùng chung
+├── assets/          # 静的アセット (Styles, Fonts, Images)
+├── components/      # グローバルコンポーネント: BaseButton, BaseInput...
+├── layouts/         # レイアウト: Admin, Auth, Landing
+├── modules/         # -- ドメインモジュール --
+│   ├── admin/       # [管理パネル]
+│   │   ├── chat/        # 管理者用チャットインターフェース
+│   │   ├── dashboard/   # メインダッシュボード (分析)
+│   │   ├── erp/         # -- ERP サブモジュール --
+│   │   │   ├── finance/          # 財務・収益管理
+│   │   │   ├── customers/        # 顧客プロファイル
+│   │   │   ├── ...               # (Expenses, Points, Returns...)
+│   │   ├── orders/      # 注文一覧・詳細
+│   │   ├── products/    # 商品編集・管理
+│   │   ├── users/       # 従業員・ユーザー管理
+│   │   └── warehouses/  # 在庫・出荷管理
+│   ├── landing/     # [カスタマーポータル]
+│   │   ├── home/        # トップページ
+│   │   ├── products/    # 商品一覧・詳細ページ (PDP)
+│   │   ├── cart/        # ショッピングカート
+│   │   ├── checkout/    # 決済プロセス
+│   │   └── profile/     # ユーザーアカウント情報
+│   └── marketplace/ # [独立型マーケットプレイス]
+├── router/          # ルーティング定義とガード
+└── stores/          # Pinia: Auth, Cart, Toast...
 ```
 </details>
 
 <details>
-<summary><b>2. Backend Structure (`web/app`)</b></summary>
+<summary><b>2. バックエンド構造 (`web/app`)</b></summary>
 
 ```
 web/app/
-├── Http/Controllers/
-│   ├── Api/Modules/         # API Controllers phân theo chức năng
-│   │   ├── Admin/           # API Endpoints cho Admin Portal
-│   │   └── Landing/         # API Endpoints cho Customer Portal
-├── Services/                # — Business Logic Layer (Lớp xử lý nghiệp vụ)
-│   ├── Admin/               # Logic quản trị (FinanceCalc, StockOp, Report...)
-│   ├── Core/                # Các dịch vụ nền tảng (FileUpload, Logger, Notification)
-│   └── Marketing/           # Logic tính toán khuyến mãi & chiến dịch
-└── Models/                  # Eloquent Entities (Định nghĩa cấu trúc dữ liệu)
+├── Http/
+│   ├── Controllers/
+│   │   ├── Api/             # ベースコントローラー
+│   │   ├── Modules/
+│   │   │   ├── Admin/       # 管理者用コントローラー
+│   │   │   ├── Landing/     # 公開用コントローラー
+│   │   │   └── Auth/        # 認証コントローラー
+│   └── Middleware/          # ミドルウェア (Role, Locale...)
+├── Models/                  # Eloquentエンティティ: Order, User, Product...
+├── Services/                # -- サービス層 (ビジネスロジック) --
+│   ├── Admin/               # [管理者向けロジック]
+│   │   ├── FinanceService.php      # 収益計算
+│   │   ├── OrderService.php        # 注文フロー処理
+│   │   ├── ProductService.php      # 商品CRUD
+│   │   ├── WarehouseService.php    # あらゆる在庫ロジック
+│   │   └── ...
+│   ├── Core/                # システムコア: FileUpload, Logger
+│   ├── Marketing/           # プロモーション・キャンペーンロジック
+│   ├── Payment/             # 決済ゲートウェイ統合 (VNPAY, Momo)
+│   └── VietQR/              # QRコード生成
+└── Events/                  # イベント・ブロードキャスト
 ```
 </details>
 
-## ⚙️ Hướng dẫn Cài đặt & Triển khai
+## セットアップ & 導入ガイド
 
-Để thiết lập môi trường phát triển (Local Development), vui lòng thực hiện theo các bước sau:
+ローカル開発環境を構築するには、以下の手順に従ってください：
 
-### Yêu cầu tiên quyết
-*   **PHP**: >= 8.2 (Bắt buộc)
+### 前提条件
+*   **PHP**: >= 8.2 (必須)
 *   **Node.js**: >= 18.x
-*   **Composer**: Latest version
+*   **Composer**: 最新バージョン
 *   **MySQL**: >= 8.0
-*   **Redis**: (Khuyến nghị để chạy Queue & Cache tốt nhất)
+*   **Redis**: (Queue & Cacheの最適化に推奨)
 
-### Bước 1: Khởi tạo Backend
+### 手順 1: バックエンドの構築
 ```bash
 cd web
-# 1. Cài đặt các thư viện PHP
+# 1. PHPライブラリのインストール
 composer install
 
-# 2. Cấu hình môi trường
+# 2. 環境設定
 cp .env.example .env
-# -> Lưu ý: Cập nhật thông tin DB_DATABASE, DB_PASSWORD trong file .env
+# -> 注意: .envファイル内の DB_DATABASE, DB_PASSWORD を更新してください
 
-# 3. Khởi tạo dữ liệu nền tảng
+# 3. データベースとキーの初期化
 php artisan key:generate
-php artisan migrate --seed  # Tạo bảng và dữ liệu mẫu (Admin, Settings)
+php artisan migrate --seed  # テーブル作成とサンプルデータ投入 (Admin, Settings)
 
-# 4. Khởi chạy Server
+# 4. サーバーの起動
 composer run dev
-# Lệnh này sẽ tự động chạy song song: Laravel Server (8000), Queue Worker, Reverb (8080)
+# このコマンドは Laravel Server (8000), Queue Worker, Reverb (8080) を並列で起動します
 ```
 
-### Bước 2: Khởi tạo Frontend
+### 手順 2: フロントエンドの構築
 ```bash
 cd FE
-# 1. Cài đặt các thư viện JS
-yarn install  # hoặc npm install
+# 1. JSライブラリのインストール
+yarn install  # または npm install
 
-# 2. Cấu hình môi trường
+# 2. 環境設定
 cp .env.example .env
-# -> Đảm bảo VITE_API_BASE_URL=http://localhost:8000/api/v1 (trỏ về Backend local)
+# -> VITE_API_BASE_URL=http://localhost:8000/api/v1 (ローカルバックエンドを指定)
 
-# 3. Khởi chạy Development Server
+# 3. 開発サーバーの起動
 yarn dev
 ```
 
-🚀 **Truy cập ứng dụng**:
+**アプリケーションへのアクセス**:
 *   **Frontend**: `http://localhost:3000`
-*   **API Documentation**: `http://localhost:8000/docs` (nếu đã cài đặt Swagger)
+*   **API Documentation**: `http://localhost:8000/docs` (Swagger導入済みの場合)
 
-## 🤝 Quy trình phát triển (Workflow)
+## 開発ワークフロー
 
-1.  **Branching**: Luôn tạo nhánh mới từ nhánh `dev` cho mỗi tính năng (`feat/ten-tinh-nang`) hoặc bản vá (`fix/ten-loi`).
-2.  **Commit Standard**: Tuân thủ chuẩn Conventional Commits (VD: `feat: add user login`, `fix: update cart calculation`).
-3.  **Pull Request**: Tạo PR và yêu cầu review code từ Tech Lead trước khi merge vào `dev`.
+1.  **ブランチ戦略**: 新機能 (`feat/feature-name`) や バグ修正 (`fix/bug-name`) は、必ず `dev` ブランチから作成してください。
+2.  **コミット基準**: Conventional Commits に従ってください (例: `feat: add user login`, `fix: update cart calculation`)。
+3.  **プルリクエスト**: Tech Lead によるコードレビューを経て、`dev` ブランチへマージされます。
 
 ---
-**Workforce Contract Digitization** — *Nâng tầm quản trị, tối ưu vận hành.*
+**Workforce Contract Digitization** — *経営管理の高度化と業務運営の最適化*
