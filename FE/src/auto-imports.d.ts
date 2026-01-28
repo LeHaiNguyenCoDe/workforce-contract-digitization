@@ -134,6 +134,7 @@ declare global {
   const useCartStore: typeof import('./modules/landing/cart/store/store').useCartStore
   const useConversationDetails: typeof import('./modules/admin/chat/composables/index').useConversationDetails
   const useConversationInfo: typeof import('./modules/admin/chat/composables/index').useConversationInfo
+  const useCoupons: typeof import('./modules/admin/marketing/composables/index').useCoupons
   const useCssModule: typeof import('vue').useCssModule
   const useCssVars: typeof import('vue').useCssVars
   const useErrorHandler: typeof import('./utils/useErrorHandler').useErrorHandler
@@ -144,6 +145,7 @@ declare global {
   const useLandingOrderStore: typeof import('./modules/landing/orders/store/store').useLandingOrderStore
   const useLandingProductStore: typeof import('./modules/landing/products/store/store').useLandingProductStore
   const useLandingPromotionStore: typeof import('./modules/landing/promotions/store/store').useLandingPromotionStore
+  const useLeads: typeof import('./modules/admin/marketing/composables/index').useLeads
   const useLink: typeof import('vue-router').useLink
   const useLoyaltyStore: typeof import('./modules/landing/loyalty/store/store').useLoyaltyStore
   const useModel: typeof import('vue').useModel
@@ -157,6 +159,7 @@ declare global {
   const useReviewStore: typeof import('./modules/admin/reviews/store/store').useReviewStore
   const useRoute: typeof import('vue-router').useRoute
   const useRouter: typeof import('vue-router').useRouter
+  const useSegments: typeof import('./modules/admin/marketing/composables/index').useSegments
   const useSlots: typeof import('vue').useSlots
   const useSwal: typeof import('./utils/useSwal').useSwal
   const useTemplateRef: typeof import('vue').useTemplateRef
@@ -345,6 +348,7 @@ declare module 'vue' {
     readonly useCartStore: UnwrapRef<typeof import('./modules/landing/cart/store/store')['useCartStore']>
     readonly useConversationDetails: UnwrapRef<typeof import('./modules/admin/chat/composables/index')['useConversationDetails']>
     readonly useConversationInfo: UnwrapRef<typeof import('./modules/admin/chat/composables/index')['useConversationInfo']>
+    readonly useCoupons: UnwrapRef<typeof import('./modules/admin/marketing/composables/index')['useCoupons']>
     readonly useCssModule: UnwrapRef<typeof import('vue')['useCssModule']>
     readonly useCssVars: UnwrapRef<typeof import('vue')['useCssVars']>
     readonly useErrorHandler: UnwrapRef<typeof import('./utils/useErrorHandler')['useErrorHandler']>
@@ -355,6 +359,7 @@ declare module 'vue' {
     readonly useLandingOrderStore: UnwrapRef<typeof import('./modules/landing/orders/store/store')['useLandingOrderStore']>
     readonly useLandingProductStore: UnwrapRef<typeof import('./modules/landing/products/store/store')['useLandingProductStore']>
     readonly useLandingPromotionStore: UnwrapRef<typeof import('./modules/landing/promotions/store/store')['useLandingPromotionStore']>
+    readonly useLeads: UnwrapRef<typeof import('./modules/admin/marketing/composables/index')['useLeads']>
     readonly useLink: UnwrapRef<typeof import('vue-router')['useLink']>
     readonly useLoyaltyStore: UnwrapRef<typeof import('./modules/landing/loyalty/store/store')['useLoyaltyStore']>
     readonly useModel: UnwrapRef<typeof import('vue')['useModel']>
@@ -368,6 +373,7 @@ declare module 'vue' {
     readonly useReviewStore: UnwrapRef<typeof import('./modules/admin/reviews/store/store')['useReviewStore']>
     readonly useRoute: UnwrapRef<typeof import('vue-router')['useRoute']>
     readonly useRouter: UnwrapRef<typeof import('vue-router')['useRouter']>
+    readonly useSegments: UnwrapRef<typeof import('./modules/admin/marketing/composables/index')['useSegments']>
     readonly useSlots: UnwrapRef<typeof import('vue')['useSlots']>
     readonly useSwal: UnwrapRef<typeof import('./utils/useSwal')['useSwal']>
     readonly useTemplateRef: UnwrapRef<typeof import('vue')['useTemplateRef']>

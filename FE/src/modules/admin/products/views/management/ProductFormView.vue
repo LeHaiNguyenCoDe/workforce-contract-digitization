@@ -76,7 +76,7 @@ const handleCancel = () => {
 </script>
 
 <template>
-  <div class="page-content py-4">
+  <div>
     <PageHeader :title="isViewMode ? 'Chi tiết sản phẩm' : (isEdit ? 'Chỉnh sửa sản phẩm' : 'Tạo sản phẩm')" pageTitle="Ecommerce" />
 
     <BRow>

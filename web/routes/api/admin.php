@@ -32,6 +32,10 @@ use App\Http\Controllers\Modules\Admin\ApiLogController;
 use App\Http\Controllers\Modules\Admin\ImportExportController;
 use App\Http\Controllers\Modules\Admin\EmailController;
 use App\Http\Controllers\Modules\Landing\CodReconciliationController;
+use App\Http\Controllers\Modules\Admin\AutomationController;
+use App\Http\Controllers\Modules\Admin\PointController;
+use App\Http\Controllers\Modules\Admin\AuditLogController;
+use App\Http\Controllers\Modules\Admin\RoleController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -62,6 +66,15 @@ $modules = [
         }
     ],
     'categories' => ['controller' => CategoryController::class, 'resource' => true],
+    'customers' => [
+        'controller' => UserController::class, // Re-use UserController for customer logic if needed, or create CustomerController
+        'custom' => function() {
+            Route::get('{id}/points', [PointController::class, 'show']);
+            Route::get('{id}/points/transactions', [PointController::class, 'transactions']);
+            Route::post('{id}/points/redeem', [PointController::class, 'redeem']);
+            Route::post('{id}/points/adjust', [PointController::class, 'adjust']);
+        }
+    ],
     'orders' => [
         'controller' => OrderController::class,
         'custom' => function() {
@@ -256,6 +269,16 @@ $modules = [
             Route::post('calculate-discount', [MembershipController::class, 'calculateDiscount']);
         }
     ],
+    'automations' => [
+        'controller' => AutomationController::class,
+        'custom' => function() {
+            Route::get('/', [AutomationController::class, 'index']);
+            Route::post('/', [AutomationController::class, 'store']);
+            Route::put('{id}', [AutomationController::class, 'update']);
+            Route::delete('{id}', [AutomationController::class, 'destroy']);
+            Route::post('{id}/toggle', [AutomationController::class, 'toggle']);
+        }
+    ],
     'suppliers' => ['controller' => SupplierController::class, 'resource' => true],
     'articles' => [
         'controller' => ArticleController::class,
@@ -372,16 +395,35 @@ $modules = [
             });
             Route::get('templates', [EmailController::class, 'templates']);
         }
+    ],
+    'roles' => [
+        'controller' => RoleController::class,
+        'custom' => function() {
+            Route::get('/', [RoleController::class, 'index']);
+            Route::post('/', [RoleController::class, 'store']);
+            Route::put('{id}', [RoleController::class, 'update']);
+            Route::delete('{id}', [RoleController::class, 'destroy']);
+            Route::put('{id}/permissions', [RoleController::class, 'updatePermissions']);
+        }
+    ],
+    'audit-logs' => [
+        'controller' => AuditLogController::class,
+        'custom' => function() {
+            Route::get('/', [AuditLogController::class, 'index']);
+            Route::get('{id}', [AuditLogController::class, 'show']);
+        }
     ]
 ];
 
 // Register Routes
 foreach ($modules as $uri => $cfg) {
-    if (isset($cfg['resource']) && $cfg['resource']) {
-        Route::apiResource($uri, $cfg['controller'], array_intersect_key($cfg, array_flip(['only', 'except'])));
-    }
+    // Register custom routes BEFORE resource routes to avoid conflicts (e.g. /warehouses/dashboard-stats matching /warehouses/{id})
     if (isset($cfg['custom'])) {
         Route::prefix($uri)->group($cfg['custom']);
+    }
+    
+    if (isset($cfg['resource']) && $cfg['resource']) {
+        Route::apiResource($uri, $cfg['controller'], array_intersect_key($cfg, array_flip(['only', 'except'])));
     }
 }
 

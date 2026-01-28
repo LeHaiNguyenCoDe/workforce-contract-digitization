@@ -19,8 +19,6 @@ class AuthService {
       credentials
     )
     
-    // Debug: Log the full response to see structure
-    console.log('Login API response:', response.data)
     
     const loginData = response.data.data!
     

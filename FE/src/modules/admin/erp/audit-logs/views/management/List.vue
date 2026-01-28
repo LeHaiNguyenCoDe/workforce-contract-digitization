@@ -2,6 +2,8 @@
 import { ref } from 'vue'
 import { actionLabels } from '../../models/auditLog'
 import { auditLogColumns } from '../../configs/columns'
+import { useAuditLogs } from '../../composables/useAuditLogs'
+import { formatDateTime } from '@/utils'
 
 const { logs, isLoading, currentPage, totalPages, actionFilter, setActionFilter, changePage } = useAuditLogs()
 
@@ -11,6 +13,11 @@ const showDetailModal = ref(false)
 function viewDetail(log: any) {
   selectedLog.value = log
   showDetailModal.value = true
+}
+
+function handleActionChange(event: Event) {
+  const target = event.target as HTMLSelectElement
+  setActionFilter(target.value)
 }
 </script>
 
@@ -23,7 +30,7 @@ function viewDetail(log: any) {
     <AdminSearch :modelValue="''" placeholder="Tìm kiếm nhật ký..." class="mb-6">
       <template #filters>
         <div class="flex gap-2">
-          <select :value="actionFilter" @change="setActionFilter(($event.target as HTMLSelectElement).value)" class="form-input w-48 bg-dark-700 border-white/10 text-white">
+          <select :value="actionFilter" @change="handleActionChange" class="form-input w-48 bg-dark-700 border-white/10 text-white">
             <option value="">Tất cả hành động</option>
             <option v-for="[k, v] in Object.entries(actionLabels)" :key="k" :value="k">{{ v }}</option>
           </select>

@@ -40,7 +40,7 @@ class ApiLogController extends Controller
             }
 
             $logs = $query->latest()->paginate($request->per_page ?? 50);
-            return $this->successResponse($logs);
+            return $this->paginatedResponse($logs);
         } catch (Exception $e) {
             return $this->serverErrorResponse('error', $e);
         }

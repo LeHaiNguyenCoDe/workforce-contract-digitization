@@ -11,7 +11,7 @@ class PointTransaction extends Model
     use HasFactory;
 
     protected $fillable = [
-        'customer_id',
+        'user_id',
         'type',
         'points',
         'balance_after',
@@ -34,10 +34,10 @@ class PointTransaction extends Model
     const TYPE_ADJUST = 'adjust';
 
     /**
-     * Get customer
+     * Get user
      */
-    public function customer(): BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(Customer::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

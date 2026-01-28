@@ -130,17 +130,10 @@ class BroadcastingController extends Controller
     {
         $adminRoles = ['admin', 'manager', 'super_admin'];
 
-        // Kiểm tra role attribute trước
-        if (isset($user->role) && in_array($user->role, $adminRoles)) {
-            return true;
-        }
-
-        // Fallback: kiểm tra Spatie roles nếu có
-        if (method_exists($user, 'hasAnyRole')) {
-            return $user->hasAnyRole($adminRoles);
-        }
-
-        return false;
+        // Check if user has any of these roles in the many-to-many relationship
+        // or via Spatie roles if they are being used
+        return $user->roles()->whereIn('name', $adminRoles)->exists() || 
+               (method_exists($user, 'hasAnyRole') && $user->hasAnyRole($adminRoles));
     }
 
     /**

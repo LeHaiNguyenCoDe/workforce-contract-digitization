@@ -23,8 +23,8 @@ class ReportService
         }
 
         $orderData = $orderQuery->selectRaw('
-            SUM(total) as revenue,
-            SUM(COALESCE(shipping_fee, 0)) as shipping_collected,
+            SUM(total_amount) as revenue,
+            0 as shipping_collected,
             COUNT(*) as order_count
         ')->first();
 
@@ -122,13 +122,13 @@ class ReportService
 
         // By status
         $byStatus = (clone $query)
-            ->select('status', DB::raw('COUNT(*) as count'), DB::raw('SUM(total) as total'))
+            ->select('status', DB::raw('COUNT(*) as count'), DB::raw('SUM(total_amount) as total'))
             ->groupBy('status')
             ->get();
 
         // By day
         $byDay = (clone $query)
-            ->select(DB::raw('DATE(created_at) as date'), DB::raw('COUNT(*) as count'), DB::raw('SUM(total) as total'))
+            ->select(DB::raw('DATE(created_at) as date'), DB::raw('COUNT(*) as count'), DB::raw('SUM(total_amount) as total'))
             ->groupBy(DB::raw('DATE(created_at)'))
             ->orderBy('date')
             ->get();
@@ -141,8 +141,8 @@ class ReportService
             ->select(
                 'products.id',
                 'products.name',
-                DB::raw('SUM(order_items.quantity) as total_qty'),
-                DB::raw('SUM(order_items.quantity * order_items.price) as total_value')
+                DB::raw('SUM(order_items.qty) as total_qty'),
+                DB::raw('SUM(order_items.qty * order_items.price) as total_value')
             )
             ->groupBy('products.id', 'products.name')
             ->orderByDesc('total_value')
@@ -240,11 +240,22 @@ class ReportService
             ->when($warehouseId, fn($q) => $q->where('warehouse_id', $warehouseId))
             ->latest()
             ->take(10)
-            ->get(['id', 'order_number', 'user_id', 'total', 'status', 'created_at']);
+            ->get(['id', 'code', 'user_id', 'total_amount', 'status', 'created_at'])
+            ->map(function ($order) {
+                return [
+                    'id' => $order->id,
+                    'order_number' => $order->code,
+                    'user_id' => $order->user_id,
+                    'user' => $order->user,
+                    'total' => (float) $order->total_amount,
+                    'status' => $order->status,
+                    'created_at' => $order->created_at,
+                ];
+            });
 
         // 5. Pending actions
         $pendingOrders = Order::where('status', 'pending')->count();
-        $pendingReturns = DB::table('return_slips')->where('status', 'pending')->count();
+        $pendingReturns = DB::table('returns')->where('status', 'requested')->count();
         $pendingPurchaseRequests = DB::table('purchase_requests')->where('status', 'pending')->count();
 
         return [

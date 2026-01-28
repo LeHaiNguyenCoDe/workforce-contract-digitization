@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { usePermissions } from '../../composables/usePermissions'
 
 const { roles, selectedRole, isLoading, isSaving, permissionGroups, selectRole, hasPermission, togglePermission, savePermissions } = usePermissions()
 </script>
