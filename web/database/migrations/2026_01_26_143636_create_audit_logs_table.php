@@ -11,27 +11,29 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('audit_logs', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
-            $table->string('ip_address', 45);
-            $table->string('user_agent', 500)->nullable();
-            $table->string('action'); // 'create', 'update', 'delete', 'access'
-            $table->string('model_type')->nullable();
-            $table->unsignedBigInteger('model_id')->nullable();
-            $table->string('route');
-            $table->string('method', 10);
-            $table->json('request_data')->nullable();
-            $table->json('changes')->nullable(); // For update operations
-            $table->integer('response_status')->nullable();
-            $table->text('description')->nullable();
-            $table->timestamps();
+        if (!Schema::hasTable('audit_logs')) {
+            Schema::create('audit_logs', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
+                $table->string('ip_address', 45);
+                $table->string('user_agent', 500)->nullable();
+                $table->string('action'); // 'create', 'update', 'delete', 'access'
+                $table->string('model_type')->nullable();
+                $table->unsignedBigInteger('model_id')->nullable();
+                $table->string('route');
+                $table->string('method', 10);
+                $table->json('request_data')->nullable();
+                $table->json('changes')->nullable(); // For update operations
+                $table->integer('response_status')->nullable();
+                $table->text('description')->nullable();
+                $table->timestamps();
 
-            // Indexes for better query performance
-            $table->index(['user_id', 'created_at']);
-            $table->index(['model_type', 'model_id']);
-            $table->index(['action', 'created_at']);
-        });
+                // Indexes for better query performance
+                $table->index(['user_id', 'created_at']);
+                $table->index(['model_type', 'model_id']);
+                $table->index(['action', 'created_at']);
+            });
+        }
     }
 
     /**
